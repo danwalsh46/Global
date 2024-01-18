@@ -1,0 +1,39 @@
+// Graphic Arts IT Application class
+//
+// sets properties used by all programs
+//
+
+Use cApplication.pkg
+
+
+Class cGlblApplication is a cApplication
+
+    Procedure Construct_Object
+        //
+        Forward Send Construct_Object
+        // used to constrol the use of the splash screen
+        // the DoLoginBackgroundUser procedure turns it
+        // off if login is successful
+        Property Integer pbSplash True
+        // used to control access to views
+        // user must first enter a valid name & password
+        Property Integer pbSecure False
+        // user ID
+        Property Integer piUser
+        Property String  psUser
+        // user security level
+        Property Integer piLevel
+        // accounting properties
+        Property Date    pdAccountingDate
+        Property Integer piAccountingYear
+        Property Integer piAccountingPeriod
+        //
+        Set pbEnterKeyAsTabKey to True
+        //
+    End_Procedure
+    
+    Procedure DoLoginBackgroundUser
+        // intended for override at the workspace level
+    End_Procedure
+
+End_Class

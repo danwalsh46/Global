@@ -1,0 +1,45 @@
+// cWinBase.pkg
+// Compiled by Sergey V. Natarov (senatc@postman.ru)
+//
+
+Use cWinBaseEx.h
+
+Function GetProfilesDirectory Global Returns String
+    String sProfileDir
+    Integer dwProfileDirSize
+    Integer iRetval
+    ZeroString MAX_PATH To sProfileDir
+    Move MAX_PATH To dwProfileDirSize
+    Move (GetProfilesDirectoryEf(AddressOf (sProfileDir), AddressOf (dwProfileDirSize))) To iRetval
+    Function_Return (Cstring (sProfileDir))
+End_Function // GetProfilesDirectory
+
+Function GetAllUsersProfileDirectory Global Returns String
+    String sProfileDir
+    Integer dwProfileDirSize
+    Integer iRetval
+    ZeroString MAX_PATH To sProfileDir
+    Move MAX_PATH To dwProfileDirSize
+    Move (GetAllUsersProfileDirectoryEf(AddressOf (sProfileDir), AddressOf (dwProfileDirSize))) To iRetval
+    Function_Return (Cstring (sProfileDir))
+End_Function // GetAllUsersProfileDirectory
+
+Function GetDefaultUserProfileDirectory Global Returns String
+    String sProfileDir
+    Integer dwProfileDirSize
+    Integer iRetval
+    ZeroString MAX_PATH To sProfileDir
+    Move MAX_PATH To dwProfileDirSize
+    Move (GetDefaultUserProfileDirectoryEf(AddressOf (sProfileDir), AddressOf (dwProfileDirSize))) To iRetval
+    Function_Return (Cstring (sProfileDir))
+End_Function // GetDefaultUserProfileDirectory
+
+Function GetUserName Global Returns String
+    String sUserName
+    Integer iRetval iLength    
+    ZeroString MAX_PATH To sUserName
+    Move MAX_PATH To iLength    
+    Move (GetUserNameEf(AddressOf (sUserName), AddressOf (iLength))) To iRetval    
+    Function_Return (CString (sUserName))
+End_Function // GetUserName
+

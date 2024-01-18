@@ -1,0 +1,16 @@
+//AB/ CLASSDEF
+Class cppTimePicker Is a Form
+    Set ClassPackage to "cppTimePicker.pkg"
+    Inherit
+    Property No_Execute Integer piHour -1
+    Property No_Execute Integer piMinute -1
+    Property No_Execute Integer piSecond -1
+End_Class
+
+Class cppdbTimePicker Is a dbForm
+    Set ClassPackage to "cppTimePicker.pkg"
+    Inherit
+    Property No_Execute Integer piHour -1
+    Property No_Execute Integer piMinute -1
+    Property No_Execute Integer piSecond -1
+End_Class

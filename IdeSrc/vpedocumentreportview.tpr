@@ -1,0 +1,110 @@
+//AB/ Project New ReportView6
+
+// Project Object Structure
+//   oVPEView is a cszVpeReportView
+//     oVpeDocument is a cszVpeReport
+
+// Register all objects
+Register_Object oVPEView
+Register_Object oVpeDocument
+
+
+//AB/ Report View
+
+
+//AB-StoreTopStart
+Use szVpeAll
+
+//AB-StoreTopEnd
+
+//AB-IgnoreStart
+
+
+//AB-IgnoreEnd
+
+ACTIVATE_VIEW Activate_oVPEView FOR oVPEView
+
+Object oVPEView is a cszVpeReportView
+
+    //AB-StoreTopStart
+    
+    //AB-StoreTopEnd
+
+    Set Border_Style to Border_Thick
+    Set Maximize_Icon to TRUE
+    Set Label to "VPE Document ReportView Template"
+    Set Size to 150 300
+    Set Location to 8 14
+
+    //AB-DDOStart
+
+
+    //AB-DDOEnd
+
+    Object oVpeDocument is a cszVpeReport
+        Set Size to 50 130
+        Set Location to 37 90
+
+        //AB-StoreStart
+        
+        Set piOpenDocFlags TO (VPE_NO_HELPBUTTON IOR VPE_NO_INFOBUTTON IOR VPE_EMBEDDED)
+        
+        Procedure RunDocument Integer bPreview
+            Local Handle hData
+            Local Integer iRtv
+        
+            Send OpenDoc
+        
+            Send DoVpeSetPageFormat VPAPER_LETTER
+        
+            if bPreview Send PreviewDoc VPE_SHOW_NORMAL
+        
+            // Insert printing Code here
+        
+            if bPreview Send DoVpeRefreshDoc
+            else Send DoVpePrintDoc TRUE
+        End_Procedure
+        
+        
+        //AB-StoreEnd
+
+    End_Object    // oVpeDocument
+
+
+    //AB-StoreStart
+    
+    Procedure RunReport
+        Send RunDocument TO oVpeDocument TRUE
+    End_Procedure
+    
+    Procedure Activate_View
+        Set View_Mode TO ViewMode_ZOOM
+        Forward Send Activate_View
+    End_Procedure
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //AB-StoreEnd
+
+End_Object    // oVPEView
+
+
+//AB-StoreStart
+
+//AB-StoreEnd
+

@@ -1,0 +1,95 @@
+Use Windows.pkg
+
+{ Visibility=Private }
+Class cBackgroundComboForm is a Form
+  
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    Property Handle phoParent 0
+    Set Attach_Parent_State to True
+    
+    Set Focus_Mode  to NonFocusable
+    Set Entry_State to False
+    Set Enabled_State to False
+    // Set Label_Color To clBtnFace
+  End_Procedure
+  
+  Function pbUseFormWindowHandle Returns Boolean
+    Boolean bUseFormWindowHandle
+    If (Shadow_State(Self)) Move False to bUseFormWindowHandle
+    Else Forward Get pbUseFormWindowHandle to bUseFormWindowHandle
+    Function_Return bUseFormWindowHandle
+  End_Function
+  
+  Procedure RefreshForm
+    Handle hoParent
+    String sCurrent
+    Get phoParent to hoParent
+    If (hoParent) Get Value of hoParent to sCurrent
+    Set Value to sCurrent
+  End_Procedure
+  
+  Procedure Set Visible_state Boolean bVisible
+    Handle hoParent hoLabel
+    Forward Set Visible_State to bVisible
+    If (bVisible) Begin
+      Send RefreshForm
+      Get phoParent to hoParent
+      If (hoParent) Get Label_Object of hoParent to hoLabel
+      If (hoLabel)  Set Visible_State of hoLabel to bVisible
+    End
+  End_Procedure
+  
+  Procedure Add_Focus Handle hoParent Returns Integer
+    Integer iSize iLocn
+    Integer iWidth iHeight
+    Boolean bApplyComboFormHeight
+    tWinRect aRect
+    Forward Send Add_Focus hoParent
+    Get pbApplyComboFormHeight to bApplyComboFormHeight
+    If (not(bApplyComboFormHeight)) Begin
+      Move (GetWindowRect(Window_Handle(hoParent),AddressOf(aRect))) to iSize
+      Move aRect.bottom to iHeight
+      Subtract aRect.top from iHeight
+      Move aRect.right to iWidth
+      Subtract aRect.left from iWidth
+      
+      Set GuiSize to iHeight iWidth
+      Send Adjust_Logicals
+    End
+  End_Procedure
+  
+  Procedure InitialiseForm
+    Handle hoParent
+    Integer iSize iLocn
+    Boolean bApplyComboFormHeight
+    Get phoParent to hoParent
+    If (hoParent) Begin
+      Get GuiSize of hoParent to iSize
+      Set GuiSize to (Hi(iSize)) (Low(iSize))
+      
+      Get GuiLocation of hoParent to iLocn
+      Set GuiLocation to (Hi(iLocn)) (Low(iLocn))
+      
+      Set peAnchors     to (peAnchors(hoParent))
+      
+      Set psToolTip     to (psToolTip(hoParent))
+      Set status_help   to (status_help(hoParent))
+      
+      Send Adjust_Logicals
+    End
+  End_Procedure
+  
+  Procedure Destroy_Object
+    Handle hoParent
+    Get phoParent to hoParent
+    If (hoParent) Set phoBkComboForm of hoParent to 0
+    Forward Send Destroy_Object
+  End_Procedure
+  
+  Procedure End_Construct_Object
+    Forward Send End_Construct_Object
+  End_Procedure
+  
+End_Class
+

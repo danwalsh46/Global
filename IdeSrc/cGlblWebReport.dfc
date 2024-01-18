@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblWebReport is a cWebReport
+    Set ClassPackage To "cGlblWebReport.pkg"
+    Inherit
+End_Class

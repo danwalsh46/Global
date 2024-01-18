@@ -1,0 +1,249 @@
+//AB/ OBJECTDEF
+Object
+//AB-StoreStart
+
+// Set DDO, Index and breaks for the report
+
+//Set Server to {DDOName}
+//Set Ordering to {IndexOrder}
+//Report_Breaks {file.field} {file.field} ...
+
+// Starting_Main_Report can be used to set metrics, margins, orientation, etc.
+//Function Starting_Main_Report Returns Integer
+//    Boolean bErr
+//    Send DFSetMetrics wpm_cm // wpm_cm or wpm_Inches
+//    Send DFSetmargins 1 1 1 1
+//    Forward Get Starting_Main_Report to bErr
+//    Function_return bErr
+//End_Function // Starting_Main_Report
+
+// Page_Top is printed first at the top margin of each page
+//Procedure Page_Top
+//    string  sFont
+//    integer iFontSize
+
+//    Move "arial" to sFont
+//    Move 12 to iFontSize
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader DFPageTop
+//        DFHeaderFrame Hdr_NoFrame
+//        DFHeaderPos   Hdr_Right
+//        DFWriteLn ("Page:" * "#pagecount#")
+//    DFEndHeader
+//End_Procedure // Page_Top
+
+// Report_Header is printed once in a report after page_top
+//Procedure Report_Header
+//    string  sFont
+//    integer iFontSize
+
+//    Move "arial" to sFont
+//    Move 12 to iFontSize
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader  DFReportHeader
+//        DFHeaderFrame  Hdr_Margins 0.01
+//        DFHeaderPos    Hdr_Center
+//        DFHeaderMargin Hm_BottomOuter 0.08
+//        DFWrite     "Report_Header" (Font_Bold)
+//    DFEndHeader
+//End_Procedure
+
+// Page_Header is printed on each page following Page_top & Report_header
+//Procedure Page_Header
+//    integer iFill iBorder iStyle
+//    string  sFont sReportTitle
+//    integer iFontSize
+
+//    Move "arial" to sFont
+//    Move 16 to iFontSize
+//    Move (Font_bold + rgb_White) to iStyle
+//    Move (rgb_dGrey) to iFill
+//    Move (rgb_dGrey) to iBorder
+//    Get Report_Title to sReportTitle
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader DFPageHeader
+//        DFHeaderPos   Hdr_Left
+//        DFHeaderFrame Hdr_Margins 0.01 iBorder iFill
+//        DFWritelnPos sReportTitle 0.1 iStyle
+//        DFHeaderMargin HM_BottomOuter 0.08
+//    DFEndHeader
+
+//End_Procedure // Page_Header
+
+// Report Title appears on every page after Page_Heading
+//Procedure Page_Title
+//    string  sFont
+//    integer iFontSize iHeaderStyle iFill iBorder
+
+//    Move "arial" to sFont
+//    Move 10 to iFontSize
+//    Move (Font_Bold + rgb_dBlue) to iHeaderStyle
+//    Move (rgb_Grey) to iFill
+//    Move (rgb_Grey) to iBorder
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader DFPageTitle
+//        DFHeaderPos   Hdr_Left
+//        DFHeaderFrame Hdr_Margins 0.01 iBorder iFill
+//        DfHeaderMargin HM_TopInner    0.04
+//        DfHeaderMargin HM_BottomInner 0.04
+//        DFHeaderMargin HM_BottomOuter 0.08
+
+//        DfWritePos {Value} {Position} {Style} {DecPoints} {MaxLength}
+//        DfWriteLn
+//    DFEndHeader
+
+//End_Procedure // Page_Title
+
+
+// SubHeaders are called for each break level
+//Procedure SubHeader1
+//    string  sFont
+//    integer iFontSize iStyle
+
+//    Move "arial" to sFont
+//    Move 10 to iFontSize
+//    Move (font_bold) to iStyle
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader DFSubHeader 1
+//        DfHeaderLineCheck 5
+//        DFHeaderWrap   HDR_Wrap
+//        DFHeaderPos    HDR_Left
+//        DFHeaderFrame HDR_NoFrame
+//        DfWritePos {Value} {Position} {Style} {DecPoints} {MaxLength}
+//        DfWriteLn
+//    DFEndHeader
+
+//End_Procedure // SubHeader1
+
+
+// Body is called for each record
+//Procedure Body
+//    string  sFont
+//    integer iFontSize iStyle
+
+//    Move "arial" to sFont
+//    Move 10 to iFontSize
+//    Move (font_default) to iStyle
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+
+//        DfWritePos {Value} {Position} {Style} {DecPoints} {MaxLength}
+//        DfWriteLn
+
+//        Send Add_SubTotal {TotalIndex} {TotalValue}
+
+//End_Procedure // Body
+
+// Subtotals are called at the end of each break level
+//Procedure SubTotal1
+//    string  sFont
+//    integer iFontSize iStyle iFill iBorder
+//    number  nAmount
+
+//    Move "arial" to sFont
+//    Move 10 to iFontSize
+//    Move (font_bold) to iStyle
+//    Move (rgb_dGrey) to iBorder
+//    Get DFGetDFColor 242 242 242 to iFill
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader DFSubTotal 1
+//        DFHeaderPos   Hdr_Left
+//        DFHeaderWrap  Hdr_NoWrap
+//        DFHeaderFrame HDR_NoFrame
+//        DFHeaderFrame Hdr_Margins 0.01 iBorder iFill
+
+//        Get SubTotal {TotalIndex} to nAmount
+//        Send Add_SubTotal {TotalIndex} nAmount
+//        DfWritePos {Value} {Position} {Style} {DecPoints} {MaxLength}
+//        DfWriteLn
+//        DFWriteLine DFGR_CURRLINE DFGR_CURRLINE DFGR_RB_MARGIN DFGR_HORI iBorder
+//        DfWriteLn
+//    DfEndHeader
+
+//End_Procedure // SubTotal1
+
+
+// Totals appear at the end of the report before report_footer
+//Procedure Total
+//    string  sFont
+//    integer iFontSize iStyle iFill iBorder
+//    number  nAmount
+
+//    Move "arial" to sFont
+//    Move 10 to iFontSize
+//    Move (font_bold) to iStyle
+//    Move (rgb_Grey) to iFill
+//    Move (rgb_dGrey) to iBorder
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader DFTotal
+//        DFHeaderPos   Hdr_Left
+//        DFHeaderFrame Hdr_Margins 0.01 iBorder iFill
+
+//        Get SubTotal {TotalIndex} to nAmount
+//        DfWritePos {Value} {Position} {Style} {DecPoints} {MaxLength}
+//        DfWriteLn
+//    DfEndHeader
+
+//End_Procedure // Total
+
+
+// Report_Footer is printed once on the last page before Page_Footer
+//Procedure Report_Footer
+//    DFBeginHeader DFReportFooter
+//        DFHeaderFrame  Hdr_Margins 0.01
+//        DFHeaderPos    Hdr_Center
+//        DFHeaderMargin Hm_BottomOuter 0.08
+//        DFWrite     "Report_Footer" (Font_Bold)
+//    DFEndHeader
+//End_Procedure
+
+
+//Page footer is printed on each page before Page_Bottom
+//Procedure Page_Footer
+//    DFBeginHeader DFPageFooter
+//        DFHeaderFrame  Hdr_Margins 0.01
+//        DFHeaderPos    Hdr_Center
+//        DFHeaderMargin Hm_BottomOuter 0.08
+//        DFWrite     "Page_Footer" (Font_Bold)
+//    DFEndHeader
+//End_Procedure
+
+
+// Page_Bottom is printed last at the bottom margin of each page
+//Procedure Page_Bottom
+//    string sFont
+//    integer iFontSize iBorder iStyle
+//    DateTime dtDT
+
+//    Move (CurrentDateTime()) to dtDT
+
+//    Move "arial" to sFont
+//    Move 10 to iFontSize
+//    Move (font_default) to iStyle
+//    Move (rgb_dGrey) to iBorder
+
+//    DFFont sFont
+//    DFFontSize iFontSize
+//    DFBeginHeader DFPageBottom
+//        DFHeaderFrame Hdr_Margins 0.01 iBorder
+//        DFHeaderPos Hdr_Center
+//        DFWriteln ("Report Printed on" +string(dtDT)) iStyle
+//    DFEndHeader
+//End_Procedure
+
+//AB-StoreEnd
+End_Object

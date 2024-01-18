@@ -1,0 +1,10 @@
+//AB/ CLASSDEF
+Class Container3d is a AbstractContainer Container3d ClientControlMixin DefineClientControlMixin
+    Set ObjectNameMask To "oContainer3d<count>"
+    Set ClassHelpName  To "Container3d"
+    Set ClassCETV      To 13                // use TreeView Image #13 (1-based offset)
+    Inherit
+    Property No_Visible No_Generate No_Execute Color TextColor
+    Property Mode Border_Style Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge  // Border Display style
+    Property Mode Bitmap_Style Bitmap_Actual Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center // Bitmap display mode. Display as-is, stretch to fill object, Tile, or Center.
+End_Class

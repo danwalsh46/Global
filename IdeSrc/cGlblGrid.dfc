@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblGrid is a Grid
+    Set ClassPackage To "cGlblGrid.pkg"
+    Inherit
+End_Class

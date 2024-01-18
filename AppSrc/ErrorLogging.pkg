@@ -1,0 +1,79 @@
+Use Dferror.pkg
+
+Declare_Datafile FLEXERRS
+
+//  Writes all errors to a text file in the Logs folder
+Object oError is a ErrorSystem //GM 12/7/2010 Logs errors to ErrorLog.txt in Logs folder - at same level as AppSrc, etc.  The folder needs to be added first!
+
+    Property Integer[] piaIgnored
+    Property Boolean   pbInError
+    Property Boolean   pbIngnoreAll
+
+    Register_Function isTrapped Returns Integer
+ 
+    Procedure Error_Report Integer iError Integer iLine String sErrMsg
+        Boolean bUnhandled bBusy bTrapped
+        Integer iTrapped
+        String  sStack
+        // Added 20130911 to ignore trapped errors
+        Move (isTrapped(trappedErrors(Error_Info_Object), iError)) to iTrapped  
+        If (iTrapped = 0) Procedure_Return
+        
+        // augment to log unhandled errors
+        Get pbInError to bBusy
+        If not bBusy Begin
+            Set pbInError to True
+            Get IsUnhandledError iError to bUnhandled
+            If bUnhandled Begin  // Only show Unhandled errors.  Comment out this line & the associated "End" to show all
+                CallStackDump sStack
+                Send LogError iError iLine sErrMsg sStack
+            End
+            Set pbInError to False
+        End
+
+        // now do the normal error report.
+        Forward Send Error_Report iError iLine sErrMsg
+    End_Procedure
+    
+    Procedure LogError Integer iError Integer iLine String sErrMsg String sStack
+        Integer iHr iMin
+        String  sHr sMin sUser sDT sTmp sErrFile sPath sProgram
+        Date    dToday
+        //
+        Get psHome of (phoWorkspace(ghoApplication)) to sPath
+        Move (Trim(sPath))                           to sPath
+        Move (sPath + "Logs\")                       to sPath
+        Get psProgram of ghoApplication              to sProgram
+        Move (sPath + sProgram)                      to sPath
+        //
+        If (sErrMsg = "") Begin
+            Clear FLEXERRS
+            Move iError to FLEXERRS.Recnum
+            Find EQ FLEXERRS.Recnum
+            Move FLEXERRS.Error_Descr to sErrMsg
+        End
+        //
+        Sysdate dToday iHr iMin
+        Move (String(ihr))                  to sHr
+        Move (String(iMin))                 to sMin
+        If (Length(sHr)=1)  Move ("0"+sHr)  to sHr
+        If (Length(sMin)=1) Move ("0"+sMin) to sMin
+        Move (sHr + ":" + sMin )            to sTmp
+        //
+        Move (Trim(psUser(ghoApplication))) to sDT
+        Append sDT " " dToday " " sTmp
+        
+        Move (Trim(sPath)) to sErrFile
+        Append sErrFile "ErrorLog" ".txt"
+        Append_Output sErrFile
+        Writeln
+        Writeln sDT
+        Writeln "Error: " iError " at " iLine
+        Writeln sErrMsg
+        Writeln sStack
+        Writeln
+        Close_Output
+    End_Procedure
+ 
+    Move Self to Error_Object_Id
+End_Object

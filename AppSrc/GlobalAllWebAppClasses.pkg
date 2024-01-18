@@ -1,0 +1,16 @@
+Use AllWebAppClasses.pkg
+Use cGlblWebService.pkg
+Use cGlblWebApp.pkg
+Use cGlblWebBusinessProcess.pkg
+Use cGlblDataDictionary.pkg
+Use cGlblApplication.pkg
+Use cGlblBusinessProcess.pkg
+Use cGlblArray.pkg
+Use cGlblSet.pkg
+Use cGlblObject.pkg
+Use cGlblWebReport.pkg
+Use cGlblAutoWebReport.pkg
+Use cGlblWmlReport.pkg
+Use cGlblFtpTransfer.pkg
+Use cGlblHttpTransfer.pkg
+Use cGlblXmlHttpTransfer.pkg

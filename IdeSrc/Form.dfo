@@ -1,0 +1,11 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    //OnChange will be called on every changed character
+    //Procedure OnChange
+    //    String sValue
+    //
+    //    Get Value To sValue
+    //End_Procedure // OnChange
+    //AB-StoreEnd
+End_Object

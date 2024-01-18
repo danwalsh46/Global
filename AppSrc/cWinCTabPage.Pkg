@@ -1,0 +1,75 @@
+// cWinCTab.pkg (Cool Tab dialog)
+// By Sergey V. Natarov (senatc@postman.ru)
+//
+
+Class cWinCTabPage is a Container3d
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property Integer Page_Id               public -1
+        Property String  psLabel               public ""
+        Property String  Private.ToolTip       public ""
+        Property String  Private.ToolTipTitle  public ""
+        Set Color To (Color(Parent(Self)))
+        Set Border_Style To Border_ClientEdge
+    End_Procedure
+
+    Procedure Set Label String sLabel
+        Set psLabel To sLabel
+        If (Page_Id(Self)>-1) Delegate Send Update_Button_Label (Page_Id(Self)) sLabel
+    End_Procedure
+    Function Label returns string
+        Function_Return (psLabel(Self))
+    End_Function 
+
+    Procedure Set psToolTip String sTip
+        Set Private.ToolTip To sTip
+        If (Page_Id(Self)>-1) Delegate Send Update_Button_ToolTip (Page_Id(Self)) sTip
+    End_Procedure
+    Function psToolTip returns string
+        Function_return (Private.ToolTip(Self))
+    End_Function
+
+    Procedure Set psToolTipTitle String sTip
+        Set Private.ToolTipTitle To sTip
+        If (Page_Id(Self)>-1) Delegate Send Update_Button_ToolTipTitle (Page_Id(Self)) sTip
+    End_Procedure
+    Function psToolTipTitle returns string
+        Function_return (Private.ToolTipTitle(Self))
+    End_Function
+
+    Procedure Resize_Page
+        Integer cy iBY iAnchor
+        Delegate Get GuiSize To cy
+        Delegate Get piButtonSize To iBY
+        Move (Hi(iBY))  To iBy
+        Set GuiLocation To iBy 0
+        Set GuiSize     To (Hi(cy)-iBy) (Low(cy))
+        Send Adjust_Logicals
+        Delegate Get peAnchors To iAnchor
+        Set peAnchors To iAnchor
+    End_Procedure
+
+    Procedure OnClick
+    End_Procedure
+
+    Procedure Show_Page Integer iState
+        Send Resize_Page
+        Set Visible_State   To iState
+//        Set Focus_Mode      To (Not(iState))
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Integer hoPage iPage iDefault 
+        Forward Send End_Construct_Object
+        Move (Self) To hoPage
+        Delegate Get Register_CTab_Page hoPage (psLabel(Self)) To iPage
+        Set Page_Id         To iPage
+        Set psToolTip       To (Private.ToolTip(Self))
+        Set psToolTipTitle  To (Private.ToolTipTitle(Self))
+        // Startup Appearance
+        Delegate Get Default_Page To iDefault
+        Send Show_Page (iPage=iDefault)
+    End_Procedure
+
+End_Class

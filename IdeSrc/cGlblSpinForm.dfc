@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblSpinForm is a SpinForm
+    Set ClassPackage To "cGlblSpinForm.pkg"
+    Inherit
+End_Class

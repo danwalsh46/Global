@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class cChangeForm Is a Form 
+    Set ClassPackage to "cChangeForm.pkg"
+    Inherit
+End_Class

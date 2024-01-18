@@ -1,0 +1,14 @@
+//AB/ CLASSDEF
+
+Class SpinForm IS A AbstractForm SpinForm SpinFormMixin DefineSpinFormMixin
+    Set ObjectNameMask To "oSpinForm<count>"
+    Set ClassHelpName  To "SpinForm"
+    Set ClassCETV      To 14                // use TreeView Image #14 (1-based offset)
+    Set ClassPackage   To "dfSpnFrm.pkg"
+    Inherit
+    //Property Integer Current_Position 0
+    Property Integer Maximum_Position 32767  // Maximum Spin Value allowed
+    Property Integer Minimum_Position -32767 // Mimumum Spin Value allowed
+    Property Boolean Wrap_State FALSE // Should spinner "wrap" when at maximum or minimum value?
+    Property No_Execute Mode Form_DataType 0 Mask_window mask_numeric_window mask_date_window mask_currency_window ascii_window date_window 0 1 2 3 4 5 6 7 8
+End_Class

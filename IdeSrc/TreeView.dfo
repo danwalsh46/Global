@@ -1,0 +1,9 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    Procedure OnCreateTree
+        // Add tree items here, with the AddTreeItem function.
+        // Get AddTreeItem sText hRoot iItemData iImage iSelImage To hItem
+    End_Procedure // OnCreateTree
+    //AB-StoreEnd
+End_Object

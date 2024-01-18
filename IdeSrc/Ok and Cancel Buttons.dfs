@@ -1,0 +1,29 @@
+//AB/ SUBCOMPONENT
+Object Ok_bn is a Button
+
+    Set Default_State to TRUE
+    Set Label to "Ok"
+    Set Location to 50 50
+
+    //AB-StoreStart
+    Procedure OnClick
+       Delegate Send OK
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Ok_bn
+
+Object Cancel_bn is a Button
+
+    Set Default_State to TRUE
+    Set Label to "Cancel"
+    Set Location to 50 120
+
+    //AB-StoreStart
+    Procedure OnClick
+       Delegate Send Close_Panel
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Cancel_bn
+

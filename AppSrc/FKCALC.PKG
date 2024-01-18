@@ -1,0 +1,530 @@
+Use Windows.pkg
+Use cTextEdit.pkg
+Use cCJGrid.pkg
+Use cCJGridColumn.pkg
+
+// Confidential Trade Secret.
+// Copyright 2000 Finn kristensen
+// Released under the GPL 03/19/2019
+
+// fkCalc.pkg
+// Last changed 29. Now 2000 Fkr
+
+// When you press (Ctrl+L) then the calculator is displayed
+
+// Place these two lines in top of your src file
+// Use fkCalc.pkg
+// on_key KEY_CTRL+KEY_L send activate_fkCalc
+
+//revision 4-1-2004 Jim Albright, Wizard Systems, Inc 386-761-4677
+//    change version to 1.2
+//    Added color to show selected decimal places.
+//    dynamically recalc at new precision.
+
+//revision 3-31-3007 David Martinko, Redeemed Software Co. 248-535-7495
+//    Added ticker tape
+//    Added ability for Calculator to be called as a Prompt_Object
+//    Removed Button SubClass (VDF12 would not compile it)
+//    Cleaned up code.
+
+// Revision 03-19-2019 Michael mullan, Danes Bridge Enterprises 917-277-7983
+// Changed ticker tape to a cjGrid. 
+// Removed out a couple of warnings from 19.1 compiler. 
+
+/////////////////////////////////////////////////////////////////////
+
+Handle ghoCalculator
+
+#Replace fkCalc_label     'Calculator'  //change language as neccessary
+#Replace fkCalc_close_txt 'C&lose && paste'
+#Replace fkCalc_decimal   'Decimal points'
+
+Object fkCalc_view is a modalpanel
+    Move Self to ghoCalculator
+    Set Location to 22 35
+    Property Integer piObj         0
+    Property Integer piFunc        0 // function 1=add, 2=sub, 3=mul, 4=div
+    Property Number  pnAcc         0
+    Property Number  pnMem         0
+    Property Number  pnTempVal1        0
+    Property Number  pnTempVal2        0
+    Property Integer piTempFunction        0
+    Property Integer pbWorkingValue        0
+    Set Label to fkCalc_label // Lommeregner
+    Set Size to 130 167
+    Set Border_Style to Border_Thick
+    Set piMinSize to 130 164
+    Set piMaxSize to 0 408
+
+    Register_Object   num
+    Register_Object   Btn_Equal
+    Register_Function piChanged Returns Integer
+
+
+    Procedure set_func Integer iFunc String sFunc
+        If (iFunc <> 0 and piFunc(Self) <> 0 and piChanged(Num)) Begin
+            Send DoCalc of Btn_Equal
+        End
+        Else If (iFunc <> 0) Begin
+            If (piFunc(Self)=1) Begin
+                Send Add_Item of oTape Msg_None ("+"+String(Value(Num,0)))
+            End
+            Else If (piFunc(Self)=2) Begin
+                Send Add_Item of oTape Msg_None ("-"+String(Value(Num,0)))
+            End
+            Else If (piFunc(Self)=3) Begin
+                Send Add_Item of oTape Msg_None ("*"+String(Value(Num,0)))
+            End
+            Else If (piFunc(Self)=4) Begin
+                Send Add_Item of oTape Msg_None ("/"+String(Value(Num,0)))
+            End
+            Else Begin
+                Send Add_Item of oTape Msg_None (String(Value(Num,0)))
+            End
+        End
+        Set piFunc to iFunc
+        Set pnAcc  to (Value(Num,0))
+        Set piChanged of Num to dfFalse
+        Send Activate of Num
+    End_Procedure
+
+    Procedure set_num Integer iNum
+        Direct_Output channel 9 'ClipBoard:'
+        Writeln iNum
+        Close_Output channel 9
+        Send paste of Num
+    End_Procedure
+
+    Object btn_mc is a Button
+        Set Label    to '&MC'
+        Set Location to 46 4
+        Set Size to 14 25
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set pnMem to 0
+            Send Activate of Num
+        End_Procedure
+    End_Object
+
+    Object btn_paste is a Button
+        Set Label    to fkCalc_close_txt // Luk
+        Set Size     to 14 52
+        Set Location to 46 31
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Integer iDelMod iItem iFile
+            Get Delegation_Mode of (piObj(Self)) to iDelMod
+            Set Delegation_Mode of (piObj(Self)) to no_delegate_or_error
+            Get Current_Item of (piObj(Self)) to iItem
+            Get data_file of (piObj(Self))  iItem to iFile
+            If (iFile) Begin
+                Set Changed_Value of (piObj(Self))   to (Value(Num,0))
+            End
+            Else Begin
+                Set Value         of (piObj(Self))   to (Value(Num,0))
+            End
+            Set Delegation_Mode of (piObj(Self)) to iDelMod
+            Send Close_Panel
+        End_Procedure
+    End_Object
+
+    Object num is a form
+        Property Integer piChanged        0
+        Set Size     to 14 79
+        Set Location to 46 85
+        Set Form_Justification_Mode to (FORM_DISPLAYRIGHT ior FORM_EDITRIGHT)
+        Set peAnchors to anBottomLeft
+
+        Procedure onChange
+            Set piChanged to dfTrue
+            Set pbWorkingValue to 1
+        End_Procedure
+    End_Object
+
+    Object btn_mr is a Button
+        Set Label    to 'M&R'
+        Set Location to 60 4
+        Set Size to 14 25
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set Value of Num to (pnMem(Self))
+            Send Activate of Num
+        End_Procedure
+    End_Object
+
+    Object btn_7 is a Button
+        Set Label    to '7'
+        Set Location to 60 31
+        Set Size to 14 25
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_8 is a Button
+        Set Label    to '8'
+        Set Location to 60 58
+        Set Size to 14 25
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_9 is a Button
+        Set Size to 14 25
+        Set Label    to '9'
+        Set Location to 60 85
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_div is a Button
+        Set Size to 14 25
+        Set Label    to '/'
+        Set Location to 60 112
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Send set_func 4 (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_c is a Button
+        Set Size to 14 25
+        Set Label    to '&C'
+        Set Location to 60 139
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set Value of Num to 0
+            Set pnAcc to 0
+            Send set_func 0 ''
+            Set piTempFunction to 0
+            Set  pnTempVal1 to 0
+            Set  pnTempVal2 to 0
+            Set pbWorkingValue to False
+        End_Procedure
+    End_Object
+
+    Object btn_ms is a Button
+        Set Size to 14 25
+        Set Label    to 'M&S'
+        Set Location to 75 4
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set pnMem to (Value(Num,0))
+            Send Activate of Num
+        End_Procedure
+    End_Object
+
+    Object btn_4 is a Button
+        Set Size to 14 25
+        Set Label    to '4'
+        Set Location to 75 31
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_5 is a Button
+        Set Size to 14 25
+        Set Label    to '5'
+        Set Location to 75 58
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_6 is a Button
+        Set Size to 14 25
+        Set Label    to '6'
+        Set Location to 75 85
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_mul is a Button
+        Set Size to 14 25
+        Set Label    to '*'
+        Set Location to 75 112
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Send set_func 3 (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_ce is a Button
+        Set Size to 14 25
+        Set Label    to 'C&E'
+        Set Location to 75 139
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set Value of Num to 0
+            Send Delete_Data of oTape
+            Send set_func 0 ''
+        End_Procedure
+    End_Object
+
+    Object btn_mp is a Button
+        Set Size to 14 25
+        Set Label    to 'M+'
+        Set Location to 91 4
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set pnMem to (pnMem(Self) + Number(Value(Num,0)))
+            Send Activate of Num
+        End_Procedure
+    End_Object
+    Object btn_1 is a Button
+        Set Size to 14 25
+        Set Label    to '1'
+        Set Location to 91 31
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+    Object btn_2 is a Button
+        Set Size to 14 25
+        Set Label    to '2'
+        Set Location to 91 58
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+    Object btn_3 is a Button
+        Set Size to 14 25
+        Set Label    to '3'
+        Set Location to 91 85
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+    Object btn_sub is a Button
+        Set Size to 14 25
+        Set Label    to '-'
+        Set Location to 91 112
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Send set_func 2 (Label(Self))
+        End_Procedure
+    End_Object
+    Object btn_procent is a Button
+        Set Size to 14 25
+        Set Label    to '%'
+        Set Location to 91 139
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set Value of Num to (pnAcc(Self) * Number(Value(Num,0)) / 100.0)
+            Send Activate
+        End_Procedure
+    End_Object
+
+    Object btn_mm is a Button
+        Set Size to 14 25
+        Set Label    to 'M-'
+        Set Location to 105 4
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Set pnMem to (pnMem(Self) - Number(Value(num,0)))
+            Send Activate of Num
+        End_Procedure
+    End_Object
+    Object btn_0 is a Button
+        Set Size to 14 25
+        Set Label    to '0'
+        Set Location to 105 31
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+    Object btn_pm is a Button
+        Set Size to 14 25
+        Set Label    to '-/+'
+        Set Location to 105 58
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Set Value of Num to (Number(Value(Num,0) * -1.0))
+        End_Procedure
+    End_Object
+
+    Object btn_dec is a Button
+        Set Size to 14 25
+        Set Label to "."
+        Set Location to 105 85
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send set_num (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_add is a Button
+        Set Size to 14 25
+        Set Label    to '+'
+        Set Location to 105 112
+        Set peAnchors to anBottomLeft
+        Procedure onClick
+            Send Activate
+            Send set_func 1 (Label(Self))
+        End_Procedure
+    End_Object
+
+    Object btn_equal is a Button
+        Set Size to 14 25
+        Set Label    to '='
+        Set Location to 105 139
+        Set peAnchors to anBottomLeft
+
+        Procedure DoCalc
+            Number nN1 nN2 nN3
+            Send Activate
+            Get pnAcc to nN1 //added jra 4-1-2004
+            Get Value of Num to nN2 //added jra 4-1-2004
+            Set pnTempVal1 to nN1
+            Set pnTempVal2 to nN2
+            If (piFunc(Self)=1) Begin
+                Move (nN1 + nN2) to nN1 //added jra 4-1-2004
+                Send Add_Item of oTape Msg_None ("+ "+String(nN2))
+            End
+            Else If (piFunc(Self)=2) Begin
+                Move (nN1 - nN2) to nN1 //added jra 4-1-2004
+                Send Add_Item of oTape Msg_None ("- "+String(nN2))
+            End
+            Else If (piFunc(Self)=3) Begin
+                Move (nN1 * nN2) to nN1 //added jra 4-1-2004
+                Send Add_Item of oTape Msg_None ("* "+String(nN2))
+            End
+            Else If (piFunc(Self)=4) Begin
+                Move (nN1 / nN2) to nN1 //added jra 4-1-2004
+                Send Add_Item of oTape Msg_None ("/ "+String(nN2))
+            End
+
+            Set Value of Num to nN1 //added jra 4-1-2004
+            Set piTempFunction to (pifunc(Self))
+            Send set_func 0 ''
+        End_Procedure
+
+        Procedure OnClick
+            Send DoCalc
+            Send Add_Item of oTape Msg_None ("= "+String(Value(Num)))
+            Send Add_Item of oTape Msg_None ""
+        End_Procedure
+        
+        
+    End_Object
+
+    Object txt is a TextBox
+        Set Location to 119 4
+        Set Label to "fkCalc ver 2.3"
+        Set peAnchors to anBottomLeft
+    End_Object
+
+    Object oTape is a cCJGrid
+        Set Size to 45 161
+        Set Location to 1 4
+        Set pbShowHeader to False
+
+        Object oCJGridColumn1 is a cCJGridColumn
+            Set piWidth to 268
+            Set psCaption to "column"
+            Set peTextAlignment to xtpAlignmentRight
+        End_Object
+        
+        Procedure Add_Item String sVoid String sValue
+            
+        End_Procedure
+        
+        Procedure Add_Item String sVoid String sValue
+             Handle hoDataSource
+            tDataSourceRow[] TheDataSource
+            tDataSourceRow TheRow
+            Integer i
+            
+            Get phoDataSource to hoDataSource
+            Get DataSource of hoDataSource to TheDataSource
+            Move (SizeOfArray(TheDataSource)) to i
+             If (Pos(" -", sValue)<>0) Begin
+                Move (Replace(" -", sValue, " (-")) to sValue
+                Append sValue ")"
+            End
+            If ((Pos(" ", sValue)=0) and (Pos("-", sValue)=1)) Begin
+                Move (Replace("-", sValue, "(-")) to sValue
+                Append sValue ")"
+            End
+            Move sValue to thedatasource[i].sValue[0]  
+            Send InitializeData TheDataSource
+        End_Function
+        
+        Procedure Delete_Data 
+            Handle hoDataSource
+            tDataSourceRow[] TheDataSource
+            Send InitializeData TheDataSource
+            
+        End_Procedure
+    End_Object
+
+    Procedure Popup_Group
+        Forward Send Popup_Group
+        Send Activate of Num
+    End_Procedure
+
+    Procedure Popup
+        Integer iDelMod iItem
+        String sValue
+        Set piObj of fkCalc_view to (Focus(DeskTop))
+        Get Delegation_Mode of (piObj(Self)) to iDelMod
+        Set Delegation_Mode of (piObj(Self)) to no_delegate_or_error
+        Get Current_Item of (piObj(Self)) to iItem
+        Get Value of (piObj(Self)) iItem to sValue
+        Set Value of Num to sValue
+        Set Delegation_Mode of (piObj(Self)) to iDelMod
+        Forward Send Popup
+    End_Procedure
+
+    On_Key KEY_ESCAPE      Send Close_Panel
+    On_Key KEY_ENTER       Send DoCalc of Btn_Equal
+    On_Key KEY_EQUAL       Send DoCalc of Btn_Equal
+    On_Key KEY_PLUS        Send KeyAction of Btn_Add
+    On_Key 1067            Send KeyAction of Btn_Add // laptop +
+    On_Key KEY_MINUS       Send KeyAction of Btn_Sub
+    On_Key KEY_SLASH       Send KeyAction of Btn_Div
+    On_Key 42              Send KeyAction of Btn_Mul     // *
+    On_Key KEY_SHIFT+key_8 Send KeyAction of Btn_Mul     // *
+    On_Key 37              Send KeyAction of Btn_Procent // %
+    On_Key KEY_SHIFT+key_5 Send KeyAction of Btn_Procent // %
+    On_Key KEY_P           Send KeyAction of Btn_Procent
+    On_Key KEY_C           Send KeyAction of Btn_C
+    On_Key KEY_E           Send KeyAction of Btn_CE
+    On_Key KEY_I           Send KeyAction of Btn_Paste
+    On_Key KEY_L           Send KeyAction of Btn_Paste
+    On_Key KEY_M           Send KeyAction of Btn_MC
+    On_Key KEY_R           Send KeyAction of Btn_MR
+    On_Key KEY_S           Send KeyAction of Btn_MS
+    On_Key KEY_T           Send KeyAction of Btn_MP
+    On_Key KEY_F           Send KeyAction of Btn_PM
+End_Object
+
+// left for backwards compatability... No longer needed.
+Procedure activate_fkCalc DESKTOP  //added DESKTOP for vdf9... jra 8/15/2003
+    Send Popup of fkCalc_view
+End_Procedure

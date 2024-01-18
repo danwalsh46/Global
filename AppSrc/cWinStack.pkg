@@ -1,0 +1,22 @@
+// cWinStack.pkg
+// By Sergey V. Natarov (senatc@postman.ru)
+//
+
+Class cWinStack Is an Array
+    Procedure Construct_Object
+        Forward Send Construct_Object
+    End_Procedure
+    Procedure Set Stack_Value String sValue
+        Integer iCount
+        Get Item_Count To iCount
+        Set Value Item iCount To sValue
+    End_Procedure
+    Function Stack_Value Returns String
+        String sValue
+        Integer iCount
+        Get Item_Count To iCount
+        Get Value Item (iCount-1) To sValue
+        Send Delete_Item (iCount-1)
+        Function_Return sValue
+    End_Procedure
+End_Class

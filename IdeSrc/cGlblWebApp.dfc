@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblWebApp is a cWebApp
+    Set ClassPackage To "cGlblWebApp.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,45 @@
+//AB/ CLASSDEF
+Class FXImage Is a Container3d ABBitmap BitmapMixin DefineBitmapMixin
+    Inherit
+
+    Set ClassPackage to FXImage.pkg
+
+    Set Control_Type to ctBase
+    Set Floating_Menu_Id to BitmapFloater.obj
+    Set ObjectNameMask To "oFXImage<count>"
+
+    Property Mode Border_Style Border_None Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge
+    Property String Bitmap ""
+
+    Property No_Execute Boolean AutoSizeState False
+    Property No_Execute Boolean pbScrollBarState False
+    Property No_Execute Integer piZoomFactor 100
+    Property No_Execute Mode pmVertAlignment IM_VALIGN_NONE IM_VALIGN_NONE IM_VALIGN_TOP IM_VALIGN_BOTTOM IM_VALIGN_CENTER
+    Property No_Execute Mode pmHorzAlignment IM_HALIGN_NONE IM_HALIGN_NONE IM_HALIGN_LEFT IM_HALIGN_RIGHT IM_HALIGN_CENTER
+    Property No_Execute Mode pmStretchMode IM_STRETCH_NONE IM_STRETCH_Y IM_STRETCH_X IM_STRETCH_X_Y IM_STRETCH_X_RATIO IM_STRETCH_Y_RATIO IM_STRETCH_FULL IM_STRETCH_NONE
+    Property No_Execute Boolean useDFpath TRUE
+
+    Property NO_VISIBLE NO_GENERATE Color TextColor 0
+    Property NO_VISIBLE NO_GENERATE Color Color clBtnFace
+    Property NO_VISIBLE NO_GENERATE String Initial_Folder ""
+    Property NO_VISIBLE NO_GENERATE Mode Bitmap_Style 0 0
+    Property NO_VISIBLE NO_GENERATE Integer Help_Id
+End_Class
+
+Class dbFXImage Is a dbBitmap
+    Set ClassPackage to FXImage.pkg
+    Inherit
+    Property Mode Border_Style Border_None Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge
+    Property No_Execute Boolean AutoSizeState False
+    Property No_Execute Boolean pbScrollBarState False
+    Property No_Execute Integer piZoomFactor 100
+    Property No_Execute Mode pmVertAlignment IM_VALIGN_NONE IM_VALIGN_NONE IM_VALIGN_TOP IM_VALIGN_BOTTOM IM_VALIGN_CENTER
+    Property No_Execute Mode pmHorzAlignment IM_HALIGN_NONE IM_HALIGN_NONE IM_HALIGN_LEFT IM_HALIGN_RIGHT IM_HALIGN_CENTER
+    Property No_Execute Mode pmStretchMode IM_STRETCH_NONE IM_STRETCH_Y IM_STRETCH_X IM_STRETCH_X_Y IM_STRETCH_X_RATIO IM_STRETCH_Y_RATIO IM_STRETCH_FULL IM_STRETCH_NONE
+    Property No_Execute Boolean useDFpath TRUE
+
+    Property NO_VISIBLE NO_GENERATE Color Color clBtnFace
+    Property NO_VISIBLE NO_GENERATE String Initial_Folder ""
+    Property NO_VISIBLE NO_GENERATE Mode Bitmap_Style 0 0
+    Property NO_VISIBLE NO_GENERATE Integer Help_Id
+End_Class

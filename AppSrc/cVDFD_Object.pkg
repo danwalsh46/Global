@@ -1,0 +1,43 @@
+
+// A generic base class for build other classes upon //
+
+Use cVDFD_ClassNameArray_Mixin.pkg
+Use cVDFD_RegisterPropertyHandle_Mixin.pkg
+
+Class cVDFD_Object Is A cObject
+
+    Import_Class_Protocol cVDFD_ClassNameArray_Mixin
+    Import_Class_Protocol cVDFD_RegisterPropertyHandle_Mixin
+  
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        Send Define_VDFD_ClassNameArray_Mixin
+        Send Define_VDFD_RegisterPropertyHandle_Mixin
+        
+        Send AddClassName "cObject"  //add classname
+        Send AddClassName "!$"  //add classname
+    
+        // Define new Properties:
+    
+        // Create child objects:
+    
+        // Set property values:
+    
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        String sName
+        Get Object_Label to sName
+        If (sName = "OOBJECT") Set Name to "oVDFD_Object"
+
+        // Add your code that needs to be executed at the end of the object construction here:
+
+    End_Procedure
+
+    // Create and augment procedures and functions
+
+End_Class
+
+// End of File: cVDFD_Object.pkg

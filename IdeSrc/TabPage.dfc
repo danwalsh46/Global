@@ -1,0 +1,8 @@
+//AB/ CLASSDEF
+Class TabPage is a AbstractTabPage ABTabPage ABTabPage_Mixin Define_ABTabPage_Mixin
+    Set Control_Type To ctBASE
+    Set Floating_Menu_Id TO TabFloater.obj
+    Set ObjectNameMask To "oTabPage<count>"
+    Set ClassHelpName To "TabPage"
+    Inherit
+End_Class

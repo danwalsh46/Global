@@ -1,0 +1,15 @@
+//AB/ CLASSDEF
+Class dbTabDialogView is a AbstractTabDialog ABTabDialog ABdbTabDialogView_Mixin Define_ABdbTabDialogView_Mixin
+    Set Control_Type     To ctDataContainer
+    Set Floating_Menu_Id To TabFloater.obj
+    Set TabPageClassName To "dbTabView"
+    Set ObjectNameMask   To "oDbTabDialogView<count>"
+    Set ClassHelpName    To "dbTabDialogView"
+    Set ClassCETV        To 13                // use TreeView Image #13 (1-based offset)
+    Set ClassPackage     To "dfTabDlg.pkg"
+
+    Inherit
+
+    Property No_Visible No_Generate Integer Server
+    Property No_execute Mode Rotate_Mode RM_Ring RM_None RM_Ring RM_Rotate_in_Ring RM_Rotate
+End_Class

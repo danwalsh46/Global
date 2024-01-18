@@ -1,0 +1,7 @@
+//AB/ CLASSDEF
+
+Class cGlblTabDialog is a TabDialog
+    Set ClassPackage To "cGlblTabDialog.pkg"
+    Set TabPageClassName To "cGlblTabPage"
+    Inherit
+End_Class

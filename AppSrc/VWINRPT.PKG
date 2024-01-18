@@ -1,0 +1,108 @@
+//****************************************************************************//
+//                                                                            //
+// File Name: VWinRpt.Pkg                                                     //
+// Purpose:   To allow the VPE Preview to start immediately.                  //
+// Author:    Carl Schaer                                                     //
+//            713-270-4000                                                    //
+//            carls@hcss.com                                                  //
+//                                                                            //
+//****************************************************************************//
+
+Define PRINT_TO_ASCII_FILE for 10
+
+Use Dfwinrpt.pkg
+Use VpeRepKy
+
+Class Vpe_WinReport Is A WinReport
+
+   Procedure Construct_Object
+      Forward Send Construct_Object
+      // pShowStatusPanel effects the VDF status panel with PRINT_TO_WINDOW.
+      // With the default of False, the VPE preview is launched immediately and
+      // the VDF status panel is not shown, with the status messages going to
+      // the VPE preview status bar.
+      Property Integer pShowStatusPanel Public False
+   End_Procedure
+
+   // If printing to a window cancel the status panel procedures since
+   // the output goes to the window immediately.
+
+   Function ShouldShowStatus Returns Integer
+      Local Integer iRetVal
+      Move (Output_Device_Mode(Self) <> PRINT_TO_WINDOW Or ;
+            pShowStatusPanel(Self)) to iRetVal
+      Function_Return iRetVal
+   End_Function
+
+   Procedure Update_Status String sVal
+      If (ShouldShowStatus(Self)) Forward Send Update_Status sVal
+      Else Send Update_Status to WinprintID sVal
+   End_Procedure
+
+   Procedure Start_Status
+      If (ShouldShowStatus(Self)) Forward Send Start_Status
+   End_Procedure
+
+   Procedure Resume_Status
+      If (ShouldShowStatus(Self)) Forward Send Resume_Status
+   End_Procedure
+
+   Procedure End_Status
+      If (ShouldShowStatus(Self)) Forward Send End_Status
+   End_Procedure
+
+   Function Report_Interrupt Returns Integer
+      Local Integer iRetVal
+      If (ShouldShowStatus(Self)) ;
+         Get Halt_VPE_Report of (oVPE_Print_Cancel_Rpt(Self)) to iRetVal
+      Function_Return iRetVal
+   End_Function
+
+   Procedure Ending_Main_Report
+      Forward Send Ending_Main_Report
+      If (Cancelled_State(Self)) Begin
+         Send CloseDoc to WinprintID
+         If (Output_Device_Mode(Self) = PRINT_TO_ASCII_FILE) ;
+            Send CloseAsciiOutput to WinprintID
+      End
+   End_Procedure
+
+   Function Initialize_Vpe Returns Integer
+      Local Integer iRetVal
+      //
+      move vpeWinprintID to WinprintID
+      //
+      Set pPreviewOnOpen of WinprintID to (Not(ShouldShowStatus(Self)) And ;
+                                           Output_Device_Mode(Self) <> PRINT_TO_ASCII_FILE)
+      If (Output_Device_Mode(Self) = PRINT_TO_ASCII_FILE) Get SetupAsciiOutput of WinprintID to iRetVal
+      Function_Return iRetVal
+   End_Function
+
+   Procedure Run_Report
+      If (Initialize_Vpe(Self) = 0) Forward Send Run_Report
+   End_Procedure
+
+   Procedure PrintReport
+      If (Output_Device_Mode(Self) = PRINT_TO_ASCII_FILE) ;
+         Send DFPrintToAscii to WinprintID
+      Else Forward Send PrintReport
+   End_Procedure
+
+   Function Handle_Report_Line Returns Integer
+      Local Integer iRetVal
+      If (pPreviewOnOpen(WinprintID)) ;
+         Get IsReportCancelled of WinprintID to iRetVal
+      If (iRetVal <> RPT_CANCEL) Forward Get Handle_Report_Line to iRetVal
+      Function_Return iRetVal
+   End_Function
+
+   Procedure DFNew_Page Integer Cols
+      Local Integer iRetVal iCols
+      If (Initialize_VPE(Self) = 0) Begin
+         If (Num_Arguments = 0) Move (Print_Columns(Main_Report_id(Self))) to iCols
+         Else Move Cols to iCols
+         Forward Send DFNew_Page iCols
+      End
+   End_Procedure
+
+End_Class   // VPE_WinReport

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbGrid is a dbGrid
+    Set ClassPackage To "cGlblDbGrid.pkg"
+    Inherit
+End_Class

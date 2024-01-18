@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cXmlHttpTransfer1 is a cXmlHttpTransfer
+    Set ClassPackage To "cXmlHttpTransfer1.pkg"
+    Inherit
+End_Class

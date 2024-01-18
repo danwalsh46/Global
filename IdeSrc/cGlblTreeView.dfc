@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblTreeView is a TreeView
+    Set ClassPackage To "cGlblTreeView.pkg"
+    Inherit
+End_Class

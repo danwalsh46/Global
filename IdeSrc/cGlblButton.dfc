@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblButton is a Button
+    Set ClassPackage To "cGlblButton.pkg"
+    Inherit
+End_Class

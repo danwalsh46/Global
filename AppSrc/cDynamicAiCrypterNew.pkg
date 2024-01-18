@@ -1,0 +1,76 @@
+// Example:
+//
+// Use cDynamicAiCrypter.pkg
+//
+// Get CreateHashCode sPassword sData to sHashCode
+
+
+Use cCryptographer.pkg
+
+
+Class cDynamicAiCrypter is a cCryptographer
+	
+    Function StringToMD5Hash String sData Returns String
+        Handle hHash hProv
+        Integer iResult iProvider
+        String sHash
+        
+        Get piProvider to iProvider
+        Get AcquireContext iProvider to hProv
+        
+        Get CreateHash hProv CALG_MD5 to hHash
+        If hHash Begin
+            Get HashData hHash sData to iResult
+            If iResult Begin
+                
+                Get HashValue hHash to sHash
+                Get StrToHex sHash to sHash
+                Move (Lowercase(sHash)) to sHash
+            End
+            Get DestroyHash hHash to iResult
+        End
+        
+        Function_Return sHash
+    End_Function
+
+    
+    Function CharToHex Integer iChar Returns String
+        String sHex
+        Move (Uppercase(iChar)) to iChar
+        Move (Mid("0123456789ABCDEF",1,Integer(iChar/16+1))) to sHex
+        Move (sHex-Mid("0123456789ABCDEF",1,Mod(iChar,16)+1)) to sHex
+        Function_Return sHex
+    End_Function // CharToHex
+    
+    
+    Function StrToHex String sString Returns String
+        Integer iCounter
+        String sHex sChar
+    
+        For iCounter from 1 to (Length(sString))
+            Get CharToHex (Ascii(Mid(sString,1,iCounter))) to sChar
+            Move (sHex+sChar) to sHex
+        Loop // For iCounter From 1 To (Length(sString))
+        Function_Return sHex
+    End_Function // StrToHex
+
+	
+    Function CreateHashCode String sPassWord String sData Returns String
+        String sHashString
+
+        Get HashCode sPassWord sData to sHashString
+        Function_Return sHashString
+    End_Function
+End_Class
+
+
+
+// -------------------------------------------------------------------------
+// Create object to ensure availability
+// -------------------------------------------------------------------------
+Procedure CreateCrypter For Desktop
+    Object oCrypter is a cDynamicAiCrypter
+    End_Object
+End_Procedure
+Send CreateCrypter Of Desktop
+

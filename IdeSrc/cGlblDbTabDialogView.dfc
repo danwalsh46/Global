@@ -1,0 +1,7 @@
+//AB/ CLASSDEF
+
+Class cGlblDbTabDialogView is a dbTabDialogView
+    Set ClassPackage To "cGlblDbTabDialogView.pkg"
+    Set TabPageClassName To "cGlblDbTabView"
+    Inherit
+End_Class

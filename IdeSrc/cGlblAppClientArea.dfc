@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblAppClientArea is a AppClientArea
+    Set ClassPackage To "cGlblAppClientArea.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,47 @@
+//***************************************************************************
+//*
+//* Class:        cGlblButton
+//* Package Name: cGlblButton.pkg
+//*
+//***************************************************************************
+
+Use DFAllEnt.pkg
+Use NDA_Function_Mixin.Pkg
+//Use cWinToolTip.Pkg
+
+Class cGlblButton is a Button
+
+//    Import_Class_Protocol cWinToolTip_mx
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+        //
+        Send DoControlDataAwareFKeys
+        // cWindowsEx tooltip
+//        Send Define_cWinToolTip
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+//        Set pbClassEnabledHandleType    To True  // True=Default
+//        Set pbClassDisabledHandleType   To True  // True=Default
+//        Set pbClassEntryStateHandleType To True  // True=Default
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+    IMPORT_CLASS_PROTOCOL NDA_Function_Mixin
+
+    //    ***SYNTAX #1 (Use either 1 or 2)
+    Procedure End_Construct_Object
+        // Programmer can turn this behavior off in the object:
+        If (pbAddDataAwareFKeys(Self)) Begin
+            //If (IsInDataAwareContainer(Self)) Send Add_DataAwareKeys
+        End
+        Forward Send End_Construct_Object
+    End_Procedure
+End_Class // cGlblButton

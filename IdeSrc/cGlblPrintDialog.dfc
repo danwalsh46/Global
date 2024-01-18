@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblPrintDialog is a PrintDialog
+    Set ClassPackage To "cGlblPrintDialog.pkg"
+    Inherit
+End_Class

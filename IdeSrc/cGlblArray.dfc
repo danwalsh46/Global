@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblArray is a Array
+    Set ClassPackage To "cGlblArray.pkg"
+    Inherit
+End_Class

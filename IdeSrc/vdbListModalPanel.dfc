@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class vdbListModalPanel is a dbModalPanel
+    Inherit
+    Set ClassPackage To "vdbListModalPanel.pkg"
+End_Class

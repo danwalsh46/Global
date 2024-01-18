@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class cdbColorForm Is a dbForm
+    Set ClassPackage to "cdbColorForm.pkg"
+    Inherit
+End_Class

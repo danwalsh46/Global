@@ -1,0 +1,17 @@
+//AB/ CLASSDEF
+Class dbTrackBar is a TrackBar dbTrackBar dbTrackbarMixin DefinedbTrackbarMixin
+    Set Control_Type      To ctDataAware
+    Set Entry_Item_Object To True
+    Set Floating_Menu_Id  To EntryFormFloater.obj
+    Set Item_Based_Object To True
+    Set ObjectNameMask    To "oDbTrackbar<count>"
+    Set ClassHelpName     To "dbTrackBar"
+    Set ClassCETV         To 24                // use TreeView Image #24 (1-based offset)
+    Set ClassPackage      To "dbTrckBr.pkg"
+
+    inherit
+
+    Property No_Visible No_Generate Integer Server
+    //Property No_Visible No_Generate Integer ServerFile 0
+    Property No_Visible No_Generate Item String Data_Element ""
+End_Class

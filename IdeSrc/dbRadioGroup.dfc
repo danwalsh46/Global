@@ -1,0 +1,15 @@
+//AB/ CLASSDEF
+Class dbRadioGroup Is A AbstractdbContainer dbRadioGroup dbRadioGroupMixin DefinedbRadioGroupMixin
+    Set Drop_Allowed      To (TD_DRAG_CONTROL + TD_DRAG_NONVISUAL)
+    Set Item_Based_Object To False
+    Set Entry_Item_Object To True
+    Set ObjectNameMask    To "oDbRadioGroup<count>"
+    Set ClassHelpName     To "dbRadioGroup"
+    Set ClassCETV         To 19                // use TreeView Image #19 (1-based offset)
+    Set ClassPackage      To "dfEnRad.pkg"
+
+    Inherit
+
+    Property String Label // Text label that appears for this group.
+    Property Always_Generate Complex Size 40 80
+End_Class

@@ -1,0 +1,27 @@
+//***************************************************************************
+//*
+//* Class:        <CLASS>
+//* Package Name: <CLASS-PKG>
+//*
+//***************************************************************************
+
+Use <SUPERCLASS-PKG>
+
+Class <CLASS> is a <SUPERCLASS>
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+End_Class // <CLASS>
+

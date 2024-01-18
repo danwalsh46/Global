@@ -1,0 +1,37 @@
+// cWindowsEx Framework Compatibility package
+// By SVN
+// 
+
+#IF (!@ < 80)
+    // ***ANCHORS
+    Define anNone            For 0
+    Define anTop             For 1
+    Define anBottom          For 2
+    Define anTopBottom       For 3 
+    Define anLeft            For 4 
+    Define anTopLeft         For 5 
+    Define anBottomLeft      For 6 
+    Define anTopBottomLeft   For 7
+    Define anRight           For 8 
+    Define anTopRight        For 9 
+    Define anBottomRight     For 10
+    Define anTopBottomRight  For 11
+    Define anLeftRight       For 12 
+    Define anTopLeftRight    For 13 
+    Define anBottomLeftRight For 14
+    Define anAll             For 15
+    // Grid
+    Define rcNone            For 0
+    Define rcLastColumn      For 1
+    Define rcAll             For 2
+    Define rcSelectedColumn  For 3
+    Procedure Set peAnchors Integer iA
+    End_Procedure
+    Procedure Set piMinSize Integer iY Integer iX 
+    End_Procedure
+    // *** SYSCONF
+    #REPLACE SYSCONF_RUNTIME_NAME         |CI11
+    #REPLACE SYSCONF_UTC_TIME_OFFSET      |CI12
+    //
+    Define dferr_program   For 300
+#ENDIF

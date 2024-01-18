@@ -1,0 +1,12 @@
+//AB/ CLASSDEF
+Class Array is a AbstractNonVisualContainer
+    Set peClassLibrary To clCommon             // this class belongs to all class libraries
+    Set ObjectNameMask To "oArray<count>"
+    Set ClassHelpName  To "Array"
+    Set ClassCETV      To 30                   // use TreeView Image #30 (1-based offset)
+    Set ClassPackage   To "Windows.pkg"
+
+    Inherit
+
+    Property No_Visible String  Bitmap "array.bmp"
+End_Class  // Array

@@ -1,0 +1,84 @@
+Use DfAllEnt.pkg
+//Use OldDFAllent.pkg
+//Use Dftypes.pkg    // Old struct "Type" support and common types - use Structs and tWinXxxx struct definitions
+
+//Use Dftable.pkg    // dbGrid replaced with cCJGrid 
+//Use Dfsellst.pkg   // dbList replaced with cCJPromptList
+
+//Use Dfmenu.pkg     // old menu commands, replaced with command bars
+//Use Dfdeomnu.pkg   // ViewPopupMenu, DEOViewPopupMenu, replaced with command bars
+
+//Use Dftxtwin.pkg   // dbEdit replaced with cDbTextEdit
+//Use cStatusbar.pkg // cStatusBar replaced with command bars
+
+//Use cToolbar.pkg   // cToolbar replaced with command bars
+
+// these are from dfallrpt.pkg (these are all very old)
+//Use DfWinRpt.pkg         // WinReport - WinPrint 1, replaced with cWinReport2
+//Use WinQl32.pkg          // WinQlReport which is another name for CrystalReport
+//Use CrystalReport.pkg    // CrystalReport - original Crystal Reports class. Use DataFlex Reports
+
+//Use dafmac.pkg     // old character mode DAF commands and things. Uses func.pkg, also obsolete
+
+//Use OldFmacCommands.pkg
+//
+Use cGlblFunc.pkg
+Use cGlblApplication.pkg
+Use cGlblPanel.pkg
+Use cGlblDbView.pkg
+Use cGlblWizard.pkg
+Use cGlblDataDictionary.pkg
+Use cGlblTreeView.pkg
+//
+Use MessageBox.dg
+//Use cGlblClientArea.pkg
+//Use cGlblClientWebService.pkg
+//Use cGlblWinReport2.pkg
+//Use cGlblTabPage.pkg
+//Use cGlblDbTabPage.pkg
+//Use cGlblDbTabView.pkg
+//Use cGlblEdit.pkg
+//Use cGlblDbEdit.pkg
+//Use cGlblGroup.pkg
+//Use cGlblRadioGroup.pkg
+//Use cGlblDbGroup.pkg
+//Use cGlblDbContainer3d.pkg
+//Use cGlblContainer3d.pkg
+//Use cGlblTabDialog.pkg
+//Use cGlblDbTabDialog.pkg
+//Use cGlblDbTabDialogView.pkg
+//Use cGlblDbRadioGroup.pkg
+//Use cGlblButton.pkg
+//Use cGlblCheckBox.pkg
+//Use cGlblDbCheckBox.pkg
+//Use cGlblSpinForm.pkg
+//Use cGlblDbSpinForm.pkg
+//Use cGlblLineControl.pkg
+//Use cGlblRadio.pkg
+//Use cGlblComboForm.pkg
+//Use cGlblDbComboForm.pkg
+//Use cGlblForm.pkg
+//Use cGlblDbForm.pkg
+//Use cGlblDbBitmap.pkg
+//Use cGlblBitmapContainer.pkg
+//Use cGlblDbGrid.pkg
+//Use cGlblGrid.pkg
+//Use cGlblList.pkg
+//Use cGlblDbList.pkg
+//Use cGlblTextbox.pkg
+//Use cGlblTrackBar.pkg
+//Use cGlblDbTrackBar.pkg
+//Use cGlblBusinessProcess.pkg
+//Use cGlblOpenDialog.pkg
+//Use cGlblSaveAsDialog.pkg
+//Use cGlblFontDialog.pkg
+//Use cGlblPrintDialog.pkg
+//Use cGlblArray.pkg
+//Use cGlblSet.pkg
+//Use cGlblDfTimer.pkg
+//Use cGlblProgressBar.pkg
+//Use cGlblAnimation.pkg
+//Use cGlblImageList.pkg
+//Use cGlblColorDialog.pkg
+//Use cGlblMapiHandler.pkg
+//Use cGlblDbModalPanel.pkg

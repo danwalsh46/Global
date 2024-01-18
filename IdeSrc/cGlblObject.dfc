@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblObject is a cObject
+    Set ClassPackage To "cGlblObject.pkg"
+    Inherit
+End_Class

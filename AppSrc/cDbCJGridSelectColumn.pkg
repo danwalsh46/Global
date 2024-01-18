@@ -1,0 +1,91 @@
+Use cdbCJGridColumn.pkg
+
+Class cDbCJGridSelectColumn is a cDbCJGridColumn
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        
+        {DesignTime = False}
+        Property RowID[] prwSelectedRecords
+
+        Set pbCheckbox to True
+
+    End_Procedure
+
+    
+    // Returns a list of RowIDs for the selected rows.
+    Function SelectedRecords Returns RowID[]
+        RowID[] rwSelectedRows
+        Get prwSelectedRecords to rwSelectedRows
+        Function_Return rwSelectedRows
+    End_Function
+
+    
+    {Visibility = Private}
+    Function SearchSelectedRowId RowID rwA RowID rwB Returns Integer
+        If (IsSameRowID(rwA, rwB)) Function_Return (EQ)
+        Function_Return (NE)
+    End_Function
+    
+    
+    Procedure OnSetCalculatedValue String ByRef sValue
+        RowID[] rwSelected
+        RowID rwCurrent
+        Integer iFoundItem iFileNumber
+        Handle hDDO
+        Forward Send OnSetCalculatedValue (&sValue)
+        Get prwSelectedRecords to rwSelected
+        Delegate Get Server to hDDO
+        If (hDDO <> 0) Begin
+            Get Main_File of hDDO to iFileNumber
+            If (iFileNumber <> 0) Begin
+                Move (GetRowID(iFileNumber)) to rwCurrent    
+            End
+        End
+        Move (SearchArray(rwCurrent, rwSelected, Self, RefFunc(SearchSelectedRowId))) to iFoundItem
+        If (iFoundItem = -1) Begin
+            Get CheckedStateToValue False to sValue
+        End
+        Else Begin
+            Get CheckedStateToValue True to sValue 
+        End
+    End_Procedure
+    
+    
+    Procedure OnEndEdit String sOldValue String sNewValue
+        RowID[] rwSelected
+        RowID rwCurrent
+        Integer iFoundItem
+        Boolean bSelected
+        Handle hDDO
+        Forward Send OnEndEdit sOldValue sNewValue
+        Get prwSelectedRecords to rwSelected
+        Delegate Get Server to hDDO
+        If (hDDO <> 0) Begin
+            Get CurrentRowId of hddo to rwCurrent
+        End
+        Move (SearchArray(rwCurrent, rwSelected, Self, RefFunc(SearchSelectedRowId))) to iFoundItem
+        Get ValueToCheckedState sNewValue to bSelected
+        If bSelected Begin
+            If (iFoundItem = -1) Begin
+                Move (SizeOfArray(rwSelected)) to iFoundItem
+                Move rwCurrent to rwSelected[iFoundItem]
+                Set prwSelectedRecords to rwSelected
+            End
+        End
+        Else Begin
+            If (iFoundItem <> -1) Begin
+                Move (RemoveFromArray(rwSelected, iFoundItem)) to rwSelected
+                Set prwSelectedRecords to rwSelected
+            End
+        End
+    End_Procedure
+
+
+    Procedure OnCreateColumn
+        RowID[] rwTom
+        Forward Send OnCreateColumn
+        Set prwSelectedRecords to rwTom
+    End_Procedure
+    
+End_Class

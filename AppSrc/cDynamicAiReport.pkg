@@ -1,0 +1,877 @@
+// ************************************************************************* //
+// **                                                                     ** //
+// ** File       : cDynamicAiReport.pkg                                   ** //
+// **                                                                     ** //
+// ** Author     : Ronald Zwiers                                          ** //
+// **            : Data Access Europe                                     ** //
+// **            : May 2009                                               ** //
+// **                                                                     ** //
+// ** Purpose    : This package contains the class to enable the          ** //
+// **              integration of Dynamic AI reports into VDF.            ** //
+// **                                                                     ** //
+// ** 2009-10-09 : Fixed bug where sFreeParameter was hashed when filters ** //
+// **              where applied, instead of sFilterHash                  ** //
+// ************************************************************************* //
+Use UI
+
+Use Windows.pkg
+Use DFClient.pkg
+Use cIeFrame.pkg
+Use cDynamicAiCrypter.pkg
+
+// This struct contains the data per filter column.
+// A Dynamic AI Report can contain multiple filters.
+#IFNDEF _STRUCT_DAIFILTER
+Struct DAIFILTER
+    String  sColumnName
+    String  sFromValue
+    String  sToValue
+    Boolean bHidden
+End_Struct
+#ENDIF
+
+Class cDynamicAiReport is a cComWebBrowser
+    
+    Procedure OnCreate
+        Forward Send OnCreate
+        // Navigate to a blank page as soon as the object is created.
+        Send ComNavigate "about:blank" 0 0 0 0
+    End_Procedure
+    
+    Procedure Construct_Object
+        
+        Forward Send Construct_Object
+        
+        // Determines whether the library uses ticket authentication
+        // or plain urls. When using ticket authentication psRunUsername
+        // must be provided, and when using plain urls a username and 
+        // password will have to be provided (server and enterprise editions).
+        { Category="Dynamic AI" }
+        Property Boolean pbUseTicketAuthentication True
+
+        // Allow or disallow column based actions (not yet implemented)
+        { Category="Dynamic AI" }
+        Property Boolean pbAllowColumnBasedActions True
+        
+        // Allow or disallow ad hod customization of a report
+        { Category="Dynamic AI" }
+        Property Boolean pbAllowAdHocCustomizing True
+        
+        // Indicates a change of repository (set by ChangeRepository)
+        // Used by the OnComDocumentComplete event.
+        { Visibility=Private }
+        Property Integer piRepositoryChanged
+        
+        // Indicates whether a report ran (set by DoRunDynamicAiReport)
+        // Used by the OnComDocumentComplete event.
+        { Visibility=Private }
+        Property Boolean pbReportRan
+        
+        // Perform a repository change before each report view
+        { Category="Dynamic AI" }
+        Property Boolean pbChangeRepository True
+        
+        // Username to run the report
+        { Category="Dynamic AI" }
+        Property String psRunUsername
+
+        // Username to logon to Dynamic AI
+        { Category="Dynamic AI" }
+        Property String psUsername
+
+        // Password to use
+        { Category="Dynamic AI" }
+        Property String psPassword
+
+        // Repository to use
+        { Category="Dynamic AI" }
+        Property String psRepository "LCLDNMC"
+
+        // Repository Initialized, set this to False to 
+        // force a repository change before a report run.
+        { Visibility=Private }
+        Property Boolean pbRepositoryInitialized
+
+        // Report number to use
+        { Category="Dynamic AI" }
+        Property String psReportId
+
+        // Edition
+        { Category="Dynamic AI" }
+        { EnumList="Personal, Desktop, Runtime, Server, Enterprise" }
+        Property String peEdition "Desktop"
+
+        // Application ID
+        { Category="Dynamic AI" }
+        Property String psApplicationID "VDF"
+
+        // Customer Authentication Key
+        { Category="Dynamic AI" }
+        Property String psAuthKey "CUSTKEY"
+
+        // Device
+        { Category="Dynamic AI" }
+        { EnumList="DHTML, CSV, XML" }
+        Property String peDevice "DHTML"
+
+        // Date format
+        { Category="Dynamic AI" }
+        { Enumlist="Default, mm-dd-yyyy, dd-mm-yyyy, yyyy-mm-dd, yyyy-dd-mm, dd.mm.yyyy" }
+        Property String peDateFormat "Default"
+
+        // Decimal Separator
+        { Category="Dynamic AI" }
+        { Enumlist="Default, Period, Comma" }
+        Property String peDecimalSeparator "Default"
+
+        // Free parameter
+        { Category="Dynamic AI" }
+        Property String psFreeParameter
+
+        // Language
+        // "DF" -> Default
+        // "EN" -> English
+        // "GE" -> Deutsch
+        // "DA" -> Dansk
+        // "DU" -> Dutch
+        // "PO" -> Portuguese
+        // "HU" -> Hungarian
+        // "BF" -> French
+        // "SP" -> Spanish (South America)
+        // "ES" -> Spanish
+        // "IT" -> Italian
+        { Category="Dynamic AI" }
+        { Enumlist="DF, EN, GE, DA, DU, PO, HU, BF, SP, ES, IT" }
+        Property String peLanguage "DF"
+
+        // Basic URL
+        // Change this to "http://localhost/dynamic/" for IIS installations
+        //             or "http://localhost:81/" for Quickweb installations (desktop/personal editions)
+        { Category="Dynamic AI" }
+        Property String psBasicUrl "http://localhost/dynamic/" 
+
+        // Display the report in a single frame
+        { Category="Dynamic AI" }
+        Property Boolean pbSingleFrame True
+		
+		// Overwrite the existing list style
+		{ Category="Dynamic AI" }
+		Property String psListStyle
+
+		// Overwrite the existing form style
+		{ Category="Dynamic AI" }
+		Property String psFormStyle
+		
+        // Holds all filters
+        { Visibility=Private }
+        Property DAIFILTER[] ppFilter
+
+        // Timestamp
+        { Visibility=Private }
+        Property String ppTimeStamp
+
+        // Url as was sent to the browser object
+        { Visibility=Private }
+        Property String ppUrl
+
+        // Hashdata
+        // Data to be hashed using MD5
+        { Visibility=Private }
+        Property String ppHashdata
+
+        // Hashcode
+        // MD5 hashed data
+        { Visibility=Private }
+        Property String ppHashcode
+
+    End_Procedure
+
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+    End_Procedure
+
+
+    // Purpose: Clears all existing filters.
+    Procedure ClearAllFilters
+        DAIFILTER[] pFilter
+        Get ppFilter to pFilter
+        Move (ResizeArray(pFilter, 0)) to pFilter
+        Set ppFilter to pFilter
+    End_Procedure
+
+
+    // Purpose: Add a filter to the global filter array.
+    Procedure AddFilter String  sColumnName;
+                        String  sFromValue;
+                        String  sToValue;
+                        Boolean bHidden
+        Integer     iNumberOfElements
+            DAIFILTER[] pFilter
+        
+        Get ppFilter to pFilter
+        Move (SizeOfArray(pFilter))   to iNumberOfElements
+        Move (Uppercase(sColumnName)) to pFilter[iNumberOfElements].sColumnName
+        Move sFromValue               to pFilter[iNumberOfElements].sFromValue
+        Move sToValue                 to pFilter[iNumberOfElements].sToValue
+        Move bHidden                  to pFilter[iNumberOfElements].bHidden
+        Set ppFilter to pFilter
+    End_Procedure
+
+
+    // Purpose: Returns a string of two digits so 7 is returned
+    // as "07" and 14 is returned as "14". 213 would be returned
+    // as "13".
+    Function TwoDigits Integer iNumber Returns String
+        String sResult
+        
+        Move (Append("00", String(iNumber))) to sResult
+        Move (Right(sResult, 2)) to sResult
+        Function_Return sResult
+    End_Function
+
+
+    // Purpose: Creates a timestamp
+    // Returns a string formatted as "YYYY-MM-DDTHH:MM:SS"
+    Function CreateTimestamp Returns String
+        DateTime dtCurrentDateTime
+        Integer  iYear
+        Integer  iMonth
+        Integer  iDay
+        Integer  iHour
+        Integer  iMinute
+        Integer  iSecond
+        String   sResult
+        
+        Move (CurrentDateTime()) to dtCurrentDateTime
+        
+        Move (DateGetYear  (dtCurrentDateTime)) to iYear
+        Move (DateGetMonth (dtCurrentDateTime)) to iMonth
+        Move (DateGetDay   (dtCurrentDateTime)) to iDay
+        Move (DateGetHour  (dtCurrentDateTime)) to iHour
+        Move (DateGetMinute(dtCurrentDateTime)) to iMinute
+        Move (DateGetSecond(dtCurrentDateTime)) to iSecond
+        Move "" to sResult
+        Append sResult (String(iYear)) "-"
+        Append sResult (TwoDigits(Self, iMonth)) "-"
+        Append sResult (TwoDigits(Self, iDay)) "T"
+        Append sResult (TwoDigits(Self, iHour)) ":"
+        Append sResult (TwoDigits(Self, iMinute)) ":"
+        Append sResult (TwoDigits(Self, iSecond))
+        
+        Function_Return sResult
+    End_Function
+
+
+    // Generates a timestamp and stores it in 
+    // a private property.
+    Procedure Generate_Timestamp
+        String sTimeStamp
+        
+        Get CreateTimestamp to sTimeStamp
+        Set ppTimeStamp to sTimeStamp
+    End_Procedure
+
+
+    // Purpose: Translate an integer between 0 and 15 
+    //          into a hexadecimal format.
+    Function Integer2Hex Integer iInput Returns String
+        String sOutStr
+        
+        Move "0" to sOutStr
+        If (iInput=1) Move "1" to sOutStr
+        Else If (iInput=2) Move "2" to sOutStr
+        Else If (iInput=3) Move "3" to sOutStr
+        Else If (iInput=4) Move "4" to sOutStr
+        Else If (iInput=5) Move "5" to sOutStr
+        Else If (iInput=6) Move "6" to sOutStr
+        Else If (iInput=7) Move "7" to sOutStr
+        Else If (iInput=8) Move "8" to sOutStr
+        Else If (iInput=9) Move "9" to sOutStr
+        Else If (iInput=10) Move "A" to sOutStr
+        Else If (iInput=11) Move "B" to sOutStr
+        Else If (iInput=12) Move "C" to sOutStr
+        Else If (iInput=13) Move "D" to sOutStr
+        Else If (iInput=14) Move "E" to sOutStr
+        Else If (iInput=15) Move "F" to sOutStr
+        Function_Return sOutStr
+    End_Function
+
+
+    // Purpose: Translate a character into a 
+    //          hexadecimal format.
+    Function Ascii2Hex String sInStr Returns String
+        String  sFirstChar
+        String  sSecondChar
+        Integer iAscii
+        Integer iFirstNumber
+        Integer iSecondNumber
+        
+        Move (Ascii(sInStr)) to iAscii
+        Move (Mod(iAscii, 16)) to iSecondNumber
+        Move ((iAscii-iSecondNumber)/16) to iFirstNumber
+        Move (Integer2Hex(Self, iFirstNumber)) to sFirstChar
+        Move (Integer2Hex(Self, iSecondNumber)) to sSecondChar
+        Function_Return (Append(sFirstChar, sSecondChar))
+    End_Function
+
+
+    // Purpose: Translate a 1 digit hexadecimal number
+    //          into an integer.
+    Function Hex2Int String sInStr Returns Integer
+        If (sInStr="0") Function_Return 0
+        Else If (sInStr="1") Function_Return 1
+        Else If (sInStr="2") Function_Return 2
+        Else If (sInStr="3") Function_Return 3
+        Else If (sInStr="4") Function_Return 4
+        Else If (sInStr="5") Function_Return 5
+        Else If (sInStr="6") Function_Return 6
+        Else If (sInStr="7") Function_Return 7
+        Else If (sInStr="8") Function_Return 8
+        Else If (sInStr="9") Function_Return 9
+        Else If (sInStr="A") Function_Return 10
+        Else If (sInStr="B") Function_Return 11
+        Else If (sInStr="C") Function_Return 12
+        Else If (sInStr="D") Function_Return 13
+        Else If (sInStr="E") Function_Return 14
+        Else If (sInStr="F") Function_Return 15
+    End_Function
+
+
+    // Purpose: Translate a hexadecimal number between 00 and FF 
+    //          to an Ascii Character
+    Function Hex2Ascii String sHexStr Returns String
+        String  sFirstChar
+        String  sSecondChar
+        Integer iFirstNumber
+        Integer iSecondNumber
+
+        Move (Mid(sHexStr,1,1)) to sFirstChar
+        Move (Mid(sHexStr,1,2)) to sSecondChar
+        Move (Hex2Int(Self, sFirstChar)) to iFirstNumber
+        Move (Hex2Int(Self, sSecondChar)) to iSecondNumber
+        Function_Return (Character((iFirstNumber*16)+iSecondNumber))
+    End_Function
+
+
+    // Purpose: To convert a string of Hexadecimal characters
+    //          to Ascii. Inplemented for testing purposes.
+    Function DaiDecode String sInStr Returns String
+        Integer iCounter
+        Integer iLength
+        String  sHexStr
+        String  sAsciiStr
+        String  sOutStr
+        
+        Move "" to sOutStr
+        Move (Length(sInStr)) to iLength
+        If (Mod(iLength,2)) Function_Return "" // Stringlentgh can't be divided by 2
+        Move 1 to iCounter
+        While (iCounter<iLength)
+            Move (Mid(sInStr,2,iCounter)) to sHexStr
+            Move (Hex2Ascii(Self, sHexStr)) to sAsciiStr
+            Move (Append(sOutStr, sAsciiStr)) to sOutStr
+            Add 2 to iCounter
+        Loop
+        Function_Return sOutStr
+    End_Function
+
+
+    // Purpose: Convert a string into a string consisting 
+    //          of Hexadecimal characters.
+    Function DaiEncode String sInStr Returns String
+        String  sChar
+        String  sOutStr
+        String  sHexStr
+        Integer iCounter
+        Integer iLength
+
+        Move (Length(sInStr)) to iLength
+        Move "" to sOutStr
+        For iCounter from 1 to iLength
+            Move (Mid(sInStr, 1, iCounter)) to sChar
+            Move (Ascii2Hex(Self, sChar)) to sHexStr
+            Move (Append(sOutStr, sHexStr)) to sOutStr
+        Loop
+        Function_Return sOutStr
+    End_Function
+    
+    
+    // Purpose: Changes a repository
+    Procedure ChangeRepository
+        Boolean bNavigated
+        Boolean bShouldChange
+        String  sRepository
+        String  sUrl
+        String  sEdition
+        
+        Move (False) to bNavigated
+        Get pbChangeRepository to bShouldChange
+        Get psBasicUrl to sUrl
+        Get psRepository to sRepository
+        Get peEdition to sEdition
+        // Select a different repository
+        If ((sEdition="Personal") or (sEdition="Desktop")) Begin
+            If (bShouldChange) Begin
+                If (sRepository<>"") Begin
+                    If (Right(sUrl,1)<>"/") Begin 
+                        Move (Append(sUrl, "/")) to sUrl    
+                    End
+                    Move (Append(sUrl, "loc.asp?REPOSITORY=")) to sUrl
+                    Move (Append(sUrl, (Uppercase(sRepository)))) to sUrl
+                    Send ComNavigate sUrl 0 0 0 0
+                    Move (True) to bNavigated
+                End    
+            End
+        End
+        // Show a blank page. We need to do this because the report
+        // is loaded within the OnComDocumentComplete event.
+        If (not(bNavigated)) Begin
+            Send ComNavigate "about:blank" 0 0 0 0
+        End
+        Set piRepositoryChanged to True
+    End_Procedure
+    
+    
+    // Used internally to run a report
+    Procedure DoRunDynamicAiReport
+        Boolean     bFirstFilterParam
+        Boolean     bFirstparam 
+        Boolean     bSingleFrame
+        String      sUrl
+        String      sBasicUrl
+        String      sUserName
+        String      sPassword
+        String      sRepository
+        String      sReportId
+        String      sFilter
+        String      sFilterHash
+        String      sEdition
+        String      sTimeStamp
+        String      sDevice
+        String      sApplicationID
+        String      sDateFormat
+        String      sDecimalSeparator
+        String      sLanguage
+        String      sFreeParameter
+        String      sRunUsername
+        String      sAuthKey
+        String      sData
+        String      sHashCode
+        String      sAddhoc
+        String      sCoa
+		String      sFormStyle
+		String      sListStyle
+        Integer     iElement
+        Integer     iNumberOfElements
+        Integer     iReady
+        Handle      hRepositoryChanger
+        Boolean     bCreated
+        Boolean     bUseTicketAuthentication
+        Boolean     bAllowAdHocCustomizing
+        Boolean     bAllowColumnBasedActions
+        DAIFILTER[] pFilter
+        
+        Move "" to sUrl
+        Move (True) to bFirstparam
+        
+        Get psBasicUrl to sUrl
+        Get psRunUsername to sRunUsername
+        Get psUsername to sUserName
+        Get psPassword to sPassword
+        Get psRepository to sRepository
+        Get psReportId to sReportId
+        Get ppFilter to pFilter
+        Get pbSingleFrame to bSingleFrame
+        Get peEdition to sEdition
+        Get peDevice to sDevice
+        Get psApplicationID to sApplicationID
+        Get peDateFormat to sDateFormat
+        Get peDecimalSeparator to sDecimalSeparator
+        Get peLanguage to sLanguage
+        Get psFreeParameter to sFreeParameter
+        Get psAuthKey to sAuthKey
+        Get pbUseTicketAuthentication to bUseTicketAuthentication
+        Get pbAllowAdHocCustomizing to bAllowAdHocCustomizing
+        Get pbAllowColumnBasedActions to bAllowColumnBasedActions
+		Get psListStyle to sListStyle
+		Get psFormStyle to sFormStyle
+        
+        Move (Uppercase(sEdition)) to sEdition
+        
+        // Generate a time stamp (all editons)
+        If (bUseTicketAuthentication) Begin
+            Send Generate_Timestamp
+            Get ppTimeStamp to sTimeStamp
+        End
+        
+        // Build the url        
+        Get psBasicUrl to sUrl
+        If (Right(sUrl,1)<>"/") Begin
+            Move (Append(sUrl, "/")) to sUrl
+        End
+
+        // The ASP file used depends on the edition of Dynamic AI
+        Case Begin
+            Case ((sEdition="PERSONAL") or (sEdition="DESKTOP") or (sEdition="RUNTIME")) 
+                Move (Append(sUrl, "dnmc.asp?")) to sUrl
+                Case Break
+            Case ((sEdition="ENTERPRISE") or (sEdition="SERVER"))
+                // First login using ai.asp, this will start dnmc.asp
+                Move (Append(sUrl, "ai.asp?")) to sUrl
+                Case Break
+            Case Else
+                Get psBasicUrl to sUrl
+                Move (Append(sUrl, "?")) to sUrl
+                Case Break
+        Case End
+
+        // Run user (server/enterprise editions in combination with ticket authentication)
+        If (bUseTicketAuthentication) Begin
+            If ((sEdition="SERVER") or (sEdition="ENTERPRISE")) Begin
+                If (sRunUsername<>"") Begin
+                    If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                    Move (Append(sUrl, "AIU=")) to sUrl
+                    Move (Append(sUrl, (Trim(sRunUsername)))) to sUrl
+                    Move (False) to bFirstparam
+                End
+            End
+        End
+
+        // Username (server/enterprise editions in combination with normal authentication)
+        If (not(bUseTicketAuthentication)) Begin
+            If ((sEdition="SERVER") or (sEdition="ENTERPRISE")) Begin
+                If (sUserName<>"") Begin
+                    If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                    Move (Append(sUrl, "UID=")) to sUrl
+                    Move (Append(sUrl, (Trim(sUserName)))) to sUrl
+                    Move (False) to bFirstparam
+                End
+                
+                // Password
+                If (sPassword<>"") Begin
+                    If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                    Move (Append(sUrl, "PW=")) to sUrl
+                    Move (Append(sUrl, (Trim(sPassword)))) to sUrl
+                    Move (False) to bFirstparam
+                End
+            End
+        End
+
+        // Report ID (All editions)
+        If (sReportId<>"") Begin
+            If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+            Move (Append(sUrl, "DAI_R=")) to sUrl
+            Move (Append(sUrl, (Trim(sReportId)))) to sUrl
+            Move (False) to bFirstparam
+        End
+
+        // Device (All editions)
+        If (sDevice<>"") Begin
+            If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+            Move (Append(sUrl, "DEVICE=")) to sUrl
+            Move (Append(sUrl, (Trim(sDevice)))) to sUrl
+            Move (False) to bFirstparam
+        End
+        
+        // Timestamp (runtime/server/enterprise editions in combination with ticket authentication)
+        If (bUseTicketAuthentication) Begin
+            If ((sEdition="RUNTIME") or (sEdition="SERVER") or (sEdition="ENTERPRISE")) Begin
+                If (sTimeStamp<>"") Begin
+                    If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                    Move (Append(sUrl, "TST=")) to sUrl
+                    Move (Append(sUrl, (Trim(sTimeStamp)))) to sUrl
+                    Move (False) to bFirstparam
+                End
+            End
+        End
+    
+        // Application ID (Runtime/Server/Enterprise editions)
+        If (bUseTicketAuthentication) Begin
+            If ((sEdition="RUNTIME") or (sEdition="SERVER") or (sEdition="ENTERPRISE")) Begin
+                If (sApplicationID<>"") Begin
+                    If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                    Move (Append(sUrl, "APPID=")) to sUrl
+                    Move (Append(sUrl, (Trim(sApplicationID)))) to sUrl
+                    Move (False) to bFirstparam
+                End
+            End
+        End
+        
+        // Decimal Separator (personal/desktop/runtime editions)
+        If ((sEdition="PERSONAL") or (sEdition="DESKTOP") or (sEdition="RUNTIME")) Begin
+            Move (Uppercase(sDecimalSeparator)) to sDecimalSeparator
+            If (sDecimalSeparator<>"") Begin
+                If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                Move (Append(sUrl, "DS=")) to sUrl
+                Case Begin
+                    Case (sDecimalSeparator="DEFAULT")
+                        Move (Append(sUrl, "9")) to sUrl
+                        Case Break
+                    Case (sDecimalSeparator="PERIOD")
+                        Move (Append(sUrl, "0")) to sUrl
+                        Case Break
+                    Case (sDecimalSeparator="COMMA")
+                        Move (Append(sUrl, "1")) to sUrl
+                        Case Break
+                Case End
+                Move (False) to bFirstparam
+            End
+        End
+        
+        // Date format (personal/desktop/runtime editions)
+        If ((sEdition="PERSONAL") or (sEdition="DESKTOP") or (sEdition="RUNTIME")) Begin
+            Move (Uppercase(sDateFormat)) to sDateFormat
+            If (sDateFormat<>"") Begin
+                If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                Move (Append(sUrl, "DFM=")) to sUrl
+                Case Begin
+                    Case (sDateFormat="DEFAULT")
+                        Move (Append(sUrl, "9")) to sUrl
+                        Case Break
+                    Case (sDateFormat="MM-DD-YYYY")
+                        Move (Append(sUrl, "0")) to sUrl
+                        Case Break
+                    Case (sDateFormat="DD-MM-YYYY")
+                        Move (Append(sUrl, "1")) to sUrl
+                        Case Break
+                    Case (sDateFormat="YYYY-MM-DD")
+                        Move (Append(sUrl, "2")) to sUrl
+                        Case Break
+                    Case (sDateFormat="YYYY-DD-MM")
+                        Move (Append(sUrl, "3")) to sUrl
+                        Case Break
+                    Case (sDateFormat="DD.MM.YYYY")
+                        Move (Append(sUrl, "4")) to sUrl
+                        Case Break
+                Case End
+                Move (False) to bFirstparam
+            End
+        End
+        
+        // Language (personal/desktop/runtime editions)
+        If ((sEdition="PERSONAL") or (sEdition="DESKTOP") or (sEdition="RUNTIME")) Begin
+            If (sLanguage<>"") Begin
+                If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                Move (Append(sUrl, "LANG=")) to sUrl
+                Move (Append(sUrl, (Trim(sLanguage)))) to sUrl
+                Move (False) to bFirstparam
+            End
+        End
+        
+        Move (True) to bFirstFilterParam
+        Move "" to sFilterHash
+        
+        // Free parameter (all editions)
+        If (sFreeParameter<>"") Begin
+            Move (Append(sFilterHash, sFreeParameter)) to sFilterHash
+            Move (False) to bFirstFilterParam
+        End
+        
+        // Filters (all editions)
+        Move (SizeOfArray(pFilter)) to iNumberOfElements
+        If (iNumberOfElements) Begin
+            For iElement from 0 to (iNumberOfElements-1)
+                // From element
+                If (pFilter[iElement].sFromValue<>"") Begin
+                    If (not(bFirstFilterParam)) Move (Append(sFilterHash, "&")) to sFilterHash
+                    Move (False) to bFirstFilterParam
+                    If (pFilter[iElement].bHidden) Move "DAI_P_" to sFilter
+                    Else Move "DAI_S_" to sFilter
+                    Move (Append(sFilter, Trim(pFilter[iElement].sColumnName))) to sFilter
+                    Move (Append(sFilter, "=")) to sFilter
+                    Move (Append(sFilter, Trim(pFilter[iElement].sFromValue))) to sFilter
+//test clumsy support of 'in' SQL operator for use in multi-select comboforms
+//If ( (Left(Trim(pFilter[iElement].sFromValue),1)) = '^' ) Begin 
+//    Move (Replace('=',sFilter,' IN ')) to sFilter
+//End
+                    Move (False) to bFirstparam
+                    Move (Append(sFilterHash, sFilter)) to sFilterHash 
+                    // To element
+                    If (pFilter[iElement].sToValue<>"") Begin
+                        If (not(bFirstFilterParam)) Move (Append(sFilterHash, "&")) to sFilterHash
+                        Move (False) to bFirstFilterParam
+                        If (pFilter[iElement].bHidden) Move "DAI_PB_" to sFilter
+                        Else Move "DAI_SB_" to sFilter
+                        Move (Append(sFilter, Trim(pFilter[iElement].sColumnName))) to sFilter
+                        Move (Append(sFilter, "=")) to sFilter
+                        Move (Append(sFilter, Trim(pFilter[iElement].sToValue))) to sFilter
+                        Move (False) to bFirstparam
+                        Move (Append(sFilterHash, sFilter)) to sFilterHash 
+                    End
+                End
+                Else Begin
+                    // Empty filter, but this might still be hidden.
+                    // If not, the filter will be displayed in the Dynamic AI Report
+                    // and the user will be able to change its value.
+                    If (pFilter[iElement].bHidden) Begin
+                        If (not(bFirstFilterParam)) Move (Append(sFilterHash, "&")) to sFilterHash
+                        Move (False) to bFirstFilterParam
+                        Move "DAI_P_" to sFilter
+                        Move (Append(sFilter, Trim(pFilter[iElement].sColumnName))) to sFilter
+                        Move (Append(sFilter, "=")) to sFilter
+                        Move (Append(sFilterHash, sFilter)) to sFilterHash 
+                    End
+                End
+            Loop
+            Move (False) to bFirstparam
+        End
+        
+        // Encode the filterstring (all editions)
+        If (sFilterHash<>"") Begin
+            If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+            Move (False) to bFirstParam
+            If (bUseTicketAuthentication) Begin
+              Move (DaiEncode(Self, sFilterHash)) to sFilterHash 
+              Move (Append(sUrl, "E_=")) to sUrl    
+            End  
+            Move (Append(sUrl, sFilterHash )) to sUrl    
+        End
+
+        // Single Frame (all editions)
+        If (bSingleFrame) Begin
+            If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+            Move (False) to bFirstParam
+            Move (Append(sUrl, "SFRAME=Y")) to sUrl
+        End
+        Else Begin
+            If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+            Move (False) to bFirstParam
+            Move (Append(sUrl, "SFRAME=N")) to sUrl
+        End
+        
+        // Column based actions (runtime edition)
+        If (sEdition="RUNTIME") Begin
+            If (bAllowColumnBasedActions) Begin
+                If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                Move (False) to bFirstParam
+                Move (Append(sUrl,"COA=Y")) to sUrl
+            End
+            Else Begin
+                If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                Move (False) to bFirstParam
+                Move (Append(sUrl,"COA=N")) to sUrl
+            End
+        End
+        
+        // Allow AdHoc Customizing (runtime/server/enterprise editions)
+        If (sEdition="RUNTIME") Begin
+            If (bAllowAdHocCustomizing) Begin
+                If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                Move (False) to bFirstParam
+                Move (Append(sUrl,"AH=Y")) to sUrl
+            End
+            Else Begin
+                If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+                Move (False) to bFirstParam
+                Move (Append(sUrl,"AH=N")) to sUrl
+            End
+        End
+		
+		// Overwrite the existing list style (all editions)
+		If (sListStyle<>"") Begin
+			If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+			Move (False) to bFirstParam
+			Move (Append(sUrl,"LISTSTYLE=")) to sUrl
+			Move (Append(sUrl,(Trim(sListStyle)))) to sUrl
+		End
+
+		// Overwrite the existing form style (all editions)
+		If (sFormStyle<>"") Begin
+			If (not(bFirstParam)) Move (Append(sUrl, "&")) to sUrl
+			Move (False) to bFirstParam
+			Move (Append(sUrl,"FORMSTYLE=")) to sUrl
+			Move (Append(sUrl,(Trim(sFormStyle)))) to sUrl
+		End
+        
+        // Ticket authentication (runtime/server/enterprise editions)
+        // A ticket is an MD5 hash created of the following fields:
+        // - Report number
+        // - Run user (server/enterprise only)
+        // - Time stamp
+        // - Application ID
+        // - The Customer Authentication Key (used to generate the ticket)
+        // - Column based actions allowed or not
+        // - Addhoc changes allowed or not
+        If (bUseTicketAuthentication) Begin
+            Move "" to sData
+            // DAI_R
+            Move (Append(sData, (Trim(sReportId)))) to sData
+            // AIU
+            If ((sEdition="SERVER") or (sEdition="ENTERPRISE")) Begin
+                Move (Append(sData, (Trim(sRunUsername)))) to sData
+            End
+            // TST
+            Move (Append(sData, sTimeStamp)) to sData
+            // APPID
+            Move (Append(sData, (Trim(sApplicationID)))) to sData
+            // DnmcAuthKey
+            Move (Append(sData, (Trim(sAuthKey)))) to sData
+            // E_
+            Move (Append(sData, (Trim(sFilterHash)))) to sData
+            // COA and AH are only used in the runtime edition.
+            If (sEdition="RUNTIME") Begin
+                // COA
+                Move (Append(sData, (Trim(sFilterHash)))) to sData
+                If (bAllowAdHocCustomizing) Begin
+                    Move (Append(sData, "Y")) to sData
+                End
+                Else Begin
+                    Move (Append(sData, "N")) to sData
+                End
+                // AH
+                If (bAllowAdHocCustomizing) Begin
+                    Move (Append(sData, "Y")) to sData
+                End
+                Else Begin
+                    Move (Append(sData, "N")) to sData
+                End
+            End
+
+            // Create hashed data
+            Set ppHashdata to sData
+            Get StringToMD5Hash of oCrypter sData to sHashCode
+            Set ppHashcode to sHashCode
+            
+            Move (Append(sUrl, "&TICKET=")) to sUrl
+            Move (Append(sUrl, sHashCode)) to sUrl
+            
+            //Showln "Hash data: " sData // For testing purposes
+        End
+        
+        Set ppUrl to sUrl
+        
+        // Start the report in the browser
+        Send ComNavigate sUrl 0 0 0 0
+        Set pbReportRan to True
+        
+        // Showln sUrl // For testing purposes
+        
+    End_Procedure
+
+
+    // Purpose: Runs a Dynamic AI Report
+    Procedure RunDynamicAiReport
+        Set pbReportRan to True
+        // If repository has not yet been initialized then init the repository.
+        If (not(pbRepositoryInitialized(Self))) Begin
+            Send ChangeRepository
+        End
+        Else Begin
+            Send DoRunDynamicAiReport
+        End
+    End_Procedure
+    
+    
+    // Purpose: This event is fired after a complete page has
+    //          been loaded. It is used to fire the actual report
+    //          AFTER the repository has been changed.
+    Procedure OnComDocumentComplete Variant llpDisp Variant llURL
+        Forward Send OnComDocumentComplete llpDisp llURL
+        If ( not(pbRepositoryInitialized(Self)) and pbReportRan(Self) ) Begin
+            Set pbRepositoryInitialized to True
+            Send RunDynamicAiReport
+        End
+    End_Procedure
+    
+End_Class // cDynamicAiReport

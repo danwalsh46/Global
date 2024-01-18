@@ -1,0 +1,21 @@
+//AB/ CLASSDEF
+Class cHttpTransfer is a AbstractNonVisualContainer
+    Set ClassCETV      To 56                      // use TreeView Image #56
+    Set ClassPackage   To "cHttpTransfer.pkg"
+    Set ObjectNameMask To "oHttpTransfer<count>"
+    Set peClassLibrary To clCommon                // this class belongs to all class libraries
+
+    Inherit
+    Property No_Visible String  Bitmap "cHttpTransfer.bmp"
+
+    Property No_Execute Integer piBufferSize 1024             // Is the size of the file transfer buffer. The cHttpTransfer class tries to transfer the file in chunks of BufferSize bytes.
+    Property No_Execute Integer piRemotePort rpHttp           // Specifies the port to connect to on RemoteHost. It can be any valid port number. rpHttp is defined as port 80.
+    Property No_Execute String  psAcceptTypes "text/*"        // Specifies the HTTP content types accepted by the client. You may specify multiple types separated by ',' (commas). e.g., "text/html, text/plain", specifies plain text and html text. Wildcards may also be used, e.g. "text/*" specifies all text formats.
+    Property No_Execute String  psAgent "Visual DataFlex"     // Specifies the name of the application. The value of this property is used as the "User Agent" in the HTTP protocol.
+    Property No_Execute String  psPassword                    // Specifies the password to use to log on.
+    Property No_Execute String  psProtocolVersion "HTTP/1.0"  // Specifies the HTTP protocol version.
+    Property No_Execute String  psProxy                       // Specifies the name of the Proxy server used, if any. If the value of this property is blank, no proxy server is used.
+    Property No_Execute String  psRemoteHost                  // Specifies the hostname or the IP address of the remote server.
+    Property No_Execute String  psSaveAsFile                  // When set, ny response from the remote host will be saved to the specified file instead of triggering the OnDataReceived event. If blank, the OnDataReceived event is triggered instead.
+    Property No_Execute String  psUsername ""                 // Specifies the name of the user to log on.
+End_Class

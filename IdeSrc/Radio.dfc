@@ -1,0 +1,13 @@
+//AB/ CLASSDEF
+
+Class Radio is an AbstractControl Radio ABMetaRadioMixin DefineABMetaRadioMixin
+    Set ObjectNameMask To "oRadio<count>"
+    Set ClassHelpName  To "Radio"
+    Set ClassCETV      To 2              // use TreeView Image #2 (1-based offset)
+    Set ClassPackage   To "dfRadio.pkg"
+    Inherit
+    Property Always_Generate Complex Size 10 60
+    Property Color Color clBtnFace
+    Property String Bitmap  // Bitmap Resource name or file name (options: /T=transparent /3D=3D Display)
+    Property Mode AlignmentMode taRightJustify taLeftJustify taRightJustify // Should text appear to the left or right of the radio control?
+End_Class

@@ -1,0 +1,18 @@
+//AB/ CLASSDEF
+Class cWebReport is a AbstractNonVisualContainer
+    Set ClassPackage   To "cWebReport.pkg"
+    Set peClassLibrary To clWebApp            // this class belongs to the Web Server Application class library only
+    Set ClassCETV      To 44                  // use TreeView Image #44
+    Set ObjectNameMask To "oWebReport<count>"
+    Set ClassHelpName  To "cWebReport"
+
+    Inherit
+    
+    Property No_Visible Pseudo Complex Location 5 5   // don't show location
+    Property No_Visible Pseudo Complex Size 30 34     // don't show size
+    Property No_Visible        String  Bitmap "cWebReport.bmp"  // show this bitmap on the control
+
+    Property No_Execute Boolean pbFindDown False // Determines if the report should traverse up or down the index.
+    Property No_Execute Integer piOrdering -1    // Contains the index number used for finding records. A value of -1 tells the runtime to choose the index based on current constraints.
+    Property No_Execute String  psHRefName ""    // Used by the message get AddRecordLink to create an HTML anchor tag that contains the URL and the row's record ID.
+End_Class

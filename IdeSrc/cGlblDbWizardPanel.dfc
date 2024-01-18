@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbWizardPanel is a dbModalPanel
+    Set ClassPackage To "cGlblDbWizard.pkg"
+    Inherit
+End_Class

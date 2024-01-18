@@ -1,0 +1,37 @@
+//AB/ CLASSDEF
+Class BusinessProcess is a AbstractContainer Meta_BusinessProcess Meta_BusinessProcess_Mixin Define_Meta_BusinessProcess_Mixin
+    Set ClassPackage     To "BatchDD.pkg"
+    Set peClassLibrary   To clCommon                  // this class belongs to all class libraries
+    Set ObjectNameMask   To "oBusinessProcess<count>"
+    Set ClassHelpName    To "BusinessProcess"
+    Set Control_Type     To ctBase                    // was ctContainer!
+    Set ClassCETV        To 25                        // use TreeView Image #25 (1-based offset)
+    Set Floating_Menu_Id To EVCFloater.obj
+    Set Delete_Allowed   To False
+    Set Drop_Allowed     To TD_DRAG_NONVISUAL
+    Set Type_Of_Drag     To TD_DRAG_NONVISUAL
+
+    Property No_Visible Pseudo      Complex Location     0 0      // don't show location, write out as comment
+    Property No_Visible Pseudo      Complex Size         40 44    // don't show size, write out as comment
+
+    Property No_Visible             String  Bitmap       "BusinessProcess.bmp"  //show this bitmap on the control
+    Property No_Visible             Integer Bitmap_Style Bitmap_Center
+    Property No_Visible             Integer Bitmap_Style Bitmap_Actual
+    Property No_Visible No_Generate Mode    Border_Style Border_Normal
+    Property No_Visible No_Generate Color   Color        clWhite
+    Property No_Visible No_Generate String  Main_DD
+
+    // For BusinessProcess the Delete_Allowed property must be able to be overridden.
+    // The reason is that for BusinessProcess components, Delete_Allowed should be False.
+    // For BusinessProcess objects inside other components, it should be True.
+    Property No_Visible Pseudo Boolean pbOverrideDeleteAllowed False
+
+    Property No_Execute Boolean Allow_Cancel_State  False              // Display and support cancel button in status panel (if Status_Panel_state is True)?
+    Property No_Execute Boolean Display_Error_State False              // If error occurs, should an error be sent to the standard error-handler object, causing the error appear in a message box. Normally, not desired during a batch process.
+    Property No_Execute String  Process_Caption     "Business Process" // Caption text of status panel (if Status_Panel_state is True)
+    Property No_Execute String  Process_Message     "Now Processing: " // Processing actvity message within status panel. This should change to show progress. (if Status_Panel_state is True).
+    Property No_Execute String  Process_Title       "Processing..."    // Processing Title within status panel (if Status_Panel_state is True)
+    Property No_Execute Boolean Status_Log_State    False              // Log activity to status log? Start, Stop and errors are logged automatically. Use "Send Log_Status" to log other activity.
+    Property No_Execute String  Status_Log_ID       ""                 // Object handle of status log object. Needed to log information. You must first create this status log object.
+    Property No_Execute Boolean Status_Panel_State  True               // Display Status Panel while process is runinng?
+End_Class

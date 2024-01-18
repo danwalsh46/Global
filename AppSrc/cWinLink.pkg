@@ -1,0 +1,378 @@
+//TH-Header
+//*****************************************************************************************
+// Copyright (c) 2003 Sergey V. Natarov
+// All rights reserved.
+// senatc@postman.ru
+//
+// $FileName    : cWinButton.pkg
+// $Created     :
+//
+//*****************************************************************************************
+//TH-RevisionStart
+//TH-RevisionEnd
+
+Use cWinButton.h
+Use cWinKernEx.pkg  // **WvA Aug 30, 2004 Required for use a standalone control
+Use cWinShellEx.pkg // **WvA
+Use vWin32fh.pkg    // **WvA
+
+Class cWinLink Is A cBaseWinControl
+    Procedure Construct_Object
+        Set External_Class_Name "DFWINBUTTON"   To "BUTTON"
+        Set External_Message WM_DRAWITEM        To Wmsg_onDrawItem
+        Set External_Message WM_ERASEBKGND      To WMMSG_Erasebkgnd
+
+        //
+        Forward Send Construct_Object
+        //
+        // ************************************************************ //
+        // *** SYSTEM PROPERTIES ************************************** //
+        // ************************************************************ //
+        //
+        // PointerOnly//System
+        Property Boolean    pbPointerOnly       Public False
+        Property Integer    piCaptureHwnd       Public 0
+        //
+        Property Integer    piTextAlign         Public 0
+        //
+        Property Integer    piClicked           Public False
+        //
+        // ************************************************************ //
+        // *** PUBLIC PROPERTIES ************************************** //
+        // ************************************************************ //
+        //
+        Property Integer Border_Style          Public BORDER_NONE
+        Property Integer Border_Color          Public clBlack
+        Property Integer Border_Width          Public 1
+        //
+        Property Boolean pbDrawFocus           Public True
+        // Link
+        Property String  psUrl                 Public ""
+        Property Boolean pbVisited             Public False
+        Property Integer piVisitedColor        Public 0
+    End_Procedure
+
+    //
+    // ---------------------- POINTER ONLY --------------------------
+    Procedure Set Pointer_Only_State Boolean bState
+        Set pbPointerOnly To bState
+        If (bState) Begin
+            Set pbDrawFocus To False
+            Set Skip_state  To True
+        End
+        Else Begin
+            Set pbDrawFocus To True
+            Set Skip_state  To False
+        End
+    End_Procedure
+    Function Pointer_Only_State Returns Integer
+        Function_Return (pbPointerOnly(Self))
+    End_Function
+    Procedure mouse_down2 Integer iPara0 Integer iPara1
+        If (pbPointerOnly(Self)) Procedure_Return
+        Forward Send Mouse_down2 iPara0 iPara1
+    End_Procedure
+    Procedure mouse_up2 Integer iPara0 Integer iPara1
+        If (pbPointerOnly(Self)) Procedure_Return
+        Forward Send Mouse_up2 iPara0 iPara1
+    End_Procedure
+    Procedure mouse_down Integer iPara0 Integer iPara1
+        Integer iRet iMsg iObj
+        If (pbPointerOnly(Self)) Begin
+            Set piCaptureHwnd To (GetCaptureEf())
+            Move (SetCapture(window_handle(Self))) To iRet
+            Set piClicked To True
+            Send PaintSelectedLink (GetDC(Window_Handle(Self)))
+            Procedure_Return
+        End
+        Forward Send Mouse_down iPara0 iPara1
+    End_Procedure
+    Procedure mouse_up Integer iPara0 Integer iPara1
+        Integer iRet hBtn hWnd
+        If (pbPointerOnly(Self)) Begin
+            Forward Send Mouse_Up iPara0 iPara1
+            Get Window_Handle To hWnd
+            Move (SetCapture(piCaptureHwnd(Self))) To iRet
+            Get ObjectHandle To hBtn
+            Set piCaptureHwnd To 0
+            Send PaintLink (GetDC(hWnd))
+            If ((hBtn=hWnd)And(piClicked(Self))) Send WMSG_OnClick
+            Set piClicked To False
+            Procedure_Return
+        End
+        Forward Send Mouse_Up iPara0 iPara1
+    End_Procedure
+    Procedure mouse_click Integer iPara0 Integer iPara1
+    End_Procedure
+    Procedure mouse_click2 Integer iPara0 Integer iPara1
+    End_Procedure
+    //
+    Procedure Set Visited_Color Integer iColor
+        If (Not(iColor)) Move clWindowText To iColor
+        If (iColor<0)    Move (GetSysColor(iColor Iand $000000FF)) To iColor
+        Set piVisitedColor To iColor
+    End_Procedure
+    Function Visited_Color Returns Integer
+        Function_Return (piVisitedColor(Self))
+    End_Function
+    // -------------------------- LABEL --------------------------------
+    Procedure Set LinkTextAlign Integer iFlag
+        Set piTextAlign To iFlag
+        If (iFlag=BTA_CENTER)       Set piTextAlignFlags To (DT_CENTER  Ior DT_VCENTER Ior DT_SINGLELINE)
+        Else If (iFlag=BTA_HCENTER) Set piTextAlignFlags To (DT_CENTER  Ior DT_WORDBREAK)
+        Else If (iFlag=BTA_VCENTER) Set piTextAlignFlags To (DT_VCENTER Ior DT_VCENTER Ior DT_SINGLELINE)
+        Else If (iFlag=BTA_RIGHT)   Set piTextAlignFlags To (DT_RIGHT   Ior DT_VCENTER Ior DT_SINGLELINE)
+        Else If (iFlag=BTA_BOTTOM)  Set piTextAlignFlags To (DT_BOTTOM  Ior DT_CENTER Ior DT_SINGLELINE)
+    End_Procedure
+    Function LinkTextAlign Returns Integer
+        Function_Return (piTextAlign(Self))
+    End_Function
+    // -------------------------- ICON ----------------------------------
+    //
+    //
+    Procedure page Integer iFlag
+        Set Window_Style BS_OWNERDRAW To True
+        Forward Send page iFlag
+    End_Procedure
+
+    Procedure Start_URL String sURL
+        If (sURL="") Procedure_Return
+        Integer iM
+        String  sFile
+        Move (WindowsTempPath()+"cwinlink.url") To sFile
+        Direct_Output Channel 9 sFile
+            Writeln Channel 9 "[DEFAULT]"
+            Writeln Channel 9 "BASEURL=" sUrl
+            Writeln Channel 9 "[InternetShortcut]"
+            Writeln Channel 9 "URL=" sUrl
+            Writeln Channel 9
+        Close_Output Channel 9
+        Send ShellExecute "open" sFile 1
+        Move (vDeleteFile(sFile)) To iM
+        Set pbVisited To True
+
+        Set Private.piTextColor To (piVisitedColor(Self))
+        Set Private.piOriColor  To (piVisitedColor(Self))
+        Send RedrawControl
+    End_Procedure
+    //
+    // ---------------------------- Painting -----------------------------
+    //
+    // Shadowing Object.
+//    Procedure Set Enabled_State Integer iFlag
+//        Integer iRet
+//        Set Private.pbShadowState To (Not(iFlag))
+//        If iFlag Set Focus_Mode   To Focusable
+//        Else     Set Focus_Mode   To NonFocusable
+//        If (Window_Handle(Self) = 0) Procedure_Return
+//        Send RedrawControl
+//        Send RefreshToolTip
+//        If (Focus(Desktop) = Self And iFlag = (False)) Send Next // We don't want to be sitting here...
+//    End_Procedure // Set Enabled_State
+
+    Procedure LinkLabel Handle hDC Integer iX Integer iY Integer iShad
+        Integer iRet iBorder iColor iBX iBY iBA
+        Integer iT iB iL iR
+        Handle  hOldF
+        String sData sRc sSRc
+        Pointer lpData lpRc lpSRc
+        //
+        // Font
+        Move (SelectObject(hDc, ControlFont(Self))) To hOldF
+        // Rectangle
+        If (Border_Style(Self)=BORDER_NONE) Begin
+            Move 0 To iT
+            If (pbDrawFocus(Self)) Move 2 To iL
+            Else Move 0 To iL
+            Move (iX-1) To iR
+            Move (iY-1) To iB
+        End
+        Else Begin
+            Move 2 To iT
+            If (pbDrawFocus(Self)) Move 4 To iL
+            Else Move 2 To iL
+            Move (iX-4) To iR
+            Move (iY-4) To iB
+        End
+        //
+        ZeroType tRect To sRc
+        Put iT To sRc At tRect.Top
+        Put iL To sRc At tRect.Left
+        Put iR To sRc At tRect.Right
+        Put iB To sRc At tRect.Bottom
+        GetAddress Of sRc To lpRc
+        //
+        If iShad Begin
+            ZeroType tRect To sSRc
+            Put iT+1 To sSRc At tRect.Top
+            Put iL+1 To sSRc At tRect.Left
+            Put iR+1 To sSRc At tRect.Right
+            Put iB+1 To sSRc At tRect.Bottom
+            GetAddress Of sSRc To lpSRc
+        End
+        //
+        Move (Label(Self)+Character(0)) To sData
+        GetAddress Of sData To lpData
+        If iShad  Begin
+            Move (SetTextColor(hDc, clWhite)) To iRet
+            Move (DrawText(hDc, lpData, -1, lpSRc, piTextAlignFlags(Self) )) To iRet
+            Move (SetTextColor(hDc, clDkGray)) To iRet
+            Move (DrawText(hDc, lpData, -1, lpRc, piTextAlignFlags(Self) )) To iRet
+            // Another way
+//            Move (DrawStateEf(hDC, 0, 0, lpData, Length(sData)-1, 11, 7, iX, iY, DST_TEXT iOr DSS_DISABLED)) To iRet
+        End
+        Else Move (DrawText(hDc, lpData, -1, lpRc, piTextAlignFlags(Self) )) To iRet
+        //
+        Move (SelectObject(hDc, hOldF)) To hOldF
+    End_Procedure
+
+    Procedure LinkFace Handle hDC
+        Integer iRet iX iY iTextColor iShad
+        //
+        Get piTextColor To iTextColor
+        //
+        Get Private.pbShadowState To iShad
+        //
+        Move (Hi(GuiSize(Self))) To iY
+        Move (Low(GuiSize(Self))) To iX
+        // Color
+        Move (SetBkMode(hDC, TRANSPARENT)) To iRet
+        Move (SetTextColor(hDc, iTextColor)) To iRet
+        //
+        // Label
+        If (Label(Self)<>"") Send LinkLabel hDC iX iY iShad
+        //
+    End_Procedure
+
+    Procedure PaintLink Handle hDc
+        Handle hBrush hPen hOldB hOldP
+        Integer iX iY iRet
+        Integer iColor iShad iBorder iFlag iBW
+        String sRect
+        Pointer pRect
+        //
+        Get piColor To iColor
+        //
+        Get Private.pbShadowState To iShad
+        Get Border_Style To iBorder
+        //
+        Move (CreateSolidBrush(iColor)) To hBrush
+
+        If (iBorder=BORDER_NORMAL) Begin
+            Get Border_Width To iBW
+            Move (CreatePenEf(PS_SOLID, iBW, Border_Color(Self))) To hPen
+        End
+        Else Move (CreatePenEf(PS_SOLID, 1, iColor)) To hPen
+        //
+        Move (SelectObject(hDC, hPen)) To hOldP
+        Move (SelectObject(hDC, hBrush)) To hOldB
+        Move (Hi(guisize(Self))) To iY
+        Move (Low(guisize(Self))) To iX
+        //
+        If ((iBorder=BORDER_DIALOG)Or(iBorder=BORDER_WINDOWEDGE)) Begin
+            ZeroType tRect To sRect
+            Put iY To sRect At tRect.Bottom
+            Put iX To sRect At tRect.Right
+            GetAddress Of sRect To pRect
+            Move (DrawFrameControlEf(hDc, pRect, DFC_BUTTON, DFCS_BUTTONPUSH )) To iRet
+        End
+        Else If ((iBorder=BORDER_STATICEDGE)Or(iBorder=BORDER_CLIENTEDGE)) Begin
+            ZeroType tRect To sRect
+            Put iY To sRect At tRect.Bottom
+            Put iX To sRect At tRect.Right
+            GetAddress Of sRect To pRect
+            Move (DrawFrameControlEf(hDc, pRect, DFC_BUTTON, (DFCS_BUTTONPUSH Ior DFCS_PUSHED ) )) To iRet
+        End
+        If (iBorder=BORDER_NORMAL) Move (Rectangle(hDC, 0, 0, iX, iY)) To iRet
+        //
+        If      (iBorder=BORDER_DIALOG)     Move (Rectangle(hDC, 2, 2, iX-2, iY-2)) To iRet
+        Else If (iBorder=BORDER_CLIENTEDGE) Move (Rectangle(hDC, 2, 2, iX-2, iY-2)) To iRet
+        Else If (iBorder=BORDER_STATICEDGE) Move (Rectangle(hDC, 1, 1, iX-1, iY-1)) To iRet
+        Else If (iBorder=BORDER_NORMAL)     Move (Rectangle(hDC, iBW, iBW, iX-iBW, iY-iBW)) To iRet
+        Else If (iBorder=BORDER_WINDOWEDGE) Move (Rectangle(hDC, 1, 1, iX-1, iY-1)) To iRet
+        Else                                Move (Rectangle(hDC, 0, 0, iX, iY)) To iRet
+        //
+        Move (SetBkMode(hDC, TRANSPARENT)) To iRet
+        Send LinkFace hDC True
+        //
+        Move (SelectObject(hDC, hOldP)) To hOldP
+        Move (SelectObject(hDC, hOldB)) To hOldB
+        Move (DeleteObject(hPen)) To iRet
+        Move (DeleteObject(hBrush)) To iRet
+        //
+    End_Procedure
+
+    Procedure PaintSelectedLink Handle hDc
+        //
+        Send PaintLink  hDC
+        Send PaintFocus hDc
+        //
+    End_Procedure
+
+    Procedure PaintFocus Handle hDc
+        If (Not(pbDrawFocus(Self))) Procedure_Return
+        Pointer pRect
+        String  sRect
+        Integer iX iY iRet
+        Move (Low(GuiSize(Self))-3) To iX
+        Move (Hi(GuiSize(Self))-3) To iY
+        ZeroType  tRect To sRect
+        If (Border_Style(Self)=BORDER_NONE) Begin
+            Put 1  To sRect At tRect.Top
+            Put 1  To sRect At tRect.Left
+            Put iY+2 To sRect At tRect.Bottom
+            Put iX+2 To sRect At tRect.Right
+        End
+        Else Begin
+            Put 3  To sRect At tRect.Top
+            Put 3  To sRect At tRect.Left
+            Put iY To sRect At tRect.Bottom
+            Put iX To sRect At tRect.Right
+        End
+        GetAddress Of sRect To pRect
+        Move (DrawFocusRectEf(hDC, pRect)) To iRet
+    End_Procedure
+
+    // ----------------------- PRIVATE EVENTS -------------------------
+
+    Procedure WMMSG_Erasebkgnd Integer wParam Integer lParam
+        Procedure_Return 1
+    End_Procedure
+    //
+    Procedure WMSG_OnDrawItem Integer wParam Integer lParam
+        Integer iRet
+        Integer iAct iState hDC
+        String sItemStr
+        Pointer pItemStr
+        ZeroType DRAWITEMSTRUCT To sItemStr
+        GetAddress Of sItemStr To pItemStr
+        Move (CopyMemory(pItemStr, lParam, DRAWITEMSTRUCT_SIZE)) To iRet
+        GetBuff From sItemStr At DRAWITEMSTRUCT.itemAction  To iAct
+        GetBuff From sItemStr At DRAWITEMSTRUCT.itemState   To iState
+        GetBuff From sItemStr At DRAWITEMSTRUCT.hDC         To hDC
+        If (iAct=ODA_DRAWENTIRE)             Send PaintLink hDC
+        If ((iAct=ODA_SELECT)And(iState=16)) Send PaintLink hDC
+        If ((iAct=ODA_SELECT)And(iState=17)) Send PaintSelectedLink hDC
+        If (iState=ODS_FOCUS)                Send PaintFocus hDc
+        Send OnPaint hDC iAct iState
+    End_Procedure
+    Procedure command Integer wPara Integer lPara
+        If (Hi(wPara)=BN_CLICKED) Send WMSG_onClick
+    End_Procedure
+    Procedure WMSG_OnClick
+        Send Start_URL (psURL(Self))
+        Send OnClick
+    End_Procedure
+    // ----------------- PUBLIC EVENTS -------------------
+    Procedure OnMouseMove
+        Send SetCustom_Cursor
+    End_Procedure
+
+    Procedure OnMouseLeave
+        Send Restore_Cursor
+    End_Procedure
+
+    Procedure OnPaint Integer hDC Integer iAct Integer iState
+    End_Procedure
+
+End_Class

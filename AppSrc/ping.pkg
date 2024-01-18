@@ -1,0 +1,289 @@
+//************************************************************************
+//*** PING - Ping a string representation of an IP address.
+//************************************************************************
+//*** Ping.pkg
+//*** Version: 1.0
+//*** Copyright (c) 2003 NordTeam Gruppen
+//***
+//*** Author......: Allan Kim Eriksen
+//*** Created.....: 19/9 2003
+//*** Last updated: 19/9 2003
+//************************************************************************
+
+// Wait a number of milliseconds
+External_Function NetAliveSleep "Sleep" kernel32.dll ;
+    Integer lMilliseconds ;
+    Returns Integer
+
+//Clean up sockets.
+// http://support.microsoft.com/default.aspx?scid=kb;EN-US;q154512
+External_Function WSACleanup "WSACleanup" wsock32.dll ;
+    Returns Integer
+
+//Open the socket connection.
+//http://support.microsoft.com/default.aspx?scid=kb;EN-US;q154512
+External_Function WSAStartup "WSAStartup" wsock32.dll ;
+    Integer iVersionRequired ;
+    Integer lpWSADATA ;
+    Returns Integer
+
+//Create a handle on which Internet Control Message Protocol (ICMP) requests can be issued.
+//http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_icmpcreatefile.asp
+External_Function IcmpCreateFile "IcmpCreateFile" icmp.dll ;
+    Returns Integer
+
+//Convert a string that contains an (Ipv4) Internet Protocol dotted address into a correct address.
+//http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winsock/wsapiref_4esy.asp
+External_Function inet_addr "inet_addr" wsock32.dll ;
+    String cp ;
+    Returns Integer
+
+//Close an Internet Control Message Protocol (ICMP) handle that IcmpCreateFile opens.
+//http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_icmpclosehandle.asp
+External_Function IcmpCloseHandle "IcmpCloseHandle" icmp.dll ;
+    Handle icmphandle ;
+    Returns Integer
+
+//Send an Internet Control Message Protocol (ICMP) echo request, and then return one or more replies.
+//http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcetcpip/htm/cerefIcmpSendEcho.asp
+External_Function IcmpSendEcho "IcmpSendEcho" icmp.dll ;
+    Handle icmphandle ;
+    Integer Destinationaddress ;
+    String RequestData ;
+    Integer RequestSize ;
+    Integer RequestOptions ;
+    Integer Replybuffer ;
+    Integer Replysize ;
+    Integer Timeout ;
+    Returns Integer
+
+//Information about the Windows Sockets implementation
+//http://support.microsoft.com/default.aspx?scid=kb;EN-US;q154512
+Type WSADATA
+    Field WSADATA.Version as Word
+    Field WSADATA.HighVersion as Word
+    Field WSADATA.Description as Char 256
+    Field WSADATA.SystemStatus as Char 128
+    Field WSADATA.MaxSockets as DWord
+    Field WSADATA.MaxUDPDG as DWord
+    Field WSADATA.VendorInfo as DWord
+End_Type
+
+//This structure describes the options that will be included in the header of an IP packet.
+//http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcetcpip/htm/cerefIP_OPTION_INFORMATION.asp
+//Private Type IP_OPTION_INFORMATION       
+//   Ttl             As Byte
+//   Tos             As Byte
+//   Flags           As Byte
+//   OptionsSize     As Byte
+//   OptionsData     As Long
+//End Type
+// Is part of the ICMP_ECHO_REPLY.
+
+//This structure describes the data that is returned in response to an echo request.
+//http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wcesdkr/htm/_wcesdk_icmp_echo_reply.asp
+Type tICMP_ECHO_REPLY
+    Field tICMP_ECHO_REPLY.sIPAddr as DWord
+    Field tICMP_ECHO_REPLY.Status as DWord
+    Field tICMP_ECHO_REPLY.RoundTripTime as DWord
+    Field tICMP_ECHO_REPLY.DataSize as DWord
+    Field tICMP_ECHO_REPLY.Reserved as word
+    Field tICMP_ECHO_REPLY.ptrData as DWord
+    Field tICMP_ECHO_REPLY.Ttl as Char 1             // Her comes the start of the type IP_OPTION_INFORMATION
+    Field tICMP_ECHO_REPLY.Tos as Char 1             // .
+    Field tICMP_ECHO_REPLY.Flags as Char 1           // .
+    Field tICMP_ECHO_REPLY.OptionsSize as Char 1     // .
+    Field tICMP_ECHO_REPLY.OptionsData as DWord      // End of the type IP_OPTION_INFORMATION
+    Field tICMP_ECHO_REPLY.Data as Char 250
+End_Type
+
+Define ICMP_SUCCESS For 0
+Define ICMP_STATUS_BUFFER_TO_SMALL For 11001                   //Buffer Too Small
+Define ICMP_STATUS_DESTINATION_NET_UNREACH For 11002           //Destination Net Unreachable
+Define ICMP_STATUS_DESTINATION_HOST_UNREACH For 11003          //Destination Host Unreachable
+Define ICMP_STATUS_DESTINATION_PROTOCOL_UNREACH For 11004      //Destination Protocol Unreachable
+Define ICMP_STATUS_DESTINATION_PORT_UNREACH For 11005          //Destination Port Unreachable
+Define ICMP_STATUS_NO_RESOURCE For 11006                       //No Resources
+Define ICMP_STATUS_BAD_OPTION For 11007                        //Bad Option
+Define ICMP_STATUS_HARDWARE_ERROR For 11008                    //Hardware Error
+Define ICMP_STATUS_LARGE_PACKET For 11009                      //Packet Too Big
+Define ICMP_STATUS_REQUEST_TIMED_OUT For 11010                 //Request Timed Out
+Define ICMP_STATUS_BAD_REQUEST For 11011                       //Bad Request
+Define ICMP_STATUS_BAD_ROUTE For 11012                         //Bad Route
+Define ICMP_STATUS_TTL_EXPIRED_TRANSIT For 11013               //TimeToLive Expired Transit
+Define ICMP_STATUS_TTL_EXPIRED_REASSEMBLY For 11014            //TimeToLive Expired Reassembly
+Define ICMP_STATUS_PARAMETER For 11015                         //Parameter Problem
+Define ICMP_STATUS_SOURCE_QUENCH For 11016                     //Source Quench
+Define ICMP_STATUS_OPTION_TOO_BIG For 11017                    //Option Too Big
+Define ICMP_STATUS_BAD_DESTINATION For 11018                   //Bad Destination
+Define ICMP_STATUS_NEGOTIATING_IPSEC For 11032                 //Negotiating IPSEC
+Define ICMP_STATUS_GENERAL_FAILURE For 11050                   //General Failure
+
+Define WINSOCK_ERROR For 10091                                 // "Network subsystem is unavailable."
+Define INADDR_NONE For |CI$FFFFFFFF
+Define WSA_SUCCESS For 0
+Define WS_VERSION_REQD For |CI$0101
+
+Define ICMP_STRING_TO_SEND For "This is a ping"
+Define INVALID_HANDLE_VALUE For -1
+    
+Enum_List
+    Define PING_WRONG_IPADDRESS For 21000
+    Define PING_INVALID_HANDLE_VALUE
+    Define PING_ERRORWRITTENINLOG
+End_Enum_List
+    
+Class cPing is a cObject
+    
+    Procedure Construct_object
+        Forward Send Construct_object
+        Property String psIPAddress public ""   // Replying address
+        Property Integer piStatus public 0      // Reply status
+        Property Integer piRoundTripTime public 0   // Reply Round trip time, in milliseconds
+        Property Integer piTimeToLive public 1000   // Time to live for the ping, in milliseconds
+    End_Procedure
+    
+    //************************************************************************
+    // PINGs an IP address and returns an integer value for response.
+    //************************************************************************
+    Function Ping String sIPAddress Returns Integer
+        Integer iRetVal iPingResult iTimeToLive iTime
+        Integer iIPAddress
+        String sWSADATA sICMP_ECHO_REPLY sData
+        Pointer lpWSADATA lpICMP_ECHO_REPLY
+        Handle hIcmp
+        
+        Set psIPAddress to sIPAddress
+        Set piRoundTripTime to 0
+        Move WINSOCK_ERROR to iPingResult
+        
+        ZeroType WSADATA to sWSADATA
+        GetAddress of sWSADATA to lpWSADATA
+        Move (WSAStartup(WS_VERSION_REQD, lpWSADATA)) to iRetVal
+        
+        If (iRetVal = WSA_SUCCESS) Begin
+            
+            Get piTimeToLive to iTimeToLive
+            
+            Append sIPAddress (Character(0))
+            Move (inet_addr(sIPAddress)) to iIPAddress
+            If (iIPAddress <> INADDR_NONE and iIPAddress <> 0) Begin
+                
+                Move (IcmpCreateFile()) to hIcmp
+                If (hIcmp <> INVALID_HANDLE_VALUE) Begin
+                    
+                    ZeroType tICMP_ECHO_REPLY to sICMP_ECHO_REPLY
+                    GetAddress of sICMP_ECHO_REPLY to lpICMP_ECHO_REPLY
+            
+                    Move (IcmpSendEcho(hIcmp, iIPAddress, ICMP_STRING_TO_SEND, (Length(ICMP_STRING_TO_SEND)), 0, lpICMP_ECHO_REPLY, (Length(sICMP_ECHO_REPLY)), iTimeToLive)) to iRetVal
+                    GetBuff From sICMP_ECHO_REPLY At tICMP_ECHO_REPLY.Status to iPingResult
+                    
+                    If (iPingResult = ICMP_SUCCESS) Begin
+                        GetBuff From sICMP_ECHO_REPLY At tICMP_ECHO_REPLY.RoundTripTime to iTime
+                        Set piRoundTripTime to iTime
+                    End
+                    
+                    Move (IcmpCloseHandle(hIcmp)) to iRetVal
+            
+                End
+                Else Move PING_INVALID_HANDLE_VALUE to iPingResult
+            
+            End
+            Else Move PING_WRONG_IPADDRESS to iPingResult
+        
+            Move (WSACleanup()) to iRetVal
+        End
+        
+        Set piStatus to iPingResult
+        Function_Return iPingResult
+    
+    End_Function
+    
+    //************************************************************************
+    // Convert the ping response from an integer value to a descriptive text.
+    //************************************************************************
+    Function EvaluatePingResponse Integer PingResponse Returns String
+        String sResponse
+        Case Begin
+            Case (PingResponse = ICMP_SUCCESS)
+                Move "Success!" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_BUFFER_TO_SMALL)
+                Move "Buffer Too Small" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_DESTINATION_NET_UNREACH)
+                Move "Destination Net Unreachable" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_DESTINATION_HOST_UNREACH)
+                Move "Destination Host Unreachable" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_DESTINATION_PROTOCOL_UNREACH)
+                Move "Destination Protocol Unreachable" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_DESTINATION_PORT_UNREACH)
+                Move "Destination Port Unreachable" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_NO_RESOURCE)
+                Move "No Resources" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_BAD_OPTION)
+                Move "Bad Option" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_HARDWARE_ERROR)
+                Move "Hardware Error" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_LARGE_PACKET)
+                Move "Packet Too Big" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_REQUEST_TIMED_OUT)
+                Move "Request Timed Out" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_BAD_REQUEST)
+                Move "Bad Request" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_BAD_ROUTE)
+                Move "Bad Route" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_TTL_EXPIRED_TRANSIT)
+                Move "TimeToLive Expired Transit" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_TTL_EXPIRED_REASSEMBLY)
+                Move "TimeToLive Expired Reassembly" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_PARAMETER)
+                Move "Parameter Problem" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_SOURCE_QUENCH)
+                Move "Source Quench" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_OPTION_TOO_BIG)
+                Move "Option Too Big" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_BAD_DESTINATION)
+                Move "Bad Destination" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_NEGOTIATING_IPSEC)
+                Move "Negotiating IPSEC" to sResponse
+                Case Break
+            Case (PingResponse = ICMP_STATUS_GENERAL_FAILURE)
+                Move "General Failure" to sResponse
+                Case Break
+            Case (PingResponse = WINSOCK_ERROR)
+                Move "Windows Sockets not responding correctly" to sResponse
+                Case Break
+            Case (PingResponse = PING_WRONG_IPADDRESS)
+                Move "Forkert IP-adresse" to sResponse
+                Case Break
+            Case (PingResponse = PING_INVALID_HANDLE_VALUE)
+                Move "Failure opening icmp handle" to sResponse
+                Case Break
+            Case (PingResponse = PING_ERRORWRITTENINLOG)
+                Move "FEJL - Se loggen!" to sResponse
+                Case Break
+            Case Else
+                Move "Unknown Response" to sResponse
+                Case Break
+        Case End
+        Function_Return sResponse
+    End_Function
+End_Class

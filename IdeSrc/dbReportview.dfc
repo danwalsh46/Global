@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class dbReportView is a dbView
+  Inherit
+  Set ClassPackage To "dbRptVw.Pkg"
+End_Class

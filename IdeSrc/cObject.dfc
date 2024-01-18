@@ -1,0 +1,15 @@
+//AB/ CLASSDEF
+Class cObject is a AbstractNonVisualContainer
+    Set peClassLibrary To clCommon            // this class belongs to all class libraries
+    Set ObjectNameMask To "oObject<count>"
+    Set ClassHelpName  To "cObject"
+    Set ClassCETV      To 39                  // use TreeView Image #39
+    Set ClassPackage   To "Windows.pkg"
+
+    Inherit
+    
+    Property No_Visible String Bitmap "cObject.bmp"
+
+    Property No_Execute Mode peNeighborHood nhPublic nhPublic nhPrivate nhNo // If a neighborhood (nhPublic) all objects within may address each other with short name. nhPrivate=no short access at all. nhNo=not Neighborhood, check parent (rarely used).
+    Property No_Execute Mode Delegation_Mode Delegate_To_Parent Delegate_To_Parent No_Delegation No_Delegate_Or_Error
+End_Class

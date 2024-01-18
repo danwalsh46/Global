@@ -1,0 +1,23 @@
+//AB/ CLASSDEF
+Class Textbox IS A BaseMetaType TextBox ABMetaTextBoxMixin DefineABMetaTextBoxMixin
+    Set Control_Type     To ctBASE
+    Set Floating_Menu_Id To TextBoxFloater.obj
+    Set Type_Of_Drag     To TD_DRAG_CONTROL
+    Set ObjectNameMask   To "oTextBox<count>"
+    Set ClassHelpName    To "Textbox"
+    Set ClassCETV        To 5                // use TreeView Image #5 (1-based offset)
+
+    Property String Label // Text/Label associated with this Control
+    Property Boolean Auto_Size_State True // Size (and resize) textbox based on text contents
+    Property Boolean Transparent_State FALSE // If true, background color is transparent.
+    Property Color Color clBtnFace // Background Color
+    Property Color TextColor clWindowText // Text Color
+    Property Complex FontSize 12 0 // Text Font size (Complex)
+    Property Complex Location 0 0  // Object Location (Complex: row, column)
+    Property Always_Generate Complex Size 13 55 // Object Size (Complex: height, width)
+    Property Integer FontWeight 400 // Text Font weight
+    Property Mode Border_Style Border_None Border_None Border_Normal Border_Dialog Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style
+    Property Mode Justification_Mode jMode_VCenter jMode_Left jMode_Right jMode_Center jMode_VCenter jMode_Top jMode_Bottom // Text justification modes (not all work!)
+    Property String TypeFace "MS SANS SERIF" // Font to be used for Text
+    Property no_execute anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+End_Class

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblHttpTransfer is a cHttpTransfer
+    Set ClassPackage To "cGlblHttpTransfer.pkg"
+    Inherit
+End_Class

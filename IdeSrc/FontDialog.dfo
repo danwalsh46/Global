@@ -1,0 +1,20 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    //FontDialog is a predefined function method in the FontDialog class
+    //get FontDialog to an integer variable to call the FontDialog
+    //
+    //DoCallFontDialog is NOT a predefined method in the FontDialog class
+    //DoCallFontDialog it is just used an example
+    //you can send DoCallFontDialog from another object, such as a button
+    //
+    //Procedure DoCallFontDialog
+    //    Boolean bOk
+    //
+    //    Get FontDialog To bOk
+    //    If (bOk) Begin
+    //       //
+    //    End
+    //End_Procedure  // DoCallFontDialog
+    //AB-StoreEnd
+End_Object

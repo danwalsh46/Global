@@ -1,0 +1,24 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    Procedure OnPageTop
+        // Output table start tag
+        Send WriteHtmlTableBegin
+
+        Send WriteHtmlRowBegin
+            // Output Table Heading Cells here
+        Send WriteHtmlRowEnd
+    End_Procedure // OnPageTop
+
+    Procedure OnBody
+        Send WriteHtmlRowBegin
+            // Output Table Data Cells for each row here
+        Send WriteHtmlRowEnd
+    End_Procedure // OnBody
+
+    Procedure OnPageBottom
+        // Output table end tag
+        Send WriteHtmlTableEnd
+    End_Procedure // OnPageBottom
+    //AB-StoreEnd
+End_Object

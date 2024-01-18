@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblTextbox is a Textbox
+    Set ClassPackage To "cGlblTextbox.pkg"
+    Inherit
+End_Class

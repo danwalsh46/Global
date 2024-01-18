@@ -1,0 +1,20 @@
+//AB/ CLASSDEF
+Class cWebApp is a AbstractContainer Meta_cWebApp Meta_cWebApp_Mixin Define_Meta_cWebApp_Mixin
+    Set Drop_Allowed   To TD_DRAG_NONVISUAL
+    Set Type_Of_Drag   To TD_DRAG_PANEL
+    Set ClassPackage   To "cWebApp.pkg"
+    Set peClassLibrary To clWebApp           // this class belongs to the Web Server Application class library only
+    Set ClassCETV      To 42                 // use TreeView Image #42
+    Set Control_Type   To ctBASE             // disable DataBase tab page in Properties
+    Set ObjectNameMask To "oWebApp"
+    Set ClassHelpName  To "cWebApp"
+
+    Property No_Visible Pseudo      Complex Location     0 0  // don't show location
+    Property No_Visible Pseudo      Complex Size         40 44    // don't show size
+    Property No_Visible             String  Bitmap       "cWebApp.bmp"  // show this bitmap on control
+    Property No_Visible             Integer Bitmap_Style Bitmap_Actual
+    Property No_Visible No_Generate Mode    Border_Style Border_Normal
+    Property No_Visible No_Generate Color   Color        clWhite
+
+    Property No_Execute mode peHtmlOutput C_hoNormal C_hoNormal C_hoFile C_hoConsole // Use to redirect Html output when debugging: C_hoNormal - Direct output to your browser, C_hoFile - Direct output to the text file "WebApp Html Out.txt", C_hoConsole - Direct output to the Showln console
+End_Class

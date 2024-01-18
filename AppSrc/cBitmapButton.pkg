@@ -1,0 +1,396 @@
+//****************************************************************************
+// $Module type: CLASS
+// $Module name: cBitmapToolbarButton
+// $Author     : Nils G. Svedmyr
+// Created     : 2002-07-05 @ 14:59
+//
+// Description : Helper class for cBitmapButton.
+//
+// $Rev History
+//    2002-07-05  Module header created
+//****************************************************************************
+Use cToolBar.pkg
+Use cWinButton.pkg
+
+Register_Object oToolbar
+Register_Procedure Set phoCopy  Handle ho
+Register_Procedure Set phoPaste Handle ho
+Register_Procedure Set phoCut   Handle ho
+
+Class cBitmapButton Is A cWinButton
+
+  Procedure Construct_Object
+    String sKey sVal
+    Boolean bState
+    Integer iValue
+
+    Forward Send Construct_Object
+    Move "Preferences"         To sKey
+    Set FontSize               To 14 0
+    Set TypeFace               To "Arial"
+    Set piBitmapAlign          To BBA_LEFT
+//    Set Color                  To 13492159 // clBtnFace
+
+    Move "piButtonTextColor"   To sVal
+    Get ReadDWord Of ghoApplication sKey sVal clWindowText       To iValue
+    Set TextColor              To iValue
+
+    Move "pbHotTrack"          To sVal
+    Get ReadDWord Of ghoApplication sKey sVal True               To bState
+    Set piHotTrack             To bState
+
+    Move "piHotTrackTextColor" To sVal
+    Get ReadDWord Of ghoApplication sKey sVal clBlue             To iValue
+    Set piHotColor             To iValue
+
+    Move "piGradientMode"      To sVal
+    Get ReadDWord Of ghoApplication sKey sVal GRADIENT_TOPBOTTOM To iValue
+    Set Gradient_Mode          To iValue
+
+    Move "piButtonColor"       To sVal
+    Get ReadDWord Of ghoApplication sKey sVal clBtnFace          To iValue
+    If (Gradient_Mode(Self) <> Gradient_None) Move clBtnFace     To iValue
+    Set Color                  To iValue
+
+    Move "piGradientFromColor" To sVal
+    Get ReadDWord Of ghoApplication sKey sVal clWhite            To iValue
+    Set GradientFromColor      To iValue
+
+    Move "piGradientToColor"   To sVal
+    Get ReadDWord Of ghoApplication sKey sVal clDkGray           To iValue
+    Set GradientToColor        To iValue
+
+    Move "pbButtonBoldFace"    To sVal
+    Get ReadDWord Of ghoApplication sKey sVal True               To bState
+    Set pbBoldFace             To bState
+
+    Move "pbFlatStyle"         To sVal
+    Get ReadDWord Of ghoApplication sKey sVal True               To bState
+    Set piFlatState            To bState
+
+    Move "pbToolTips"          To sVal
+    Get ReadDWord Of ghoApplication sKey sVal True               To bState
+    Set pbToolTips             To bState
+
+    Move "pbToolTipStyle"      To sVal
+    Get ReadDWord Of ghoApplication sKey sVal True               To bState
+    Set pbToolTipBalloon       To bState
+
+  //    Set psToolTip              To ""
+  //    Set psToolTipTitle         To ""
+  //    Set piToolTipIcon       To TTI_INFO
+  //    Set pbToolTipBalloon    To True
+
+  //    Set ButtonTextAlign     To BTA_CENTER
+  //    Set Pointer_Only_State  To False
+  //    Set psShadowText        To ""
+  //    Set Label               To ""       // We need this to trigger the
+    Set Exit_msg         To DoEnableToolbarButtons
+    Set Entry_msg        To DoDisableToolbarButtons
+  End_Procedure // Construct_Object
+
+  Procedure DoEnableToolbarButtons
+    Handle ho
+    Move (oToolBar(Self)) To ho
+    If ho Begin
+      Get phoCut          To ho
+      If ho Set pbEnabled Of ho To True
+      Get phoCopy         To ho
+      If ho Set pbEnabled Of ho To True
+      Get phoPaste        To ho
+      If ho Set pbEnabled Of ho To True
+    End // If ho Begin
+  End_Procedure // DoEnableToolbarButtons
+
+  Procedure DoDisableToolbarButtons
+    Handle ho
+    Boolean bState
+    Move (oToolBar(Self)) To ho
+    If ho Begin
+      Get phoCut          To ho
+      If ho Set pbEnabled Of ho To False
+      Get phoCopy         To ho
+      If ho Set pbEnabled Of ho To False
+      Get phoPaste        To ho
+      If ho Set pbEnabled Of ho To False
+    End // If ho Begin
+  End_Procedure // DoDisableToolbarButtons
+
+End_Class // cBitmapButton
+
+Class cBitmapToolbarButton Is A cToolbarButton
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    Set piImage      To 0
+    Set pbAutoSize   To False // True This doesn't work !!! (it is always true...) *** CHECK CLASS CODE ***
+    Set Border_Style To Border_None
+    Set TypeFace     To "MS Sans Serif"
+  End_Procedure // Construct_Object
+
+  Procedure End_Construct_Object
+    Forward Send End_Construct_Object
+  End_Procedure // End_Construct_Object
+
+  Procedure OnClick
+    Delegate Send OnClick // This will send it to the outer object where the real code is placed by the programmer.
+  End_Procedure // OnClick
+
+  Procedure Set Status_Help String sValue
+  End_Procedure // Set Status_Help
+
+//  Procedure Page Integer iState
+//    If (iState =1) Begin
+//      Set Window_Style To TTS_BALLOON   True
+//      Set Window_Style To TTS_ALWAYSTIP True
+//    End // If (iState =1) Begin
+//    Forward Send Page iState
+//  End_Procedure // Page Integer iState
+
+End_Class // cBitmapToolbarButton
+
+//****************************************************************************
+// $Module type: CLASS
+// $Module name: cBitmapImageList
+// $Author     : Nils G. Svedmyr
+// Created     : 2002-07-05 @ 17:05
+//
+// Description : Helper class for cBitmapButton.
+//
+// $Rev History
+//    2002-07-05  Module header created
+//****************************************************************************
+Class cBitmapImageList Is A cImageList
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    //Set phoImage    To Self
+    Set piMaxImages To 1
+  End_Procedure // Construct_Object
+
+  Procedure End_Construct_Object
+    Forward Send End_Construct_Object
+  End_Procedure // End_Construct_Object
+End_Class // cBitmapImageList
+
+  //****************************************************************************
+  // $Module type: CLASS
+  // $Module name: cBitmapToolbar
+  // $Author     : Nils G. Svedmyr
+  // Created     : 2002-07-05 @ 17:01
+  //
+  // Description : Helper class for cBitmapButton.
+  //
+  // $Rev History
+  //    2002-07-05  Module header created
+  //****************************************************************************
+Register_Function piBitmapSize Returns Integer
+
+Class cBitmapToolbar Is A cToolbar
+  Procedure Construct_Object
+    Handle ho
+    Forward Send Construct_Object
+    Property Integer Private.CurrentButtonState False
+    Property Integer Private.phoButton 0
+
+    //Set phoToolBar    Of (Parent(Self)) To Self
+    Set pbInMDIPanel                    To False
+    Set pbShowLabels                    To True  // Display the psLabel property on the button
+    Set pbList                          To True  // Show the psLabel property to the right of the image
+    Set pbWrapable                      To False
+    Set pbNoDivider                     To True
+    Set pbFlat                          To False // Displayes the toolbar raised. This is what makes it look like a button.
+    Set piIndent                        To 0
+    Set peAlign                         To alTop //alNone
+    Set TypeFace                        To "MS Sans Serif"
+
+    Get Create U_cBitmapImageList       To ho
+    //Set phoImage      Of (Parent(Self)) To ho // Set property of cBitmapButton class.
+    Set Private.phoButton               To ho
+    Set phoImageList                    To ho // Standard class property.
+//    Set phoImageListDisabled          To ho // Set this so the defined bitmap is displayed if button is disabled (else gray image)
+
+    Get Create U_cBitmapToolbarButton      To ho
+    //Set phoToolBarButton Of (Parent(Self)) To ho // Set property of cBitmapButton class.
+  End_Procedure // Construct_Object
+
+  Procedure Set Status_Help String sValue
+  End_Procedure // Set Status_Help
+
+  Procedure Add_Focus Integer hoBase Returns Integer
+    Integer iButtonWidth iButtonHeight
+    Handle ho
+    Integer iRetVal
+    Integer iSize iSizeSelf
+    Get GuiSize Of (Parent(Self)) To iSize
+    Set GuiSize                   To (Hi(iSize)) (Low(iSize))
+    Set piButtonWidthMin          To (Low(iSize) -5)
+    Forward Get Msg_Add_Focus hoBase To iRetVal
+  End_Procedure
+
+  Function Item_Count Returns Integer
+    Function_Return 1
+  End_Function // Item_Count
+
+//  Procedure Set Default_State Integer bState
+//    set Default_Action_Button to (if(bState,self,0))
+//  End_Procedure
+
+End_Class // cBitmapToolbar
+
+//****************************************************************************
+// $Module type: CLASS
+// $Module name: cBitmapButton.pkg
+// $Author     : Nils G. Svedmyr
+// Created     : 2002-07-05 @ 13:02
+//
+// Description :
+//
+// $Rev History
+//    2002-07-05  Module header created
+//****************************************************************************
+//Class cBitmapButton Is A Container3d
+//  Procedure Construct_Object
+//    Handle ho
+//    Forward Send Construct_Object
+//    Property Handle  phoImage         0
+//    Property Handle  phoToolBar       0
+//    Property Handle  phoToolBarButton 0
+//    Property Integer piBitmapSize     16
+//    Property Boolean Private.Enabled_State True
+//    Property Boolean Private.Default_State False
+//    Property String  Private.Bitmap ""
+//    Property Integer Private.TransparentColor 0
+//    Property String  Private.Label ""
+//    Property String  Private.Tooltip ""
+
+//    Set TypeFace                To "MS Sans Serif"
+//    Set Border_Style            To Border_None
+//    Get Create U_cBitmapToolbar To ho
+//    Set phoToolBar              To ho
+//    // 2004-05-11 ------------------------------------ Start Nils G. Svedmyr
+//    Set Skip_state              To True
+//    Set Focus_Mode              To Pointer_Only
+//    // 2004-05-11 ------------------------------------ Stop Nils G. Svedmyr
+
+//  End_Procedure // Construct_Object
+
+//  Procedure End_Construct_Object
+//    Handle ho
+//    Integer iColor iVoid iSize iLoc iTextWidth
+//    String sBitmap sLabel
+//    Forward Send End_Construct_Object
+
+//    // Readjust size and location
+//    // The container object needs to be 2 units
+//    // higher than what is visible in the IDE
+//    // and when running the program. So set the height in
+//    // the IDE to normal 14 units (done in cBitmapButton.dfc) but add an
+//    // extra two units here:
+//    // 2003-07-03 ------------------------------------ Start Nils G. Svedmyr
+//    Get GuiSize     To iSize
+//    Set GuiSize     To (Hi(iSize) + 4) (Low(iSize) + 5)
+//    // 2003-07-03 ------------------------------------ Stop Nils G. Svedmyr
+//    Get GuiLocation To iLoc
+//    Set GuiLocation To (Hi(iLoc) - 2) (Low(iLoc))
+
+//    // cImageList:
+//    Get phoImage                 To ho
+//    Get Private.Bitmap           Of ho To sBitmap
+//    Get Private.TransparentColor Of ho To iColor
+//    Set piImageHeight            Of ho To (piBitmapSize(Self))
+//    Set piImageWidth             Of ho To (piBitmapSize(Self))
+//    Send DoCreate                Of ho                          // Must do this...
+//    Get AddTransparentImage      Of ho sBitmap iColor To iVoid
+
+//    // cToolBarButton:
+//    Get phoToolbarButton To ho
+//    Set psLabel          Of ho To (Private.Label(Self))
+//    Set psTooltip        Of ho To (Private.Tooltip(Self))
+//  End_Procedure // End_Construct_Object
+
+//  Procedure Set Bitmap String sValue
+//    Set Private.Bitmap To sValue
+//  End_Procedure // Set Bitmap
+
+//  Function Bitmap Returns String
+//    Function_Return (Private.Bitmap(Self))
+//  End_Function // Bitmap
+
+//  Procedure Set piTransparentColor Integer iValue
+//    Set Private.TransparentColor To iValue
+//  End_Procedure // Set piTransparentColor
+
+//  Function piTransparentColor Returns Integer
+//    Function_Return (Private.TransparentColor(Self))
+//  End_Function // piTransparentColor
+
+//  Procedure Set Label String sValue
+//    Set Private.Label To sValue
+//    Set psLabel Of (phoToolBarButton(Self)) To sValue
+//  End_Procedure // Set Label
+
+//  Function Label Returns String
+//    Function_Return (Private.Label(Self))
+//  End_Function // Label
+
+//  Procedure Set Status_Help String sValue
+//    Set Private.Tooltip To sValue
+//  End_Procedure // Set Status_Help
+
+//  // We can't have a function Status_Help, since this collide
+//  // with the auto tooltip logic for all objects that displays
+//  // the status_help as a tooltip. Else there would be two
+//  // tooltips displayed for each cBitmapButton object.
+//  // So to get the status_help for this object;
+//  // use Get psTooltip.
+//  Function psTooltip Returns String
+//    Function_Return (Private.Tooltip(Self))
+//  End_Function // psTooltip
+
+//  Procedure Set psToolTip String sToolTip
+//    Set Private.ToolTip To sToolTip
+//    Set psTooltip Of (phoToolbarButton(Self)) To (Private.Tooltip(Self))
+//  End_Procedure // Set psToolTip String sToolTip
+
+//  Procedure Set Enabled_State Boolean bValue
+//    Integer iParentState
+//    Get Enabled_State   Of (Parent(Self)) To iParentState
+//    Set Private.Enabled_State To (bValue And iParentState)
+//    Set pbEnabled Of (phoToolBarButton(Self)) To (bValue And iParentState)
+//  End_Procedure // Set Enabled_State
+
+//  Function Enabled_State Returns Boolean
+//    Function_Return (Private.Enabled_State(Self))
+//  End_Function // Enabled_State
+
+//  Procedure Set Default_State Boolean bValue
+//    Set Private.Default_State To bValue
+//  End_Procedure // Set Enabled_State
+
+//  Function Default_State Returns Boolean
+//    Function_Return (Private.Default_State(Self))
+//  End_Function // Enabled_State
+
+//  Procedure Set pbToolTips Boolean bState
+//    Handle ho
+//    If (bState = False) Begin
+//      Get phoToolBar To ho
+//      Set pbToolTips Of ho To False
+//      Get phoToolbarButton To ho
+//      Set Private.Tooltip  To ""
+//      Set psTooltip        Of ho To ""
+//    End // If (bState = False) Begin
+//  End_Procedure // Set pbToolTips
+
+//  Procedure KeyAction
+//    Boolean bActive bEnabled
+//    Integer iRetVal
+//    Get Active_State  To bActive
+//    Get Enabled_State To bEnabled
+//    Move 0 To iRetVal   // Must do this!
+//    If (bActive And bEnabled) Get msg_OnClick To iRetVal
+//  End_Procedure // KeyAction
+
+//  Function Current_Item Returns Integer
+//    Function_Return 0
+//  End_Function // Current_Item
+//End_Class // cBitmapButton

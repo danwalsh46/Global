@@ -1,0 +1,36 @@
+//AB/ CLASSDEF
+Class PrintDialog is a BitmapContainer
+    Set Drop_Allowed   To False      // disallow dropping controls onto this control
+    Set Type_Of_Drag   To TD_DRAG_NONVISUAL
+    Set Control_Type   To ctBASE     // disable DataBase tab page in Properties
+    Set Size_Allowed   To False
+    Set ObjectNameMask To "oPrintDialog<count>"
+    Set ClassHelpName  To "PrintDialog"
+    Set ClassCETV      To 29         // use TreeView Image #29 (1-based offset)
+    Set ClassPackage   To "Prnt_dlg.pkg"
+
+    //don't show location
+    Property No_Visible Pseudo Complex Location 0 0
+    //don't show size
+    Property No_Visible Pseudo Complex Size 20 20
+    //show this bitmap on control
+    Property No_Visible String Bitmap "PrintDialog.bmp"
+    Property No_Visible Integer Bitmap_Style Bitmap_Center
+
+    Property No_Execute Mode Collate DMCollate_True DMCollate_True DMCollate_False // Specifies whether collation should be used when printing multiple copies.
+    Property No_Execute Mode Color DMColor_Color DMColor_Color DMColor_Monochrome // Specifies whether color printing should be used with color printers
+    Property No_Execute Integer Copies 1 // Specifies the number of copies printed.
+    Property No_Execute String DeviceName "" // Specifies the name of the printer.
+    Property No_Execute Mode DitherType DMDither_Fine DMDither_None DMDither_Coarse DMDither_Fine DMDither_LineArt DMDither_GrayScale DMDither_ErrorDiffusion // Specifies the dithering type.
+    Property No_Execute String DriverName "" // Specifies the dithering type. For a complete list of possible values refer to the prnt_dlg.pkg file.
+    Property No_Execute Mode Duplex DMDup_Simplex DMDup_Simplex DMDup_Horizontal DMDup_Vertical // Specifies the double-sided printing type.
+    Property No_Execute Integer FromPage 1 // Holds the value of the starting page edit control of the Print dialog.
+    Property No_Execute Integer ToPage 1 // Holds the value of the ending page edit control of the Print dialog.
+    Property No_Execute Integer MinPage 1 // Specifies the minimum value for the FromPage property.
+    Property No_Execute Integer MaxPage 1 // Specifies the maximum value for the ToPage property.
+    Property No_Execute Mode Orientation DMOrient_Portrait DMOrient_Portrait DMOrient_Landscape // Specifies the orientation of the paper.
+    Property No_Execute String OutputName // Holds the device name for the physical output medium (output port).
+    Property No_Execute Mode PrintQuality DMRes_Medium DMRes_High DMRes_Medium DMRes_Low DMRes_Draft // Specifies the printer resolution.
+    Property No_Execute Integer Scale 100 // Specifies the factor by which the printed output is to be scaled. The apparent page size is scaled from the physical page size by a factor of Scale/100.
+    Property No_Execute Mode TTOption DMTT_Download DMTT_Bitmap DMTT_Download DMTT_Subdev DMTT_Dowload_Outline // Specifies how TrueType fonts should be printed.
+End_Class

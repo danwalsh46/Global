@@ -1,0 +1,123 @@
+Use Windows.pkg
+Use WinSuggestion.pkg
+
+{ Visibility=Private }
+Class cComboSuggestionList is a cSuggestionList
+  Procedure Construct_Object
+    Forward Send Construct_Object
+  End_Procedure  
+  // select the current row 
+  Procedure Mouse_Up Integer hCell Integer iPos
+    Handle hoObj
+    Get phoOwner to hoObj
+    If (hoObj) Begin
+      Send SelectSuggestion of hoObj
+      Send Activate of hoObj // move focus to owner, which will close the list
+    End
+  End_Procedure // Mouse_Up
+End_Class
+
+Class cSuggestion_Combo_mixin is a Mixin
+
+  Procedure Define_cSuggestion_Combo_mixin 
+    Set peSuggestionMode to smCustom
+    Set piStartAtChar to 1
+    Set pbFullText to True
+
+    // New Suggestion List Class
+    Set phcSuggestionListClass to (RefClass(cComboSuggestionList))      
+  End_Procedure  
+
+  // Overwrite standard suggestion control definition
+  Procedure Define_cSuggestionControl_mixin
+    { Visibility=Private }
+    Property Integer piTimeOutTicks 0
+    On_Key kEnter Send SelectSuggestion
+    On_Key Key_Escape Send DeActivateSuggestionList
+  End_Procedure
+  
+  Function OnDropKey Integer iVKey Boolean bIsAccelerator Returns Boolean
+    Boolean bUnload
+    Forward Get OnDropKey iVKey bIsAccelerator to bIsAccelerator
+    Move (iVKey=vk_escape or iVKey=vk_return) to bUnload
+    If (bUnload) Send DeActivateSuggestionList
+    Function_Return bIsAccelerator // we want to always ignore accelerator keys.
+  End_Function
+  
+  Procedure Key Integer iKy Returns Integer
+    Integer bDropped iVKey
+    Boolean bDone
+    Get WindowsMessage CB_GETDROPPEDSTATE 0 0 to bDropped
+    If not bDropped Begin
+      Move (Focus(Desktop) = Self and ghoSuggestionList) to bDone
+      If bDone Begin
+        Get ansiKey to iVKey  // get the last virtual key
+        If (iVKey=VK_ESCAPE or iVKey=VK_RETURN) Begin
+          If (iVKey=VK_ESCAPE) Send DeActivateSuggestionList
+          If (iVKey=VK_RETURN) Send SelectSuggestion
+        End
+        Else If (iKy=KDOWNARROW) ;
+            Send ScrollDown of ghoSuggestionList
+        Else If (iKy=KUPARROW) ;
+            Send ScrollUp of ghoSuggestionList
+        Else ;
+            Move False to bDone
+      End
+    End
+    If (not(bDone)) ;
+        Forward Send Key iKy
+  End_Procedure
+  
+  Function ShouldSuggestion String sValue Boolean bChanged Returns Boolean
+    Boolean bDoIt bDropped
+    Integer iItem
+    Get WindowsMessage CB_GETDROPPEDSTATE 0 0 to bDropped
+    If (not(bDropped)) Begin
+      Get Combo_Item_Matching sValue to iItem
+      If (iItem<0) ;
+        Forward Get ShouldSuggestion sValue bChanged to bDoIt
+    End
+    Function_Return bDoIt
+  End_Function
+  
+  // custom code to find all matches for the search
+  // You can write whatever code you want here to find matched items
+  Procedure OnFindSuggestions String sSearch tSuggestion[] ByRef aSuggestions
+    Integer iCnt iMax iLen
+    Integer iIdx iVoid
+    String sCBValue sText
+    Boolean bFound bDropped
+    Boolean bFullText
+    
+    Get Value to sText
+    Get Combo_Item_Count to iMax
+    Get pbFullText to bFullText
+    Get WindowsMessage CB_GETDROPPEDSTATE 0 0 to bDropped
+    
+    If (not(bDropped) and iMax>0 and sText<>'') Begin
+      Move (Lowercase(RTrim(sText))) to sText
+      Move (Length(sText)) to iLen
+      
+      For iCnt from 0 to (iMax-1)
+        Get Combo_Value item iCnt to sCBValue
+        If (not(bFullText)) ;
+            Move (sText=Lowercase(Left(sCBValue,iLen))) to bFound
+        Else ;
+            Move (Lowercase(sCBValue) contains sText) to bFound
+        If (bFound) Begin
+          Move sCBValue to aSuggestions[iIdx].aValues[0]
+          Increment iIdx
+        End
+      Loop
+
+      If (bDropped and iIdx>0) ;
+        Get WindowsMessage CB_SHOWDROPDOWN 0 0 to iVoid
+    End
+  End_Procedure
+  
+  Procedure OnSelectSuggestion String sSearch tSuggestion Suggestion
+    Set Value to Suggestion.aValues[0]
+    Set Item_Changed_State to True
+  End_Procedure
+  
+End_Class

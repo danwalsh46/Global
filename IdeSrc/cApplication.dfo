@@ -1,0 +1,8 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    Procedure OnCreate
+        Send DoOpenWorkspace CURRENT$WORKSPACE
+    End_Procedure // OnCreate
+    //AB-StoreEnd
+End_Object

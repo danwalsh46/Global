@@ -1,0 +1,12 @@
+//AB/ CLASSDEF
+Class Set is a AbstractNonVisualContainer
+    Set peClassLibrary To clCommon              // this class belongs to all class libraries
+    Set ObjectNameMask To "oSet<count>"
+    Set ClassHelpName  To "Set"
+    Set ClassPackage   To "Set.pkg"
+    Set ClassCETV      To 31                    // use TreeView Image #31 (1-based offset)
+
+    Inherit
+    
+    Property No_Visible String Bitmap "set.bmp"
+End_Class

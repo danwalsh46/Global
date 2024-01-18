@@ -1,0 +1,31 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDbList
+//* Package Name: cGlblDbList.pkg
+//*
+//***************************************************************************
+
+Use DFAllEnt.pkg
+Use Dfsellst.pkg
+
+Class cGlblDbList is a dbList
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+        set Color               to clWhite
+        set TextColor           to clBlack
+        set peDisabledColor     to clWhite
+        set peDisabledTextColor to clBlack
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+End_Class // cGlblDbList

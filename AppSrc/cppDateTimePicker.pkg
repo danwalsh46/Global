@@ -1,0 +1,143 @@
+//$- PLUSPAK GENERATED DOCUMENTATION
+//   - YOU MUST NOT MODIFY THESE AUTO-GENERATED LINES
+//
+// cDateTimePicker.pkg
+//
+// Provides abstact classes to the cDatePicker and cTimePicker classes.
+//
+// +------------------------------------------------------+
+// | *** COPYRIGHT 1998, STARZEN.  ALL RIGHT RESERVED *** |
+// | ***   NO PART OF THIS CODE MAY BE TRANSMITTED    *** |
+// | ***           TO NON-LICENSE HOLDERS             *** |
+// +------------------------------------------------------+
+//$- PLUSPAK END GENERATED DOCUMENTATION
+
+use plusbase
+
+Define DTM_FIRST           for |CI$1000
+define DTN_FIRST           for |CI-760
+Define DTN_LAST            for |CI-799
+Define DTM_GETSYSTEMTIME   for (DTM_FIRST + 1)
+
+Define MCSC_BACKGROUND   for 0   // the background color (between months)
+Define MCSC_TEXT         for 1   // the dates
+Define MCSC_TITLEBK      for 2   // background of the title
+Define MCSC_TITLETEXT    for 3
+Define MCSC_MONTHBK      for 4   // background within the month cal
+Define MCSC_TRAILINGTEXT for 5   // the text color of header & trailing days
+
+Define DTM_SETSYSTEMTIME   for (DTM_FIRST + 2)
+Define DTM_SETMCCOLOR      for (DTM_FIRST + 6)
+Define DTM_GETMCCOLOR      for (DTM_FIRST + 7)
+
+Define DTM_SETFORMATA for (DTM_FIRST + 5)
+Define DTM_SETFORMATW for (DTM_FIRST + 50)
+
+#IFDEF UNICODE
+define DTM_SETFORMAT       for DTM_SETFORMATW
+#ELSE
+define DTM_SETFORMAT       for DTM_SETFORMATA
+#ENDIF
+
+#REPLACE DTN_DATETIMECHANGE  (DTN_FIRST + 1)
+#REPLACE DTN_DROPDOWN        (DTN_FIRST + 6)
+#REPLACE DTN_CLOSEUP         (DTN_FIRST + 7)
+
+
+#REPLACE GDTR_MIN     0001
+#REPLACE GDTR_MAX     0002
+
+#REPLACE GDT_ERROR    -1
+#REPLACE GDT_VALID    0
+#REPLACE GDT_NONE     1
+
+#REPLACE DTS_UPDOWN          |CI$0001
+#REPLACE DTS_SHOWNONE        |CI$0002
+#REPLACE DTS_SHORTDATEFORMAT |CI$0000
+#REPLACE DTS_LONGDATEFORMAT  |CI$0004
+#REPLACE DTS_TIMEFORMAT      |CI$0009
+#REPLACE DTS_APPCANPARSE     |CI$0010
+#REPLACE DTS_RIGHTALIGN      |CI$0020
+
+Type tNMDATETIMECHANGE
+    Field tNMDATETIMECHANGE.tNMHDR.hWndFrom  as HANDLE
+    Field tNMDATETIMECHANGE.tNMHDR.idFrom    as DWORD
+    Field tNMDATETIMECHANGE.tNMHDR.code      as DWORD
+    Field tNMDATETIMECHANGE.dwFlags          as Dword    // GDT_VALID or GDT_NONE
+    Field tNMDATETIMECHANGE.st.wYear         as Short
+    Field tNMDATETIMECHANGE.st.wMonth        as Short
+    Field tNMDATETIMECHANGE.st.wDayOfWeek    as Short
+    Field tNMDATETIMECHANGE.st.wDay          as Short
+    Field tNMDATETIMECHANGE.st.wHour         as Short
+    Field tNMDATETIMECHANGE.st.wMinute       as Short
+    Field tNMDATETIMECHANGE.st.wSecond       as Short
+    Field tNMDATETIMECHANGE.st.wMilliseconds as Short
+End_Type
+
+#COMMAND SZIFDEFSTRUCT
+    #IFDEF !1
+#ENDCOMMAND
+
+SZIFDEFSTRUCT TSYSTEMTIME_SIZE
+#ELSE
+Type tSYSTEMTIME
+    Field tSYSTEMTIME.wYear         as Short
+    Field tSYSTEMTIME.wMonth        as Short
+    Field tSYSTEMTIME.wDayOfWeek    as Short
+    Field tSYSTEMTIME.wDay          as Short
+    Field tSYSTEMTIME.wHour         as Short
+    Field tSYSTEMTIME.wMinute       as Short
+    Field tSYSTEMTIME.wSecond       as Short
+    Field tSYSTEMTIME.wMilliseconds as Short
+End_Type
+#ENDIF
+
+//Register the class to load the appropriate DLLs
+Send Global_DoInitCommonControls ICC_DATE_CLASSES
+
+//Class cDateTimePicker Is A DFControl
+//    Procedure Construct_Object
+//        Forward Send Construct_Object
+//        Property String psClassName      Published "cDateTimePicker"
+//        Property String psSuperClassName Published "DFControl"
+//        Property Integer pbShowNone  Public False
+//        Send Define_Dflabel_Mixin
+//    End_Procedure
+
+//    Import_Class_Protocol Dflabel_Mixin
+//    //
+//    Procedure OnSetFocus
+//    End_Procedure
+//    Procedure OnKillFocus
+//    End_Procedure
+//    //
+//End_Class
+
+Class cppDateTimePickerMixin Is A Message
+    Procedure Define_cppDateTimePickerMixin
+        Property String psClassName      Published "cppDateTimePicker"
+        Property String psSuperClassName Published "DFControl"
+        Property Integer pbShowNone  Public False
+        Property String psFormatString   Public ""
+        Send Define_Dflabel_Mixin
+    End_Procedure
+
+    Import_Class_Protocol Dflabel_Mixin
+    //
+    Procedure OnSetFocus
+    End_Procedure
+    Procedure OnKillFocus
+    End_Procedure
+
+    procedure DoInitFormatString
+        local string sFormat
+        local pointer psFormat
+        get psFormatString to sFormat
+        if (trim(sFormat)<>"") begin
+            getaddress of sFormat to psFormat
+            send Windows_Message DTM_SETFORMAT 0 psFormat
+        end
+    end_procedure
+
+    //
+End_Class // cppDateTimePickerMixin

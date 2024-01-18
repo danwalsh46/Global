@@ -1,0 +1,13 @@
+//AB/ CLASSDEF
+Class List is a AbstractControl List ListMixin DefineListMixin
+    Set ObjectNameMask To "oList<count>"
+    Set ClassHelpName  To "List"
+    Set ClassCETV      To 7                // use TreeView Image #7 (1-based offset)
+    Inherit
+    Property Always_Generate Complex Size 70 55
+    Property Integer Label_Col_Offset 60 // Column offset for Label. Value depends on Label_Justification_Mode
+    Property Integer Label_Row_Offset 0 // Row offset for Label. Result depends on Label_Justification_Mode
+    Property Mode Border_Style Border_ClientEdge Border_None Border_Normal Border_Dialog Border_ClientEdge // Border Display style
+    Property Mode Label_Justification_Mode jMode_Left jMode_Left jMode_Right jMode_Top // Mode determines where label's row and column values are offset
+    Property Mode Select_Mode Single_Select Auto_Select No_Select Single_Select Multi_Select // Determines how items are selected and how many items may be selected.
+End_Class

@@ -1,0 +1,556 @@
+// ******************************************************************************* //
+// ******************************************************************************* //
+// ***********************                                 *********************** //
+// ***********************         SysDateTimePick32       *********************** //
+// ***********************                                 *********************** //
+// ******************************************************************************* //
+// ******************************************************************************* //
+//
+// Purposes.. This Windows control allows to the user select date or time using
+//            simple built-in calendar and/or Up/down buttons. Appears as a
+//            combo- or spin- form. Uses only Windows Common Controls library.
+//            Please refer to MSDN for expanding its functionality.
+//
+// Author.... Sergey V. Natarov (senatc@postman.ru)
+// Version... 0.0.2
+// Date...... 01/07-2004
+// Support... Not available
+//
+// Revision History:
+//    03/05-2003 v0.0.1 -- Basic functionality implemented
+//    01/07-2004 v0.0.2 -- WvA** Moved the function Value from the DateTimeMixin
+//                         class to the cDateTimePick class because it destroyed
+//                         the logic for database binded controls
+//
+// Special Notes:
+//    Control can display date or time and allows to modify it. Standard
+//    VDF methods Get/Set Value also available. The parameter expected is
+//    a plain string. The processing depends in pbTimeFormat property. If
+//    True, this string will be processed as time. In this case, string may
+//    be represented as "HHsMM", "HHMM", "HHsMMsSS" or "HHMMSS" (where, HH-
+//    2-digits hour being 23 or 02 for example, MM-minutes with leading zero,
+//    SS-seconds with leading zero and 's'- is a separator, defined within
+//    psTimeSeparator property). If False, dates will be processed as per
+//    Windows system settings. To Clear Control, set its Value to "" (it
+//    actually not clears form by self, but checks off the ticket).
+//
+// How to use:
+//
+//    Object oDateTimePick is a cDateTimePick
+//        Set Location To 10 75
+//    End_Object
+//
+// Available properties:
+//
+//    Property String  psTimeSeparator  Public ":"
+//        Used internally to parser current time strings
+//
+//    Property Boolean pbUpDown   Public False
+//        Places an up-down control to the right of the DTP control
+//        To modify Date-Time values.
+//
+//    Property Boolean pbShowNone  Public True
+//        It is possible to have no date currently selected in the
+//        control. With this style, the control displays a check box
+//        that users can check once they have entered Or selected a Date.
+//
+//    Property Boolean pbShortDateFormat  Public True
+//        Displays the date in short format. The default format string
+//        For this style Is defined by LOCALE_SSHORTDATE, which produces
+//        output like "4/19/96".
+//
+//    Property Boolean pbLongDateFormat  Public False
+//        Displays the date in long format. The default format string for
+//        this style Is defined by LOCALE_SLONGDATEFORMAT, which produces
+//        output like "Friday, April 19, 1996".
+//
+//    Property Boolean pbShortDateCenturyFormat   Public False
+//        Version 5.80. Similar to the DTS_SHORTDATEFORMAT style, except
+//        the year Is a four-digit Field. The default format String For
+//        this style Is based on LOCALE_SSHORTDATE. The output looks
+//        like: "4/19/1996".
+//
+//    Property Boolean pbTimeFormat Public False
+//        Displays the time. The default format string for this style is
+//        defined by LOCALE_STIMEFORMAT, which produces output like "5:31:42 PM".
+//
+//    Property Boolean pbAppCanParse Public False
+//        Allows the owner to parse user input and take necessary action.
+//        It enables users To edit within the client area Of the control
+//        when they press the F2 key.
+//
+//    Property Boolean pbRightAlign  Public False
+//        The drop-down month calendar will be right-aligned with the control
+//        instead Of Left-aligned, which Is the default.
+//
+//    Property String psFormMask Public ""
+//        A DTP format string consists of a series of elements that represent
+//        a particular piece Of information And Define its display format.
+//        The elements will be displayed In the order they appear In
+//        the format String.
+//
+//        Element Description
+//        "d"     The one- Or two-digit day.
+//        "dd"    The two-digit day. Single-digit day values are preceded by a zero.
+//        "ddd"   The three-Character weekday abbreviation.
+//        "dddd"  The full weekday name.
+//        "h"     The one- Or two-digit hour In 12-hour format.
+//        "hh"    The two-digit hour In 12-hour format. Single-digit values are preceded by a zero.
+//        "H"     The one- Or two-digit hour In 24-hour format.
+//        "HH"    The two-digit hour In 24-hour format. Single-digit values are preceded by a zero.
+//        "m"     The one- Or two-digit minute.
+//        "mm"    The two-digit minute. Single-digit values are preceded by a zero.
+//        "M"     The one- Or two-digit month Number.
+//        "MM"    The two-digit month Number. Single-digit values are preceded by a zero.
+//        "MMM"   The three-Character month abbreviation.
+//        "MMMM"  The full month name.
+//        "t"     The one-letter AM/PM abbreviation (that Is, AM Is displayed as "A").
+//        "tt"    The two-letter AM/PM abbreviation (that Is, AM Is displayed as "AM").
+//        "yy"    The last two digits Of the year (that Is, 1996 would be displayed as "96").
+//        "yyyy"  The full year (that Is, 1996 would be displayed as "1996").
+//
+
+Use cWinControls.pkg // External Windows controls base class
+Use dfExtClM.pkg     // external class mixin
+Use dbExtFrm.pkg
+Use cDateTimePick.h
+
+Class DateTimePick_Mixin Is a Mixin
+    Import_Class_Protocol External_Class_Mixin
+    Procedure Define_DateTimePick_Mixin
+        Set Object_Color  To WinColor_BtnText WinColor_BtnFace
+        Set External_Class_Name "cDateTimePick" To DATETIMEPICK_CLASS
+        // System properties (Window Styles)
+        Property Boolean pbUpDown                   Public False
+        Property Boolean pbShowNone                 Public True
+        Property Boolean pbShortDateFormat          Public True
+        Property Boolean pbLongDateFormat           Public False
+        Property Boolean pbShortDateCenturyFormat   Public False
+        Property Boolean pbTimeFormat               Public False
+        Property Boolean pbAppCanParse              Public False
+        Property Boolean pbRightAlign               Public False
+        Property String  psFormMask                 Public ""
+        //
+        // Public properties (Form data)
+        Property String  psTimeSeparator            Public ":"
+        Property Integer piYear                     Public 0
+        Property Integer piMonth                    Public 0
+        Property Integer piDayOfWeek                Public 0
+        Property Integer piDay                      Public 0
+        Property Integer piHour                     Public 0
+        Property Integer piMinute                   Public 0
+        Property Integer piSecond                   Public 0
+        Property Integer piMSecond                  Public 0
+        //
+    End_Procedure
+
+    Procedure DT_Form_Mask
+        String  sMask
+        Pointer lpMask
+        Handle  hWnd
+        Integer iRet
+        Move (psFormMask(Self)) To sMask
+        Move (sMask+Character(0)) To sMask
+        GetAddress Of sMask To lpMask
+        Get Window_Handle To hWnd
+        If (hWnd) Move (SendMessage(hWnd, DTM_SETFORMAT, 0, lpMask)) To iRet
+    End_Procedure
+
+    Procedure Page Integer iState
+        If (iState =1) Begin
+            Set Window_Style To DTS_UPDOWN                  (pbUpDown(Self))
+            Set Window_Style To DTS_SHOWNONE                (pbShowNone(Self))
+            Set Window_Style To DTS_SHORTDATEFORMAT         (pbShortDateFormat(Self))
+            Set Window_Style To DTS_LONGDATEFORMAT          (pbLongDateFormat(Self))
+            Set Window_Style To DTS_SHORTDATECENTURYFORMAT  (pbShortDateCenturyFormat(Self))
+            Set Window_Style To DTS_TIMEFORMAT              (pbTimeFormat(Self))
+            Set Window_Style To DTS_APPCANPARSE             (pbAppCanParse(Self))
+            Set Window_Style To DTS_RIGHTALIGN              (pbRightAlign(Self))
+        End
+        Forward Send Page iState
+        If (iState =1) Begin
+            Send DT_Form_Mask
+        End
+    End_Procedure
+
+    Procedure Adjust_Control_Data Integer iFlag Integer iYear Integer iMonth Integer iDayOfWeek Integer iDay Integer iHour Integer iMinute Integer iSecond Integer iMSecond
+        If (iFlag=GDT_VALID) Begin
+            Set piYear      To iYear
+            Set piMonth     To iMonth
+            Set piDayOfWeek To iDayOfWeek
+            Set piDay       To iDay
+            Set piHour      To iHour
+            Set piMinute    To iMinute
+            Set piSecond    To iSecond
+            Set piMSecond   To iMSecond
+        End
+        Else Begin
+            Set piYear      To 0
+            Set piMonth     To 0
+            Set piDayOfWeek To 0
+            Set piDay       To 0
+            Set piHour      To 0
+            Set piMinute    To 0
+            Set piSecond    To 0
+            Set piMSecond   To 0
+        End
+    End_Procedure
+
+    Function DT_Time_Value Returns String
+        String sHour sMinute sSecond sSep
+        Get piHour             To sHour
+        Get piMinute           To sMinute
+        Get piSecond           To sSecond
+        Get psTimeSeparator    To sSep
+        If (Length(sHour)=1)   Move ('0'+sHour)   To sHour
+        If (Length(sMinute)=1) Move ('0'+sMinute) To sMinute
+        If (Length(sSecond)=1) Move ('0'+sSecond) To sSecond
+        Function_Return (sHour+sSep+sMinute+sSep+sSecond)
+    End_Function
+
+    Function DT_Date_Value Returns String
+        Integer iFormat iSep
+        String sDate sDay sMonth sYear sSep
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+
+        Get piDay              To sDay
+        Get piMonth            To sMonth
+        Get piYear             To sYear
+        If (Length(sDay)=1)    Move ('0'+sDay)   To sDay
+        If (Length(sMonth)=1)  Move ('0'+sMonth) To sMonth
+        If (Length(sYear)=1)   Move ('0'+sYear)  To sYear
+
+        If (iFormat=DF_DATE_EUROPEAN) Move (sDay+sSep+sMonth+sSep+sYear) To sDate // DMY
+        If (iFormat=DF_DATE_USA)      Move (sMonth+sSep+sDay+sSep+sYear) To sDate // MDY
+        If (iFormat=DF_DATE_MILITARY) Move (sYear+sSep+sMonth+sSep+sDay) To sDate // YMD
+
+        Move (sDay+sSep+sMonth+sSep+sYear) To sDate
+        Function_Return sDate
+    End_Function
+
+    Function DT_HOUR String sVal Returns Integer
+        String  sSep sHr
+        If (sVal="") Begin
+            Sysdate sHr sHr
+            Function_Return sHr
+        End
+        Get psTimeSeparator To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        If (Length(sVal)<4) Function_Return 0
+        If (Length(sVal)=4) Function_Return (Left(sVal, 2))
+        If (Length(sVal)=6) Function_Return (Left(sVal, 2))
+        Function_Return 0
+    End_Function
+
+    Function DT_MINUTE String sVal Returns Integer
+        Integer iRet
+        String  sSep sMin
+        If (sVal="") Begin
+            Sysdate sMin sMin sMin
+            Function_Return sMin
+        End
+        Get psTimeSeparator To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        If (Length(sVal)<4) Function_Return 0
+        If (Length(sVal)=4) Function_Return (Right(sVal, 2))
+        If (Length(sVal)=6) Function_Return (Mid(sVal, 2, 3))
+        Function_Return 0
+    End_Function
+
+    Function DT_SECOND String sVal Returns Integer
+        Integer iRet
+        String  sSep sSec
+        If (sVal="") Begin
+            Sysdate sSec sSec sSec sSec
+            Function_Return sSec
+        End
+        Get psTimeSeparator To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        If (Length(sVal)<=4) Function_Return 0
+        If (Length(sVal)=6) Function_Return (Right(sVal, 2))
+        Function_Return 0
+    End_Function
+
+    Function DT_DAY String sVal Returns Integer
+        Integer iDay iFormat iSep
+        String  sSep
+        If (sVal="") Sysdate4 sVal
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        // DDMMYYYY
+        Move 0 To iDay
+        If (length(sVal)>=6) Begin
+            If (iFormat=DF_DATE_EUROPEAN) Move (Left(sVal, 2)) To iDay // DMY
+            If (iFormat=DF_DATE_USA)      Move (Mid(sVal, 2, 3)) To iDay // MDY
+            If (iFormat=DF_DATE_MILITARY) Move (Right(sVal, 2)) To iDay // YMD
+        End
+        If (iDay>31) Function_Return 0
+        Else Function_Return iDay
+    End_Function
+
+    Function DT_MONTH String sVal Returns Integer
+        Integer iMonth iFormat iSep
+        String  sSep
+        If (sVal="") Sysdate4 sVal
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        // DDMMYYYY
+        Move 0 To iMonth
+        If (length(sVal)<6) Function_Return 0
+        If (iFormat=DF_DATE_EUROPEAN) Move (Mid(sVal, 2, 3)) To iMonth // DMY
+        If (iFormat=DF_DATE_USA)      Move (Left(sVal, 2)) To iMonth // MDY
+        If (length(sVal)=8) Begin
+            If (iFormat=DF_DATE_MILITARY) Move (Mid(sVal, 2, 5)) To iMonth // YMD
+        End
+        If (length(sVal)=6) Begin
+            If (iFormat=DF_DATE_MILITARY) Move (Mid(sVal, 2, 3)) To iMonth // YMD
+        End
+        If (iMonth>12) Function_Return 0
+        Else Function_Return iMonth
+    End_Function
+
+    Function DT_YEAR String sVal Returns Integer
+        Integer iYear iFormat iSep
+        String  sSep
+        If (sVal="") Sysdate4 sVal
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        Move 0 To iYear
+        If (length(sVal)<6) Function_Return 0
+        If (length(sVal)=8) Begin
+            If (iFormat=DF_DATE_EUROPEAN) Move (Right(sVal, 4)) To iYear // DMY
+            If (iFormat=DF_DATE_USA)      Move (Right(sVal, 4)) To iYear // MDY
+            If (iFormat=DF_DATE_MILITARY) Move (Left(sVal, 4)) To iYear // YMD
+        End
+        If (length(sVal)=6) Begin
+            If (iFormat=DF_DATE_EUROPEAN) Move (Right(sVal, 2)) To iYear // DMY
+            If (iFormat=DF_DATE_USA)      Move (Right(sVal, 2)) To iYear // MDY
+            If (iFormat=DF_DATE_MILITARY) Move (Left(sVal, 2)) To iYear // YMD
+        End
+        If (iYear>2200) Function_Return 0
+        Else Function_Return iYear
+    End_Function
+
+    Procedure OnChangeDateTime
+    End_Procedure
+
+    Procedure OnChange
+    End_Procedure
+
+    Procedure OnUserString
+    End_Procedure
+
+    Procedure OnWmKeyDown
+    End_Procedure
+
+    Procedure OnFormat
+    End_Procedure
+
+    Procedure OnFormatQuery
+    End_Procedure
+
+    Procedure OnDropDown
+    End_Procedure
+
+    Procedure OnCloseUp
+    End_Procedure
+
+    Procedure DTNM_DateTimeChange Integer lParam
+        //
+        Integer iVoid
+        String  sNmDTChange
+        Pointer lpsNmDTChange
+        //
+        Integer iFlag iYear iMonth iDayOfWeek iDay iHour iMinute iSecond iMSecond
+        //
+        ZeroType tNMDATETIMECHANGE To sNmDTChange
+        GetAddress Of sNmDTChange To lpsNmDTChange
+        Move (CopyMemory(lpsNmDTChange, lParam, tNMDATETIMECHANGE_size)) To iVoid
+        //
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.dwFlags       To iFlag
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wYear         To iYear
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wMonth        To iMonth
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wDayOfWeek    To iDayOfWeek
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wDay          To iDay
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wHour         To iHour
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wMinute       To iMinute
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wSecond       To iSecond
+        GetBuff From sNmDTChange At tNMDATETIMECHANGE.wMilliseconds To iMSecond
+        //
+        Send Adjust_Control_Data iFlag iYear iMonth iDayOfWeek iDay iHour iMinute iSecond iMSecond
+        //
+        Send OnChange
+        Send OnChangeDateTime
+        //
+    End_Procedure
+    Procedure DTNM_UserString Integer lParam
+        Send OnUserString
+    End_Procedure
+    Procedure DTNM_WMKEYDOWN Integer lParam
+        Send OnWMKeyDown
+    End_Procedure
+    Procedure DTNM_Format Integer lParam
+        Send OnFormat
+    End_Procedure
+    Procedure DTNM_FormatQuery Integer lParam
+        Send OnFormatQuery
+    End_Procedure
+    Procedure DTNM_Dropdown Integer lParam
+        Send OnDropDown
+    End_Procedure
+    Procedure DTNM_CloseUp Integer lParam
+        Send OnCloseUp
+    End_Procedure
+
+    Procedure Notify Integer wParam Integer lParam
+        Integer iVoid     iCode
+        String  sNmHdr
+        Pointer lpsNmHdr
+        ZeroType tNmHdr To sNmHdr
+        GetAddress Of sNmHdr To lpsNmHdr
+        Move (CopyMemory(lpsNmHdr, lParam, tNmHdr_size)) To iVoid
+        GetBuff From sNmHdr At tNmHdr.code  To iCode
+        If (iCode = DTN_DATETIMECHANGE)     Send DTNM_DateTimeChange lParam
+        Else If (iCode = DTN_USERSTRING)    Send DTNM_UserString     lParam
+        Else If (iCode = DTN_WMKEYDOWN)     Send DTNM_WmKeyDown      lParam
+        Else If (iCode = DTN_FORMAT)        Send DTNM_Format         lParam
+        Else If (iCode = DTN_FORMATQUERY)   Send DTNM_FormatQuery    lParam
+        Else If (iCode = DTN_DROPDOWN)      Send DTNM_DropDown       lParam
+        Else If (iCode = DTN_CLOSEUP)       Send DTNM_CloseUp        lParam
+    End_Procedure
+
+    Function GetDateTimePickValue Returns String
+        Integer hWnd iRet iFormat
+        String  sValue sSysTime
+        Pointer lpSysTime
+        Integer iYear iMonth iDayOfWeek iDay iHour iMinute iSecond iMSecond
+        Get Window_Handle To hWnd
+        //
+        ZeroType tDATETIMESYSTEMTIME To sSysTime
+        GetAddress Of sSysTime To lpSysTime
+        //
+        If (hWnd) Move (SendMessage(hWnd, DTM_GETSYSTEMTIME, 0, lpSysTime)) To iRet
+        Else Function_Return ""
+        //
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wYear         To iYear
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wMonth        To iMonth
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wDayOfWeek    To iDayOfWeek
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wDay          To iDay
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wHour         To iHour
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wMinute       To iMinute
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wSecond       To iSecond
+        GetBuff From sSysTime At tDATETIMESYSTEMTIME.wMilliseconds To iMSecond
+        //
+        If (iRet=GDT_VALID) Begin
+            Send Adjust_Control_Data GDT_VALID iYear iMonth iDayOfWeek iDay iHour iMinute iSecond iMSecond
+        End
+        Else Begin
+            Send Adjust_Control_Data GDT_NONE iYear iMonth iDayOfWeek iDay iHour iMinute iSecond iMSecond
+            Function_Return ""
+        End
+        //
+        Get pbTimeFormat To iFormat
+        //
+        If (iFormat) Function_Return (DT_Time_Value(Self))
+        Else         Function_Return (DT_Date_Value(Self))
+    End_Function
+  
+
+    Procedure SetDateTimePickValue String sValue
+        Integer hWnd iFlag iRet
+        String  sSysTime
+        Pointer lpSysTime
+        //
+        Integer iYear iMonth iDayOfWeek iDay iHour iMinute iSecond iMSecond
+        //
+        Get Window_Handle To hWnd
+        If (Not(hWnd)) Procedure_Return
+        If (sValue="") Move GDT_NONE  To iFlag
+        Else           Move GDT_VALID To iFlag
+        //
+        If (pbTimeFormat(Self)) Begin
+            Get DT_DAY    ""     To iDay
+            Get DT_MONTH  ""     To iMonth
+            Get DT_YEAR   ""     To iYear
+            Get DT_HOUR   sValue To iHour
+            Get DT_MINUTE sValue To iMinute
+            Get DT_SECOND sValue To iSecond
+        End
+        Else Begin
+            Get DT_DAY    sValue To iDay
+            Get DT_MONTH  sValue To iMonth
+            Get DT_YEAR   sValue To iYear
+            Get DT_HOUR   ""     To iHour
+            Get DT_MINUTE ""     To iMinute
+            Get DT_SECOND ""     To iSecond
+        End
+        //
+        ZeroType tDATETIMESYSTEMTIME To sSysTime
+        Put iYear       To sSysTime At tDATETIMESYSTEMTIME.wYear
+        Put iMonth      To sSysTime At tDATETIMESYSTEMTIME.wMonth
+        Put 0           To sSysTime At tDATETIMESYSTEMTIME.wDayOfWeek
+        Put iDay        To sSysTime At tDATETIMESYSTEMTIME.wDay
+        Put iHour       To sSysTime At tDATETIMESYSTEMTIME.wHour
+        Put iMinute     To sSysTime At tDATETIMESYSTEMTIME.wMinute
+        Put iSecond     To sSysTime At tDATETIMESYSTEMTIME.wSecond
+        Put 0           To sSysTime At tDATETIMESYSTEMTIME.wMilliseconds
+        GetAddress Of sSysTime To lpSysTime
+        //
+        Move (SendMessage(hWnd, DTM_SETSYSTEMTIME, iFlag, lpSysTime)) To iRet
+        //
+    End_Procedure
+
+End_Class  // DateTimePick_Mixin
+
+// Plain DateTimePick form
+Class cDateTimePick Is a FormExternalControl
+    Import_Class_Protocol DateTimePick_Mixin
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Send InitCommonControlsEx ICC_DATE_CLASSES
+        Send Define_DateTimePick_Mixin
+        Set Value       To ""
+        Set Size        To 13 70
+        Set FontWeight  To 400
+    End_Procedure // Construct_Object
+    Procedure Set Value Integer iItem String sValue
+        Send SetDateTimePickValue sValue
+    End_Procedure
+    
+    Function Value Returns String
+        String sValue
+        Get GetDateTimePickValue To sValue
+        Function_Return sValue
+    End_Function
+    
+End_Class
+
+// Data aware DateTimePick form
+Class cdbDateTimePick Is a dbFormExternalControl
+    Import_Class_Protocol DateTimePick_Mixin
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Send InitCommonControlsEx ICC_DATE_CLASSES
+        Send Define_DateTimePick_Mixin
+        Set Value       To ""
+        Set Size        To 13 70
+        Set FontWeight  To 400
+    End_Procedure // Construct_Object
+    Procedure Set ControlValue String sVal
+        Send SetDateTimePickValue sVal
+    End_Procedure
+    Function ControlValue Returns String
+        Function_Return (GetDateTimePickValue(Self))
+    End_Function
+    Procedure OnChangeDateTime
+        Send ControlValueChanged
+    End_Procedure
+End_Class

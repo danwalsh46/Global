@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblComDbActiveXControl is a cComDbActiveXControl
+    Set ClassPackage To "cGlblComDbActiveXControl.pkg"
+    Inherit
+End_Class

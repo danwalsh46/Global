@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbEdit is a dbEdit
+    Set ClassPackage To "cGlblDbEdit.pkg"
+    Inherit
+End_Class

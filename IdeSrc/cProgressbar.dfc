@@ -1,0 +1,20 @@
+//AB/ CLASSDEF
+Class cProgressBar is a AbstractControl cIdeProgressBar ControlMixin DefineControlMixin
+    Set ClassPackage   To "cProgressBar.pkg"
+    Set ObjectNameMask To "oProgressBar<count>"
+    Set ClassHelpName  To "cProgressBar"
+    Set ClassCETV      To 23                 // use TreeView Image #23 (1-based offset)
+
+    Property integer piMinimum   0   // The value that represents zero percent of the range the progress bar covers. Set the value to any valid integer, but less than piMaximum.
+    Property integer piMaximum   100 // The value that represents 100 percent of the range the progress bar covers. Set the value to any valid integer, but more than piMinimum.
+    Property integer piPosition  0   // The current position of progress within the progress bar. When you set this value, the progress bar will redraw the bar to reflect the change.
+    Property integer piAdvanceBy 10  // Stores the amount that piPosition will increment by when the DoAdvance method is sent.
+    Property Boolean pbVertical  False // Display the progress bar either vertically (true) or horizontally (false).
+    Property Boolean pbSmooth    False // Progress within the progress bar can be displayed segmented or contiguous. Set pbSmooth to True to draw the progress as a smooth, contiguous bar (true) or as a segmented bar (false).
+    Property Color   piBackColor clDefault // The background color behind the bar. You can set this property to any valid color. If you set it to clDefault, Windows will provide the color for you.
+    Property Color   piBarColor  clDefault // The color of the bar. You can set this property to any valid color. If you set it to clDefault, Windows will provide the color for you.
+    Property Complex Location 0 0 // Object Location (Complex: Row, Column)
+    Property Always_Generate Complex Size 14 60 // Object Size (Complex: height, width)
+    Property Mode Border_Style Border_StaticEdge Border_None Border_Normal Border_Dialog Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style
+    Property no_execute anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can be anchored in any combination of left, right, top or bottom.
+End_Class

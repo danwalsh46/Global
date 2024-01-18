@@ -1,0 +1,58 @@
+//TH-Header
+//*****************************************************************************************
+// Copyright (c)  2003 KURANT Project
+// All rights reserved.
+//
+// $FileName    : E:\Program Files\Hammer\Pkg\cStatusPanel.pkg
+// $ProjectName : The Hammer v1.5
+// $Created     : 31.01.2003  19:53
+// $Type        : OptionWare
+//
+// Contents:
+//
+//     This panels used in TheHammer 2.0 utilities to show current 
+//     status of process...
+//
+//*****************************************************************************************
+//TH-RevisionStart
+//TH-RevisionEnd
+
+Class cStatusPanel Is a ToolPanel
+    Procedure Construct_Object
+        Forward Send            Construct_Object
+        Set size                To 50 205
+        Set Locate_Mode         To center_on_screen
+        Set Label               To "Please wait..."
+        Set Popup_State         To True
+        Object oTitle           Is a TextBox
+            Set auto_size_state To False
+            Set location        To 5 5
+            Set size            To 12 200
+            Set label           To "Processing:"
+        End_Object
+        Object oProgress        Is a TextBox
+            Set auto_size_state To False
+            Set location        To 19 5
+            Set size            To 13 190
+            Set Border_Style    To Border_StaticEdge
+        End_Object
+    End_Procedure 
+    Procedure ShowInfo String sText
+        If (Not(Active_State(Self)))    Send Popup
+        Set Label Of (oProgress(Self))  To sText
+    End_Procedure
+    Procedure SetTitle String sText
+        Set Label Of (oTitle(Self))     To sText
+        Set Label Of (oProgress(Self))  To ""
+    End_Procedure
+    Procedure HideInfo
+        Set label To "Processing:"
+        Set Label Of (oProgress(Self))  To ""
+        Send Deactivate 
+    End_Procedure
+End_Class
+
+Integer ghoStatusPanel
+Object oStatusPanel Is a cStatusPanel
+    Move Self To ghoStatusPanel
+End_Object

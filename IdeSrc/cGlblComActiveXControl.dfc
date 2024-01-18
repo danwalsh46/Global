@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblComActiveXControl is a cComActiveXControl
+    Set ClassPackage To "cGlblComActiveXControl.pkg"
+    Inherit
+End_Class

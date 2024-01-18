@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+Class cppCancel_bn Is a Button
+    Set ClassPackage to "cppCancel_bn.pkg"
+    Inherit
+    Property No_Visible No_Generate String Label "&Cancel"
+End_Class

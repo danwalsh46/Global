@@ -1,0 +1,14 @@
+//AB/ CLASSDEF
+Class cListView Is a Edit
+    Set ClassPackage to "cListView.pkg"
+    Inherit
+    Property No_Execute Boolean pbAutoArrange False 
+    Property No_Execute Boolean pbRetainSel True 
+    Property No_Execute Boolean pbSingleSel False 
+    Property No_Execute Boolean pbHighLightRow False 
+    Property No_Execute Boolean pbCheckBoxes False 
+    Property No_Execute Boolean pbGridLines False 
+    Property No_Execute Boolean pbHotTrack False 
+    Property No_Execute Integer peSort smNone 
+    Property Always_Generate Complex Size 70 70
+End_Class

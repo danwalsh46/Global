@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblMapiHandler is a cMapiHandler
+    Set ClassPackage To "cGlblMapiHandler.pkg"
+    Inherit
+End_Class

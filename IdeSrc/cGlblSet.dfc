@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblSet is a Set
+    Set ClassPackage To "cGlblSet.pkg"
+    Inherit
+End_Class

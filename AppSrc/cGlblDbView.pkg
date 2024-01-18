@@ -1,0 +1,103 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDbView
+//* Package Name: cGlblDbView.pkg
+//*
+//***************************************************************************
+
+Use Dfclient.pkg
+
+Class cGlblDbView is a DbView
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // this is the ID of the current object
+        // and is set to 'self' during creation
+        Property Integer phCallerId
+        // this is the ID of the object that activated
+        // this object via a method other than the
+        // conventional View pull-down menu activation
+        Property Integer phCallingId
+        // used to insure proper Request_Cancel behaviors
+        // in programs using selection list front-ends
+        Property Boolean pbHasFocus
+
+        // Create child objects
+
+        // Set property values:
+        Set Auto_Clear_Deo_State to False
+        Set View_Latch_State     to False
+        Set phCallerId           to Self
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+    // if the view is activated by a method other than the
+    // "activate_oObject" method, this augmentation causes
+    // the focus to return to the calling object
+    Procedure Request_Cancel
+        Integer hCallingId
+        //
+        Forward Send Request_Cancel
+        //
+        If (not(phCallingId(Self))) Begin
+            Procedure_Return
+        End
+        //
+        Get phCallingId to hCallingId
+        Set phCallingId to 0
+        If (Active_State(hCallingId)) Begin
+            Send Activate_View to hCallingId
+        End
+    End_Procedure
+
+    // these 2 procedures facilitate logical object deactivation
+    // in scenarios where the object is called by another object
+    // and is not expected to stand alone
+    Procedure DoReleaseView
+        Set phCallingId to 0
+        Send Request_Cancel
+    End_Procedure
+    //
+    Procedure CloseView
+        If (Should_Save(Self)) Begin
+            Procedure_Return
+        End
+        Send Request_Cancel
+    End_Procedure
+
+//    procedure DoRefreshView
+//        boolean bChanged
+//        // Do not refresh the view if unsaved changes have been made.
+//        broadcast recursive get Data_Set_Should_Save to bChanged
+//        if (bChanged) procedure_return
+//        // pbInRefreshView and pbAlreadyRefreshed are for optimization.
+//        // Without these properties, Refresh_Page may be sent as part of the Request_Assign
+//        // of a grid's Parent DD, and then in the Broadcast of Refresh_Current_Page.
+//        // Set pbInRefreshView True first, and then False at the end so that this optimization
+//        // does not effect any other occurences of Refresh_Page.
+//        broadcast recursive set pbInRefreshView    to TRUE
+//        broadcast recursive set pbAlreadyRefreshed to FALSE
+//        // Restore the record for the top row of any grid in the view.
+//        // This stops a grid for a child file from jumping to the top of the list when DDRefresh is sent to the parent DDO.
+//        broadcast recursive send DoRestoreTopRecord
+//        broadcast recursive send DoDDRefresh // Sent to all child DDs to redisplay the current record, clearing if not found.
+//        // Refresh_Current_Page is really only needed for the case that the current record of a grid has been
+//        // deleted.  In that case, the DoDDRefresh has cleared a row and moved the deleted record down, so the grid
+//        // has to be refreshed again.
+//        broadcast recursive send DoRefreshCurrentPage // Sent to all dbGrids to refresh the entire grid without changing the top record.
+//        broadcast recursive set pbInRefreshView    to FALSE
+//        broadcast recursive set pbAlreadyRefreshed to FALSE
+//    end_procedure
+
+//    // Refresh the view during Entering_Scope
+//    procedure Entering_Scope
+////       send DoRefreshView
+//       forward send Entering_Scope
+//    end_procedure
+//
+End_Class

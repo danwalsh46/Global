@@ -1,0 +1,268 @@
+// Top of File: cVDFD_ESQL_Statement.pkg
+
+//Use Mertech.pkg
+#Include MerTech.inc
+
+Use cVDFD_Object.pkg
+
+
+Enum_List // ESST = Embedded SQL Statement Type
+    Define VDFD_ESST_UNKNOWN
+    Define VDFD_ESST_SELECT
+    Define VDFD_ESST_INSERT
+    Define VDFD_ESST_UPDATE
+    Define VDFD_ESST_DELETE
+End_Enum_List
+
+Struct tDataSourceHeader
+    String  sColumnName
+    Integer iColumnSize
+    Integer iDataType
+    Integer iLength
+    Integer iPrecision
+End_Struct
+
+Class cVDFD_ESQL_Statement is a cVDFD_Object
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property tDataSourceRow[]    ptData
+        Property tDataSourceHeader[] ptHeader
+        Property Integer piCurrentRow
+        
+        {EnumList="VDFD_ESST_UNKNOWN,VDFD_ESST_SELECT,VDFD_ESST_DELETE,VDFD_ESST_UPDATE,VDFD_ESST_INSERT"}
+        Property Integer peType
+        
+        Property String  psStatement
+        Property Integer piRowsAffected
+        Property Boolean pbDebug False
+        
+        Send AddClassName "!$"  //add classname
+		
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+    End_Procedure
+
+    Function WrapWithOpenQuery String sStatement String sLinkedServer Returns String
+        String sSQL
+        Get CleanUpString sStatement to sStatement
+        Append sSQL "SELECT * " 
+        Append sSQL "FROM OPENQUERY([" sLinkedServer "],' "
+        Append sSQL sStatement
+        Append sSQL " ') "
+        Function_Return sSQL
+    End_Function
+
+    Procedure AppendSQL String sAdd
+        String sSelect
+        Get psStatement to sSelect
+        Set psStatement to (sSelect * sAdd + CR_LF)
+    End_Procedure
+
+    Function SQLDateTimeStr DateTime dVal Returns String
+        String sVal sMonth sDay sHour sMin sSec
+
+        Move (DateGetMonth(dVal))     to sMonth 
+        Move (DateGetDay(dVal))       to sDay
+        Move (DateGetHour(dVal))      to sHour
+        Move (DateGetMinute(dVal))    to sMin
+        Move (DateGetSecond(dVal))    to sSec
+
+        Append sVal (Right("0000"+DateGetYear(dVal),4)) "-" 
+        Append sVal (Right("0"+sMonth, 2)) "-" (Right("0"+sDay, 2)) " " 
+        Append sVal (Right("0"+sHour, 2)) ":" (Right("0"+sMin, 2)) ":" (Right("0"+sSec, 2))
+        Function_Return sVal
+    End_Function
+
+    Function CleanUpString String sVal Returns String
+        Move (Replaces("'", sVal, "''")) to sVal
+        Move (Replaces("`", sVal, "``")) to sVal
+        Function_Return sVal
+    End_Function
+
+    Function FormatStatement Returns String 
+        Function_Return (psStatement(Self))
+    End_Procedure
+
+    Procedure OnExecute
+    End_Procedure
+
+    Procedure OnFetchRow tDataSourceRow Row Integer iRow Integer iNumRows
+    End_Procedure
+    
+    Function piColumn String sColumnName Returns Integer
+        Integer iCount iCol
+        tDataSourceHeader[] Header
+        Get ptHeader to Header
+        Move (Uppercase(sColumnName)) to sColumnName
+        Move (SizeOfArray(Header)) to iCount
+        While (iCol < iCount)
+            If (sColumnName = Uppercase(Header[iCol].sColumnName)) Begin
+                Function_Return iCol
+            End
+            Increment iCol
+        Loop
+        Function_Return -1
+    End_Function
+    
+    Function psColumnValue tDataSourceRow Row String sColumnName Returns String
+        Integer iColumn iCount
+        String sValue
+        Get piColumn sColumnName to iColumn
+        Move (SizeOfArray(Row.sValue)) to iCount
+        If (iColumn > iCount) Move "" to sValue
+        Else Move Row.sValue[iColumn] to sValue
+        Function_Return sValue
+    End_Function
+
+    Procedure DoFetch //Variant[] ByRef vData
+        tDataSourceRow[] Data
+        tDataSourceRow BlankRow
+        tDataSourceHeader[] Header
+        Variant vTemp
+        Integer iCol iRow iColumn iNumCols iNumRows iColumnSize
+        String sColumnName sColumnData
+
+        SQL_GET_NUM_COLS to iNumCols
+        For iCol from 1 to iNumCols
+            SQL_GET_COL_NAME iCol to sColumnName iColumnSize
+            Move sColumnName to Header[iCol-1].sColumnName
+            Move iColumnSize to Header[iCol-1].iColumnSize
+            //Showln (iCol-1) "  " sColumnName
+        Loop
+        Set ptHeader to Header
+        
+        Move -1 to iRow
+        SQL_GET_NUM_ROWS to iNumRows
+        Set piCurrentRow to iRow
+//        Send OnFetchRow BlankRow iRow iNumRows
+        
+        If (iNumRows = -1) Begin
+            Move 0 to iRow
+            Repeat
+                SQL_FETCH_NEXT_ROW
+                If (Found) Begin
+                    For iColumn from 0 to (iNumCols-1)
+                        SQL_FETCH_COLUMN (iColumn+1) INTO sColumnData
+                        Move sColumnData to Data[iRow].sValue[iColumn]
+                    Loop
+                    Set piCurrentRow to iRow
+                    Send OnFetchRow Data[iRow] iRow iNumRows
+                    Increment iRow
+                End
+            Until (FindErr)
+            Set piRowsAffected to iRow
+        End
+        Else Begin
+            For iRow from 0 to (iNumRows-1)
+                SQL_FETCH_NEXT_ROW
+                [Found] Begin
+                    For iColumn from 0 to (iNumCols-1)
+                        SQL_FETCH_COLUMN (iColumn+1) INTO sColumnData
+                        Move sColumnData to Data[iRow].sValue[iColumn]
+                    Loop
+                    Set piCurrentRow to iRow
+                    Send OnFetchRow Data[iRow] iRow iNumRows
+                End
+            Loop            
+        End
+
+        Set ptData to Data
+    End_Procedure
+    
+    {MethodType = Method}
+    Procedure Delete_Data
+        Set psStatement to ""
+    End_Procedure
+    
+    {MethodType = Event}
+    Procedure BuildSQL
+        Send Delete_Data
+    End_Procedure
+
+    {MethodType = Event}
+    {Visibility = Private}
+    Procedure Private_BuildSQL
+        Send Delete_Data
+        Send BuildSQL
+    End_Procedure
+    
+    Procedure ShowInfo
+        String sServer sUser sPassword
+        GET_CURRENT_SQL_SERVER to sServer
+        GET_CURRENT_USER_NAME of sServer to sUser
+        GET_CURRENT_USER_PASSWORD of sServer to sPassword
+    End_Procedure
+
+    Procedure OnLogin
+    End_Procedure
+    
+    Procedure OnLogout
+        //Logout
+    End_Procedure
+
+    Procedure Execute
+        String sStatement
+        Integer iRow
+        Integer iRowsAffected
+        
+        Send OnLogin
+        
+		Send Private_BuildSQL
+		Get FormatStatement to sStatement
+
+        Set SQL_USE_DATAFLEX_DATEFORMAT to True
+        Send OnExecute
+
+        //Initialize query statement. 
+        SQL_SET_STMT to sStatement
+        SQL_PREPARE_STMT
+        SQL_EXECUTE_STMT
+
+        String sError sError2
+        SQL_ERROR_MESSAGE sError
+
+        String sServer
+        GET_CURRENT_SQL_SERVER to sServer
+        SQL_ERROR_MESSAGE2 of sServer to sError2
+        
+        //SQL_GET_NUM_ROWS to iRowsAffected
+        //Set piRowsAffected to iRowsAffected
+        If (peType(Self) = VDFD_ESST_SELECT) Begin
+            Send DoFetch //(&vData)
+            //SQL_ERROR_MESSAGE2 sError2
+            If (pbDebug(Self)) Begin 
+                Send Info_Box (String(iRowsAffected) * "row(s) returned.") "Debug Info"
+            End
+        End
+        Else If (peType(Self) = VDFD_ESST_DELETE) Begin
+            If (pbDebug(Self)) Send Info_Box (String(iRowsAffected) * "row(s) deleted.") "Debug Info"
+        End
+        Else If (peType(Self) = VDFD_ESST_UPDATE) Begin
+            If (pbDebug(Self)) Send Info_Box (String(iRowsAffected) * "row(s) affected.") "Debug Info"
+        End
+        
+        Send OnLogout
+        
+    End_Procedure
+
+    Procedure DoForEachRow Handle hMethod Handle hObj
+        tDataSourceRow[] Data
+        tDataSourceRow Row
+        Integer iItem iMax
+        
+        Get ptData to Data
+        Move (SizeOfArray(Data)) to iMax
+        Decrement iMax
+        For iItem from 0 to iMax
+            Move Data[iItem] to Row
+            Send hMethod of hObj Row
+        Loop
+    End_Procedure
+
+
+End_Class
+
+// End of File: cVDFD_ESQL_Statement.pkg

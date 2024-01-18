@@ -1,0 +1,249 @@
+// Mastering Visual DataFlex
+//
+// cGlblWizard.pkg
+//
+// (c) 1997, StarZen Technologies, Inc
+//
+// Use of any parts of the code contained in this file is governed
+// by the terms of the license agreement contained in the
+// accompanying book, "Mastering Visual DataFlex".
+
+Use Windows.pkg
+Use dfline.pkg
+
+Class cWizardPage IS A Dialog
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        // short description
+        Property String ShortTitle
+
+        Set PopUp_State TO TRUE
+        Set Caption_Bar TO FALSE
+        Set Border_Style TO Border_None
+
+        // long description
+        Object oTitle IS A TextBox
+
+            // bold text
+            Set FontWeight To 800
+
+            Set GUILocation To 2 0
+            Set GUISize             To 20 500
+        End_Object
+    End_Procedure
+
+    // public access method to set long description/title
+    Procedure Set Title String strtitle
+        Set Value OF (oTitle(self)) TO strTitle
+    End_Procedure
+
+    Procedure OnEnter Integer fromObj
+    End_Procedure
+
+    Procedure OnLeave Integer toObj
+    End_Procedure
+End_Class
+
+Class cNextButton IS A Button
+    Procedure OnClick
+        Delegate Send DoNext
+    End_Procedure
+End_Class
+Class cBackButton IS A Button
+    Procedure OnClick
+        Delegate Send DoBack
+    End_Procedure
+End_Class
+Class cCloseButton IS A Button
+    Procedure OnClick
+        Delegate Send DoClose
+    End_Procedure
+End_Class
+
+Class cGlblWizardPanel IS A ModalPanel //BasicPanel
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        // set up caption bar
+        Set SysMenu_Icon  To False
+        Set Minimize_Icon To False
+        Set Maximize_Icon To False
+
+        // Set Size in pixels
+        Set GUISize To 400 623
+
+        // current page number
+        Property Integer Current_Page -1
+
+        // Title property
+        Property String Title
+
+        // storage array for pages
+        Object PageArray IS An Array
+        End_Object
+
+        // bitmap container object
+        Object oBitmapBox IS A BitmapContainer
+            Set GUILocation  To  14  14
+            Set GUISize      To 278 135
+            Set Allow_Select_Bitmap_State to FALSE
+            Set Border_Style To Border_ClientEdge
+        End_Object
+
+        Object oBackButton is a cBackButton
+            Set Label to "< B&ack"
+            Set GUILocation TO 326 318
+            Set GUISize             TO 28 87
+        End_Object    // oBackButton
+
+        Object oNextButton is a cNextButton
+            Set Label to "&Next >"
+            Set GUILocation TO 326 405
+            Set GUISize             TO 28 87
+        End_Object    // oNextButton
+
+        Object oCloseButton is a cCloseButton
+            Set Label to "Cancel"
+            Set GUILocation TO 326 514
+            Set GUISize             TO 28 87
+        End_Object    // oCancel_bn
+
+        Object LineControl1 is a LineControl
+            Set GUILocation TO 310 12
+            Set GUISize             TO 2 591
+        End_Object    // LineControl1
+        //
+        on_key kCancel send DoClose
+        //
+    End_Procedure
+
+    Function PageObjectID Integer page# returns Integer
+        Integer ObjectID
+        Get Value OF (PageArray(self)) Item page# to ObjectID
+
+        Function_Return ObjectID
+    End_Function
+
+    Procedure Set PageObjectID Integer page# Integer ObjectID
+        Set Value OF (PageArray(self)) Item page# To ObjectID
+    End_Procedure
+
+    Function Page_Count Returns Integer
+        Integer iPageCount
+
+        Get Item_Count Of (PageArray(self)) To iPageCount
+        Function_Return iPageCount
+    End_Function
+
+    Procedure AddWizardPage Integer objId
+        Integer nxItem
+
+        Get Item_Count OF (PageArray(self)) To nxItem
+
+        Set Value OF (PageArray(self)) Item nxItem To objid
+    End_Procedure
+
+    Procedure Page Integer state
+        Forward Send Page state
+
+        if state EQ 1 Send ShowPage 0
+    End_Procedure
+
+    Procedure ShowPage Integer page#
+        Integer ToObj FromObj curPage
+
+        Get Current_Page TO curPage
+
+        Get PageObjectID page#   TO ToObj
+        Get PageObjectID curPage TO FromObj
+
+        // make sure page exists !
+        if ToObj NE 0 begin
+
+            // only if valid page
+            if curpage NE -1 Begin
+                send OnLeave To FromObj ToObj
+
+                send deactivate to FromObj
+
+                set Current_Page To -1
+            End
+
+            // set location and size just to be sure
+            Set GUILocation OF ToObj To 14 160
+            Set GUISize     OF ToObj To 278 440
+
+            If page# EQ 0 Send EnableBack FALSE
+            Else Send EnableBack TRUE
+
+            Send EnableNext TRUE
+
+            If page# EQ (Page_Count(self)-1) begin
+                Set Value OF (oNextButton(self)) to '&Process'
+            end
+            else begin
+                Set Value OF (oNextButton(self)) to '&Next >'
+            End
+
+            Send OnEnter TO ToObj FromObj
+            Send Popup   TO ToObj
+
+            Set Current_Page To page#
+
+            Set Value TO (Title(self)) // + " - " + ;
+//                          ShortTitle(ToObj))
+        End
+    End_Procedure
+
+    Procedure DoFinish
+        Send Close_Panel
+    End_Procedure
+
+    Procedure DoBack
+        Integer CurPage
+
+        Get Current_Page To CurPage
+
+        // make sure we are not on first page or uninitialized
+        If CurPage LE 0 Procedure_Return
+
+        // switch to previous page
+        Send ShowPage (CurPage - 1)
+    End_Procedure
+
+    Procedure DoNext
+        Integer CurPage
+
+        Get Current_Page To CurPage
+
+        // make sure we do have pages
+        If CurPage EQ -1 Procedure_Return
+
+        // are we on last Page ?
+        If CurPage EQ (Page_Count(self)-1) Begin
+            Send DoFinish
+            Procedure_Return
+        End
+
+        // switch to next page
+        Send ShowPage (CurPage + 1)
+    End_Procedure
+
+    Procedure DoClose
+        Send Close_Panel
+    End_Procedure
+
+    Procedure EnableNext Integer state
+        Set Shadow_State OF (oNextButton(self)) To (1-state)
+    End_Procedure
+
+    Procedure EnableBack Integer state
+        Set Shadow_State OF (oBackButton(self)) To (1-state)
+    End_Procedure
+
+    Procedure Set Wizard_Bitmap String bitmapName
+        Set Bitmap OF (oBitmapBox(self)) To bitmapName
+    End_Procedure
+End_Class    // cGlblWizardPanel
+

@@ -1,0 +1,32 @@
+//AB/ SUBCOMPONENT
+Object Destination is a RadioGroup
+        Set Label to "Output Device:"
+        Set Size to 50 80
+        Set Location to 5 5
+        Set Current_Radio to 0
+        Object Screen is a Radio
+                Set Label to "Screen"
+                Set Size to 10 39
+                Set Location to 15 10
+                Set Status_Help to "Preview the report to screen"
+        End_Object    // Screen
+
+        Object Printer is a Radio
+                Set Label to "Printer"
+                Set Size to 10 37
+                Set Location to 30 10
+                Set Status_Help to "Send the report to the default printer"
+        End_Object    // Printer
+
+
+        //AB-StoreStart
+        // set the Output_Device_Mode each time the radio button changes
+
+        Procedure Notify_Select_State  Integer iNewItem  Integer iOldItem
+                Forward Send Notify_Select_State  iNewItem  iOldItem
+                If iNewItem EQ 0 Set Output_Device_Mode  To PRINT_TO_WINDOW
+                Else             Set Output_Device_Mode  To PRINT_TO_PRINTER
+        End_Procedure
+        //AB-StoreEnd
+
+End_Object    // Destination

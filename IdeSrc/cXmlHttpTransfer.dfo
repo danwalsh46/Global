@@ -1,0 +1,9 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    //	This is an object of the cXMLHttpTransfer class. It handles HTTP 
+    //  requests for sending and receiving XML documents. This class allows 
+    //  you to transfer and receive data that is larger than the string size 
+    //  limitations imposed by DataFlex.
+    //AB-StoreEnd
+End_Object

@@ -1,0 +1,33 @@
+//AB/ OBJECTDEF
+Object oForm_AutoComplete Is A Form_AutoComplete 
+  //AB-StoreStart
+  //#######################
+  //Required Settings
+  //Send ToggleAutoComplete FALSE // default is TRUE You can use this to turn the option on and off
+  //Set AutoCompelte_Index to 1 // index #
+  //#######################
+  //Optional Settings
+  //Set FindMode to GE // default is EQ
+  //Set PopupOffset to 0 0 // adjust the location of the popup with +/- integer values
+  //#######################
+  //Display Columns
+  //                        DD of find file | Find file.field | Column width
+  //Send Add_Display_Column (VendCont_DD(Self)) File_Field VendCont.Title  75
+  //Send Add_Display_Column (VendCont_DD(Self)) File_Field VendCont.Phone  75
+  // tip: add the recnum but make the column width zero if you want to make that record active.
+  //Send Add_Display_Column (VendCont_DD(Self)) File_Field VendCont.Recnum 0
+  //
+  //Procedure Accepted
+  //    oAux_Value is an array object that stores all the values of the popup from the row selected
+  //    Each item# of the array corresponds with the column from the popup.
+  //
+  //    default a value
+  //  Get String_Value of oAux_Value item 0 to sVal
+  //  Set FIELD_CHANGED_VALUE of POHead_DD FIELD POHead.Title to (trim(sVal))
+  //
+  //    make an entire record active
+  //  Get Integer_Value of oAux_Value item 2 to iRecnum
+  //  Send Find_By_Recnum of VendCont_DD VendCont.File_Number iRecnum
+  //End_Procedure // Accepted
+  //AB-StoreEnd
+End_Object // oForm_AutoComplete

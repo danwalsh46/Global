@@ -1,0 +1,139 @@
+//typedef struct tagPOINT { 
+//  LONG x; 
+//  LONG y; 
+//} POINT, *PPOINT; 
+//
+//typedef Struct _RECT { 
+//  LONG left; 
+//  LONG top; 
+//  LONG right; 
+//  LONG bottom; 
+//} RECT, *PRECT; 
+//
+//typedef Struct tagMONITORINFO {
+//  DWORD  cbSize; 
+//  RECT   rcMonitor; 
+//  RECT   rcWork; 
+//  DWord  dwFlags; 
+//} MONITORINFO, *LPMONITORINFO; 
+
+Struct tRECT
+    Integer Left
+    Integer Top
+    Integer Right
+    Integer Bottom
+End_Struct
+
+Struct tMONITORINFO
+    DWord cbSize
+    tRECT rcMonitor
+    tRECT rcWork
+    DWord dwFlags
+End_Struct
+
+//HMONITOR MonitorFromWindow(
+//  HWND hwnd,       // handle to a window 
+//  DWord dwFlags    // determine return value 
+//);
+
+//BOOL GetMonitorInfo(
+//  HMONITOR hMonitor,  // handle to display monitor
+//  LPMONITORINFO lpmi  // display monitor information
+//);
+External_Function MonitorFromWindow "MonitorFromWindow" user32.dll Handle hWnd DWord dwFlags Returns Handle
+External_Function GetMonitorInfo "GetMonitorInfoA" user32.dll Handle hMonitor Pointer lpmi Returns Boolean
+External_Function MonitorFromPoint "MonitorFromPoint" user32.dll Integer x Integer y DWord dwFlags Returns Handle
+
+//#define MONITOR_DEFAULTTONULL       0x00000000
+//#define MONITOR_DEFAULTTOPRIMARY    0x00000001
+//#define MONITOR_DEFAULTTONEAREST    0x00000002
+
+Define MONITOR_DEFAULTONNULL for 0
+Define MONITOR_DEFAULTONPRIMARY for 1
+Define MONITOR_DEFAULTONNEAREST for 2
+
+// a set that contains a list of monitor handles
+Object oMonitorHandles is a Set
+End_Object
+
+// "brute force" monitor enumeration:
+//  we can't do a callback function so the Windows API is out
+//  this Procedure will determine what monitors (if any) are 
+//  immediately adjacent to the primary monitor and store the 
+//  monitor handles in a set for use later
+
+Procedure EnumerateMonitors
+    tMONITORINFO tPrimary
+    Handle hMonitor
+    Boolean bRetVal
+    
+    Move (MonitorFromPoint(0,0,MONITOR_DEFAULTONPRIMARY)) to hMonitor
+    Set value of oMonitorHandles item 0 to hMonitor
+    Move (SizeofType(tMONITORINFO)) to tPrimary.cbSize
+    Move (GetMonitorInfo(hMonitor, AddressOf(tPrimary))) to bRetVal
+    //
+    Move (MonitorFromPoint(-1,0,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(-1,-1,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(0,-1,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(tPrimary.rcMonitor.Right+1,-1,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(tPrimary.rcMonitor.Right+1,0,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(tPrimary.rcMonitor.Right+1,tPrimary.rcMonitor.Bottom+1,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(0,tPrimary.rcMonitor.Bottom+1,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(0,tPrimary.rcMonitor.Bottom+1,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+    //
+    Move (MonitorFromPoint(-1,tPrimary.rcMonitor.Bottom+1,MONITOR_DEFAULTONNULL)) to hMonitor
+    If (hMonitor<>0) Send add_element of oMonitorHandles hMonitor
+End_Procedure
+
+Send EnumerateMonitors
+
+Procedure DisplayMonitorInfo Handle hWnd
+    tMONITORINFO tMonInfo 
+    Boolean bRetVal
+    Integer i iCnt iRetVal
+    Handle hMonitor
+    
+    Get item_count of oMonitorHandles to iCnt
+    If (iCnt=0) Send EnumerateMonitors
+    //
+    Get item_count of oMonitorHandles to iCnt
+    For i from 0 to (iCnt-1)
+        Get value of oMonitorHandles item i to hMonitor
+        Move (SizeofType(tMONITORINFO)) to tMonInfo.cbSize
+        Move (GetMonitorInfo(hMonitor, AddressOf(tMonInfo))) to bRetVal
+        If (bRetVal=0) Get ShowLastError to iRetVal
+        Showln "Monitor #" i
+        Showln "Top Left: " tMonInfo.rcMonitor.Left ',' tMonInfo.rcMonitor.Top
+        Showln "Bottom Right: " tMonInfo.rcMonitor.Right ',' tMonInfo.rcMonitor.Bottom
+        Showln "Resolution: " (tMonInfo.rcMonitor.Right-tMonInfo.rcMonitor.Left) 'x' (tMonInfo.rcMonitor.Bottom-tMonInfo.rcMonitor.Top)
+        Showln
+    Loop
+End_Procedure
+
+Function MonitorInfo Handle hWnd Returns tMONITORINFO
+    tMONITORINFO tMonInfo
+    Boolean bRetVal
+    Integer iRetVal
+    Handle hMonitor
+    
+    Move (SizeofType(tMONITORINFO)) to tMonInfo.cbSize
+    Move (MonitorFromWindow(hWnd,MONITOR_DEFAULTONPRIMARY)) to hMonitor
+    Move (GetMonitorInfo(hMonitor, AddressOf(tMonInfo))) to bRetVal
+    If (bRetVal=0) Get ShowLastError to iRetVal
+    Function_Return tMonInfo   
+End_Function

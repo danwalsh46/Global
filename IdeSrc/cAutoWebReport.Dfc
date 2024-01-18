@@ -1,0 +1,14 @@
+//AB/ CLASSDEF
+Class cAutoWebReport is a AbstractNonVisualContainer
+    Set ClassPackage   To "cAutoWebReport.pkg"
+    Set peClassLibrary To clWebApp            // this class belongs to the Web Server Application class library only
+    Set ClassCETV      To 44                  // use TreeView Image #44
+    Set ObjectNameMask To "oAutoWebReport<count>"
+    Set ClassHelpName  To "cAutoWebReport"
+
+    Inherit
+
+    Property No_Visible Pseudo Complex Location 5 5   // don't show location
+    Property No_Visible Pseudo Complex Size 30 34     // don't show size
+    Property No_Visible        String  Bitmap "cAutoWebReport.bmp"  // show this bitmap on the control
+End_Class

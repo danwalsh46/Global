@@ -1,0 +1,30 @@
+[Workspace]
+CurrentProject=TestBed.src
+Location=C:\DataFlex Workspaces\Global\IDESrc\danwalsh_Studio.dsk
+CreateNew=4
+[TabWindows]
+GroupCount=1
+HorizontalGroups=1
+[TabGroup0]
+GroupSize=40
+SelectedTab=1
+[Window0]
+Filename=Workspace Dashboard
+ViewType=101
+Top=26
+Left=0
+Bottom=387
+Right=866
+TabIndex=0
+TabGroup=0
+[Window1]
+Filename=C:\DataFlex Workspaces\Global\AppSrc\cGlblWebView.pkg
+ViewType=1
+Top=26
+Left=0
+Bottom=387
+Right=866
+CursorLine=0
+CursorColumn=0
+TabIndex=1
+TabGroup=0

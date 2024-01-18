@@ -1,0 +1,63 @@
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Confidential Trade Secret.
+// Copyright 1987-2001 Data Access Corporation, Miami FL, USA
+// All Rights reserved
+// DataFlex is a registered trademark of Data Access Corporation.
+//
+// Module:
+//      GetTempPath.Pkg
+//
+// Purpose:
+//      Defines interface to WinAPI function GetTempPath
+//
+// Description:
+//
+//    This function returns the temporary directory according to Windows. The
+//    following logic is used by Windows:
+//       Windows 95/98: The GetTempPath function gets the temporary file path
+//                      as follows:
+//          1. The path specified by the TMP environment variable.
+//          2. The path specified by the TEMP environment variable, if TMP is
+//             not defined or if TMP specifies a directory that does not
+//             exist.
+//          3. The current directory, if both TMP and TEMP are not defined or
+//             specify nonexistent directories.
+//
+//       Windows NT/2000: The GetTempPath function does not verify that the
+//                         directory specified by the TMP or TEMP environment
+//                         variables exists. The function gets the temporary
+//                         file path as follows:
+//          1. The path specified by the TMP environment variable.
+//          2. The path specified by the TEMP environment variable, if TMP is
+//             not defined.
+//          3. The Windows directory, if both TMP and TEMP are not defined.
+//
+//    This DataFlex implementation adds to this that when the function was
+//    afterall not successful the current directory is returned.
+//
+// Author:
+//      Vincent Oorsprong
+//
+// Date:
+//      2001, June, 4th
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+External_Function WinAPI_GetTempPath "GetTempPathA" Kernel32.Dll Dword nBufferLength Pointer lpBuffer Returns Integer
+
+Define MAX_PATH For 260
+
+Function GetTempPath Desktop Returns String
+    String sTempPath
+    Integer iRetVal
+    
+    ZeroString MAX_PATH To sTempPath
+    
+    Move (WinAPI_GetTempPath (MAX_PATH, AddressOf (sTempPath))) To iRetVal
+    If (iRetVal > MAX_PATH) Begin
+        // Retry with more space
+        ZeroString iRetval To sTempPath
+        Move (WinAPI_GetTempPath (iRetVal, AddressOf (sTempPath))) To iRetVal
+    End   
+    
+    Function_Return (Cstring (sTempPath))
+End_Function // GetTempPath

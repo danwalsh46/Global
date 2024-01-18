@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+Class cRadioList Is a Edit
+    Set ClassPackage to "cRadioList.pkg"
+    Inherit
+    Property Always_Generate Complex Size 70 70
+End_Class

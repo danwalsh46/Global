@@ -1,0 +1,94 @@
+//**********************************************************************************[v4]***
+// Copyright (c) 2004  Todd Forsberg d/b/a Threshold Software (VDFD)
+// Copyright (c) 2006 Threshold Software
+// All rights reserved.
+//
+// DO NOT DISTRIBUTE THIS FILE OR ANY PART OF IT !
+//
+// $Authors     : Todd Forsberg (todd_forsberg@hotmail.com)
+//
+// $FileName    : cVDFD_ClassNameArray_Mixin
+// $ProjectName : VDFD Framework
+// $Created     : July 12, 2004
+// $Type        : Mixin Class
+//
+// Contents:    This package provides support for class identification during runtime.
+//
+// Properties:
+//     
+// Methods:     
+//      
+//     
+// Required Files:
+//  
+//
+//*****************************************************************************************
+
+Use VdfBase.pkg
+Use VDFD_Commands.pkg
+  
+{ ClassType=Mixin }
+Class cVDFD_ClassNameArray_Mixin is a Mixin
+
+    Procedure Define_VDFD_ClassNameArray_Mixin
+        { Visibility=Private }
+        Property Handle phoClassArray (Create(Self, RefClass(Array)))
+    End_Procedure
+  
+    // ??? //
+    Procedure ClassShowln String sVal
+        Integer iCount
+        String sClass
+        Handle hArray
+        Get phoClassArray to hArray
+        Get Item_Count of hArray to iCount
+        Showln (Value(hArray,iCount-1)) " --> " sVal
+    End_Procedure
+    
+    Procedure AddClassName String sClassName
+        Integer iCount
+        Handle hArray
+        Get phoClassArray to hArray
+        Get Item_Count of hArray to iCount
+        Set Value of hArray item iCount to sClassName
+    End_Procedure
+    
+    Function psCurrentClassName Returns String
+        Integer iCount
+        Handle hArray
+        String sClassName
+        Get phoClassArray to hArray
+        Get Item_Count of hArray to iCount
+        Get Value of hArray item (iCount-1) to sClassName
+        Function_Return sClassName
+    End_Function
+  
+    Function psClassName Returns String
+        Integer iCount
+        Handle hArray
+        String sClassName
+        Get phoClassArray to hArray
+        Get Item_Count of hArray to iCount
+        Get Value of hArray item (iCount-1) to sClassName
+        Function_Return sClassName
+    End_Function
+
+    Procedure DisplayClasses
+        Integer iCount iLoop
+        String sVal
+        Handle hArray
+        Get phoClassArray to hArray
+        Get Item_Count of hArray to iCount
+        Showln "-------------------------------------------"
+        Showln "Class Heirarchy of : " (Name(Self))
+        For iLoop from 0 to (iCount-1)
+            Get Value of hArray item iLoop to sVal
+            Showln (Repeat(" ",(iLoop*3))) "+--" sVal
+        Loop
+        Showln "-------------------------------------------"
+    End_Procedure
+
+End_Class
+
+// End of File: cVDFD_ClassNameArray_Mixin.pkg
+

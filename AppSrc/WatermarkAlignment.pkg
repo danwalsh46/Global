@@ -1,0 +1,28 @@
+//****************************************************************************
+// $Module type: Package
+// $Module name: WatermarkAlignment.pkg
+// $Author     : Nils G. Svedmyr
+// Created     : 2008-03-16 @ 13:19
+//
+// Description :
+//
+// $Rev History:
+//    2008-03-16  Module header created
+//****************************************************************************
+#IFDEF OLEXTPReportWatermarkAlignment
+#ELSE
+    Define OLEXTPReportWatermarkAlignment for Integer
+        Define OLExtpReportWatermarkUnknown for 0
+        Define OLExtpReportWatermarkLeft for 1
+        Define OLExtpReportWatermarkCenter for 2
+        Define OLExtpReportWatermarkRight for 4
+        Define OLExtpReportWatermarkHmask for 15
+        Define OLExtpReportWatermarkTop for 16
+        Define OLExtpReportWatermarkVCenter for 32
+        Define OLExtpReportWatermarkBottom for 64
+        Define OLExtpReportWatermarkVmask for 240
+        Define OLExtpReportWatermarkStretch for 256
+        Define OLExtpReportWatermarkEnlargeOnly for 512
+        Define OLExtpReportWatermarkShrinkOnly for 1024
+        Define OLExtpReportWatermarkPreserveRatio for 2048
+#ENDIF

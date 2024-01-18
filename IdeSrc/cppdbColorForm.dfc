@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class cppdbColorForm Is a dbForm
+    Set ClassPackage to "cppdbColorForm.pkg"
+    Inherit
+End_Class

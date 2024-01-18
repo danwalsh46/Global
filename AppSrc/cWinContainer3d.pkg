@@ -1,0 +1,32 @@
+//****************************************************************************
+// $Module type: Class
+// $Module name: cWinContainer3d
+// $Author     : Nils G. Svedmyr
+// Created     : 2004-05-15 @ 16:02
+//
+// Description :
+//
+// $Rev History:
+//    2004-05-15  Module header created
+//****************************************************************************
+Use cWinToolTip.pkg
+
+Class cWinContainer3d Is A Container3d
+
+    Import_Class_Protocol cWinToolTip_mx
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Send Define_cWinToolTip
+        Set pbClassEnabledHandleType    To False // True=Default
+        Set pbClassDisabledHandleType   To True  // True=Default
+        Set pbClassEntryStateHandleType To True  // True=Default
+    End_Procedure // Construct_Object
+
+    // Augment to display ToolTips for child objects if
+    // this object sets the shadow_state for those child objects.
+    Procedure Set Enabled_State Integer iState
+        Forward Set Enabled_State To iState
+        Broadcast Recursive Set Enabled_State To iState
+    End_Procedure // Procedure Set Enabled_State
+
+End_Class // cWinContainer3d

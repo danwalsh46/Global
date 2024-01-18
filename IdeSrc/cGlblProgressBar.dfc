@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblProgressBar is a cProgressBar
+    Set ClassPackage To "cGlblProgressBar.pkg"
+    Inherit
+End_Class

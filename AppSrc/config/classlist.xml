@@ -1,0 +1,1489 @@
+<?xml version="1.0"?>
+<classList xmlns="http://www.dataaccess.com/VisualDataFlex/2006/classlist/">
+	<VDFLibraryTimeStamp>2019-10-11T11:11:10</VDFLibraryTimeStamp><libraries></libraries>
+	<classes>
+		<class>
+			<className>cGlblEdit</className>
+			<image>ControlObject.ico</image>
+			<package>cGlblEdit.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbEdit</className>
+			<image>ControlObject.ico</image>
+			<package>cGlblDbEdit.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblGroup</className>
+			<image>ControlGroup.ico</image>
+			<package>cGlblGroup.pkg</package>
+			<groupName>Glbl Base Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblRadioGroup</className>
+			<image>ControlRadioGroup.ico</image>
+			<package>cGlblRadioGroup.pkg</package>
+			<groupName>Glbl Base Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbGroup</className>
+			<image>ControldbGroup.ico</image>
+			<package>cGlblDbGroup.pkg</package>
+			<groupName>Glbl Data Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbContainer3d</className>
+			<image>ControldbContainer3D.ico</image>
+			<package>cGlblDbContainer3d.pkg</package>
+			<groupName>Glbl Data Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblContainer3d</className>
+			<image>ControlContainer3D.ico</image>
+			<package>cGlblContainer3d.pkg</package>
+			<groupName>Glbl Base Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblTabDialog</className>
+			<image>ControlTabDialog.ico</image>
+			<package>cGlblTabDialog.pkg</package>
+			<groupName>Glbl Base Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbTabDialog</className>
+			<image>ControldbTabDialog.ico</image>
+			<package>cGlblDbTabDialog.pkg</package>
+			<groupName>Glbl Data Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbTabDialogView</className>
+			<image>ControldbTabDialog.ico</image>
+			<package>cGlblDbTabDialogView.pkg</package>
+			<groupName>Glbl Data Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbRadioGroup</className>
+			<image>ControldbRadioGroup.ico</image>
+			<package>cGlblDbRadioGroup.pkg</package>
+			<groupName>Glbl Data Containers</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblButton</className>
+			<image>ControlButton.ico</image>
+			<package>cGlblButton.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblCheckBox</className>
+			<image>ControlCheckbox.ico</image>
+			<package>cGlblCheckBox.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbCheckBox</className>
+			<image>ControldbCheckbox.ico</image>
+			<package>cGlblDbCheckBox.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblSpinForm</className>
+			<image>ControlSpinForm.ico</image>
+			<package>cGlblSpinForm.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbSpinForm</className>
+			<image>ControldbSpinForm.ico</image>
+			<package>cGlblDbSpinForm.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblLineControl</className>
+			<image>ControlLineControl.ico</image>
+			<package>cGlblLineControl.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblRadio</className>
+			<image>ControlRadio.ico</image>
+			<package>cGlblRadio.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblComboForm</className>
+			<image>ControlComboForm.ico</image>
+			<package>cGlblComboForm.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbComboForm</className>
+			<image>ControldbComboForm.ico</image>
+			<package>cGlblDbComboForm.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblForm</className>
+			<image>ControlForm.ico</image>
+			<package>cGlblForm.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbForm</className>
+			<image>ControldbForm.ico</image>
+			<package>cGlblDbForm.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbBitmap</className>
+			<image>ControldbBitmap.ico</image>
+			<package>cGlblDbBitmap.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblBitmapContainer</className>
+			<image>ControlBitmapContainer.ico</image>
+			<package>cGlblBitmapContainer.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbGrid</className>
+			<image>ControldbGrid.ico</image>
+			<package>cGlblDbGrid.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblGrid</className>
+			<image>ControlGrid.ico</image>
+			<package>cGlblGrid.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblList</className>
+			<image>ControlList.ico</image>
+			<package>cGlblList.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbList</className>
+			<image>ControldbList.ico</image>
+			<package>cGlblDbList.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblTextbox</className>
+			<image>ControlTextBox.ico</image>
+			<package>cGlblTextbox.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblTrackBar</className>
+			<image>ControlTrackbar.ico</image>
+			<package>cGlblTrackBar.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbTrackBar</className>
+			<image>ControldbTrackbar.ico</image>
+			<package>cGlblDbTrackBar.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblBusinessProcess</className>
+			<image>ControlBusinessProcess.ico</image>
+			<package>cGlblBusinessProcess.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblOpenDialog</className>
+			<image>ControlOpenDialog.ico</image>
+			<package>cGlblOpenDialog.pkg</package>
+			<groupName>Dialogs</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblSaveAsDialog</className>
+			<image>ControlSaveAsDialog.ico</image>
+			<package>cGlblSaveAsDialog.pkg</package>
+			<groupName>Dialogs</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblFontDialog</className>
+			<image>ControlFontDialog.ico</image>
+			<package>cGlblFontDialog.pkg</package>
+			<groupName>Dialogs</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblPrintDialog</className>
+			<image>ControlPrintDialog.ico</image>
+			<package>cGlblPrintDialog.pkg</package>
+			<groupName>Dialogs</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblArray</className>
+			<image>ControlArray.ico</image>
+			<package>cGlblArray.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblSet</className>
+			<image>ControlSet.ico</image>
+			<package>cGlblSet.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDfTimer</className>
+			<image>ControlDfTimer.ico</image>
+			<package>cGlblDfTimer.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblProgressBar</className>
+			<image>ControlProgressBar.ico</image>
+			<package>cGlblProgressBar.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblAnimation</className>
+			<image>ControlAnimation.ico</image>
+			<package>cGlblAnimation.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblTreeView</className>
+			<image>ControlTreeView.ico</image>
+			<package>cGlblTreeView.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblImageList</className>
+			<image>ControlImageList.ico</image>
+			<package>cGlblImageList.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblColorDialog</className>
+			<image>ControlColorDialog.ico</image>
+			<package>cGlblColorDialog.pkg</package>
+			<groupName>Dialogs</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblMapiHandler</className>
+			<image>ControlMapiHandler.ico</image>
+			<package>cGlblMapiHandler.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cSzRichEdit</className><image></image>
+			<package>cszrichedit.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cSzDbRichEdit</className><image></image>
+			<package>cSzRichEdit.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cFXProgressBar</className><image></image>
+			<package>cFXProgressBar.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>FXImage</className><image></image>
+			<package>FXImage.pkg</package>
+			<groupName>StarZen</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>dbFXImage</className><image></image>
+			<package>FXImage.pkg</package>
+			<groupName>StarZen Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cszVpeDocument</className><image></image>
+			<package>cszVpeDocument.pkg</package>
+			<groupName>VPE</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cszVpeReport</className><image></image>
+			<package>cszVpeReport.pkg</package>
+			<groupName>VPE</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cszVpeTreeDocument</className><image></image>
+			<package>cszVpeTreeDocument.pkg</package>
+			<groupName>VPE</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cszRicheditEx</className><image></image>
+			<package>cszRicheditEx.pkg</package>
+			<groupName>StarZen</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cSzDbRichEditEx</className><image></image>
+			<package>cszRicheditEx.pkg</package>
+			<groupName>StarZen Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>DbForm_AutoComplete</className>
+			<image>ControldbForm.ico</image>
+			<package>DbForm_AutoComplete.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>DbGrid_AutoComplete</className>
+			<image>ControldbGrid.ico</image>
+			<package>DbGrid_AutoComplete.pkg</package>
+			<groupName>Glbl Data</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>Form_AutoComplete</className>
+			<image>ControlForm.ico</image>
+			<package>DbForm_AutoComplete.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cszDropDownButton</className><image></image>
+			<package>cszDropDownButton.pkg</package>
+			<groupName>StarZen</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppAnimatedBitmap</className><image></image>
+			<package>cppAnimatedBitmap.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppButton</className><image></image>
+			<package>cppButton.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppCancel_bn</className><image></image>
+			<package>cppCancel_bn.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppChangeForm</className><image></image>
+			<package>cppChangeForm.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppCheckList</className><image></image>
+			<package>cppCheckList.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppDatePicker</className><image></image>
+			<package>cppDatePicker.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppdbDatePicker</className><image></image>
+			<package>cppDatePicker.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppdbColorForm</className><image></image>
+			<package>cppdbColorForm.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppListView</className><image></image>
+			<package>cppListView.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppOk_bn</className><image></image>
+			<package>cppOk_bn.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppProgressBar</className><image></image>
+			<package>cppProgressBar.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppRadioList</className><image></image>
+			<package>cppRadioList.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppTimePicker</className>
+			<image>ControlObject.ico</image>
+			<package>cppTimePicker.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppdbTimePicker</className>
+			<image>ControldbForm.ico</image>
+			<package>cppTimePicker.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cppTreeView</className><image></image>
+			<package>cppTreeView.pkg</package>
+			<groupName>PlusPak</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblWinReport2</className>
+			<image>ControlWinReport.ico</image>
+			<package>cGlblWinReport2.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDropDownButton</className><image></image>
+			<package>cGlblDropDownButton.pkg</package>
+			<groupName>Glbl Base</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbWizardPage</className>
+			<image>ControldbContainer3D.ico</image>
+			<package>cGlblDbWizard.pkg</package>
+			<groupName>Glbl Wizard</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblWizardNextButton</className>
+			<image>ControlButton.ico</image>
+			<package>cGlblDbWizard.pkg</package>
+			<groupName>Glbl Wizard</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblWizardBackButton</className>
+			<image>ControlButton.ico</image>
+			<package>cGlblDbWizard.pkg</package>
+			<groupName>Glbl Wizard</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblWizardCloseButton</className>
+			<image>ControlButton.ico</image>
+			<package>cGlblDbWizard.pkg</package>
+			<groupName>Glbl Wizard</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblWizardBitmapBox</className>
+			<image>ControlContainer3D.ico</image>
+			<package>cGlblDbWizard.pkg</package>
+			<groupName>Glbl Wizard</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblDbWizardPageContainer</className>
+			<image>ControldbContainer3D.ico</image>
+			<package>cGlblDbWizard.pkg</package>
+			<groupName>Glbl Wizard</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>BitmapContainer</className>
+			<image>ControlBitmapContainer.ico</image>
+			<package>dfBitmap.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Button</className>
+			<image>ControlButton.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cAnimation</className>
+			<image>ControlAnimation.ico</image>
+			<package>cAnimation.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Checkbox</className>
+			<image>ControlCheckbox.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>ComboForm</className>
+			<image>ControlComboForm.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cProgressBar</className>
+			<image>ControlProgressBar.ico</image>
+			<package>cProgressBar.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cRichEdit</className>
+			<image>ControlRichEdit.ico</image>
+			<package>cRichEdit.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cTextEdit</className>
+			<image>ControlTextEdit.ico</image>
+			<package>cTextEdit.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Form</className>
+			<image>ControlForm.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>LineControl</className>
+			<image>ControlLineControl.ico</image>
+			<package>dfLine.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Radio</className>
+			<image>ControlRadio.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>SpinForm</className>
+			<image>ControlSpinForm.ico</image>
+			<package>dfSpnFrm.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>TextBox</className>
+			<image>ControlTextBox.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Trackbar</className>
+			<image>ControlTrackbar.ico</image>
+			<package>TrckBr.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>TreeView</className>
+			<image>ControlTreeView.ico</image>
+			<package>dfTreeVw.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Container3D</className>
+			<image>ControlContainer3D.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Group</className>
+			<image>ControlGroup.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>ModalPanel</className>
+			<image>ControlModalPanel.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>RadioGroup</className>
+			<image>ControlRadioGroup.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>TabDialog</className>
+			<image>ControlTabDialog.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>ToolPanel</className>
+			<image>ControlToolPanel.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>View</className>
+			<image>ControlView.ico</image>
+			<package>Dfadlg.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbRichEdit</className>
+			<image>ControldbRichEdit.ico</image>
+			<package>cDbRichEdit.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbTextEdit</className>
+			<image>ControldbTextEdit.ico</image>
+			<package>cDbTextEdit.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbBitmap</className>
+			<image>ControldbBitmap.ico</image>
+			<package>dbBitmap.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbCheckbox</className>
+			<image>ControldbCheckbox.ico</image>
+			<package>dfEnChk.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbComboForm</className>
+			<image>ControldbComboForm.ico</image>
+			<package>dfcentry.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbForm</className>
+			<image>ControldbForm.ico</image>
+			<package>dfEntry.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbSpinForm</className>
+			<image>ControldbSpinForm.ico</image>
+			<package>dfSpnEnt.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbTrackbar</className>
+			<image>ControldbTrackbar.ico</image>
+			<package>dbTrckBr.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbContainer3D</className>
+			<image>ControldbContainer3D.ico</image>
+			<package>dfClient.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbModalPanel</className>
+			<image>ControlDbModalPanel.ico</image>
+			<package>dfClient.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbRadioGroup</className>
+			<image>ControldbRadioGroup.ico</image>
+			<package>dfEnRad.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbTabDialog</className>
+			<image>ControldbTabDialog.ico</image>
+			<package>dfTabDlg.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbView</className>
+			<image>ControlDbView.ico</image>
+			<package>DfClient.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>ColorDialog</className>
+			<image>ControlColorDialog.ico</image>
+			<package>Colr_dlg.pkg</package>
+			<groupName>Dialogs</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>FontDialog</className>
+			<image>ControlFontDialog.ico</image>
+			<package>Font_dlg.pkg</package>
+			<groupName>Dialogs</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>OpenDialog</className>
+			<image>ControlOpenDialog.ico</image>
+			<package>File_dlg.pkg</package>
+			<groupName>Dialogs</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>SaveAsDialog</className>
+			<image>ControlSaveAsDialog.ico</image>
+			<package>File_dlg.pkg</package>
+			<groupName>Dialogs</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cFtpTransfer</className>
+			<image>ControlFtpTransfer.ico</image>
+			<package>VdfBase.pkg</package>
+			<groupName>Internet</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cHttpTransfer</className>
+			<image>ControlHttpTransfer.ico</image>
+			<package>cHttpTransfer.pkg</package>
+			<groupName>Internet</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cXmlHttpTransfer</className>
+			<image>ControlXmlHttpTransfer.ico</image>
+			<package>cXmlHttpTransfer.pkg</package>
+			<groupName>Internet</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Array</className>
+			<image>ControlArray.ico</image>
+			<package>VdfBase.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>BusinessProcess</className>
+			<image>ControlBusinessProcess.ico</image>
+			<package>BatchDD.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cApplication</className>
+			<image>ControlApplication.ico</image>
+			<package>cApplication.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cHtmlHelp</className>
+			<image>ControlHtmlHelp.ico</image>
+			<package>cHtmlHelp.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cIniFile</className>
+			<image>ControlIniFile.ico</image>
+			<package>cIniFile.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cObject</className>
+			<image>ControlObject.ico</image>
+			<package>VdfBase.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWinReport2</className>
+			<image>ControlWinReport.ico</image>
+			<package>cWinReport2.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>Set</className>
+			<image>ControlSet.ico</image>
+			<package>Set.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbTabDialogView</className>
+			<image>ControlDbTabView.ico</image>
+			<package>dfTabDlg.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cImageList32</className>
+			<image>ControlImageList.ico</image>
+			<package>cImageList32.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJMenuBar</className>
+			<image>ControlCJMenuBar.ico</image>
+			<package>cCJCommandBarSystem.pkg</package>
+			<groupName>Menus and Toolbars</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJToolbar</className>
+			<image>ControlCJToolbar.ico</image>
+			<package>cCJCommandBarSystem.pkg</package>
+			<groupName>Menus and Toolbars</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJStatusbar</className>
+			<image>ControlCJStatusbar.ico</image>
+			<package>cCJCommandBarSystem.pkg</package>
+			<groupName>Menus and Toolbars</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJStatusbarPane</className>
+			<image>ControlCJStatusbarPane.ico</image>
+			<package>cCJCommandBarSystem.pkg</package>
+			<groupName>Menus and Toolbars</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJContextMenu</className>
+			<image>ControlCJContextMenu.ico</image>
+			<package>cCJCommandBarSystem.pkg</package>
+			<groupName>Menus and Toolbars</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJSkinFramework</className>
+			<image>ControlCJSkinFramework.ico</image>
+			<package>cCJSkinFramework.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cToolTipController</className>
+			<image>ControlToolTip.ico</image>
+			<package>cToolTipController.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbScrollingContainer</className>
+			<image>ControlDbScrollingContainer.ico</image>
+			<package>cDbScrollingContainer.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cScrollingContainer</className>
+			<image>ControlScrollingContainer.ico</image>
+			<package>cScrollingContainer.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbSplitterContainer</className>
+			<image>ControlDbSplitterContainer.ico</image>
+			<package>cDbSplitterContainer.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cSplitterContainer</className>
+			<image>ControlSplitterContainer.ico</image>
+			<package>cSplitterContainer.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cLinkLabel</className>
+			<image>ControlLinkLabel.ico</image>
+			<package>cLinkLabel.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cComReportControl</className>
+			<image>ControlCOM.ico</image>
+			<package>Codejock.ReportControl.v13.3.1.pkg</package>
+			<groupName>ActiveX</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cComTrackControl</className>
+			<image>ControlCOM.ico</image>
+			<package>Codejock.ReportControl.v13.3.1.pkg</package>
+			<groupName>ActiveX</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cComFieldChooser</className>
+			<image>ControlCOM.ico</image>
+			<package>Codejock.ReportControl.v13.3.1.pkg</package>
+			<groupName>ActiveX</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cGlblWizardPanel</className>
+			<image>ControlModalPanel.ico</image>
+			<package>cGlblWizard.pkg</package>
+			<groupName>Glbl Wizard</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cCJGrid</className>
+			<image>ControlGrid.ico</image>
+			<package>cCJGrid.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJGridColumn</className>
+			<image>ControlGridColumn.ico</image>
+			<package>cCJGridColumn.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJGridColumnRowIndicator</className>
+			<image>ControlGridColumnRowIndicator.ico</image>
+			<package>cCJGridColumnRowIndicator.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbCJGrid</className>
+			<image>ControldbGrid.ico</image>
+			<package>cDbCJGrid.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbCJGridColumn</className>
+			<image>ControldbGridColumn.ico</image>
+			<package>cDbCJGridColumn.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbCJGridPromptList</className>
+			<image>ControldbList.ico</image>
+			<package>cDbCJGridPromptList.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cIdleHandler</className>
+			<image>ControlIdleHandler.ico</image>
+			<package>Windows.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCJGridPromptList</className>
+			<image>ControlList.ico</image>
+			<package>cCJGridPromptList.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>ReportView</className>
+			<image>ControlView.ico</image>
+			<package>DFRptVw.pkg</package>
+			<groupName>Base Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cComChilkatMailMan2</className>
+			<image>ControlCOM.ico</image>
+			<package>cComChilkatMailMan2.pkg</package>
+			<groupName>ActiveX</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cWebButton</className>
+			<image>cWebButton.ico</image>
+			<package>cWebButton.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebCard</className>
+			<image>cWebCard.ico</image>
+			<package>cWebCard.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebCardContainer</className>
+			<image>cWebCardContainer.ico</image>
+			<package>cWebCardContainer.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebCheckbox</className>
+			<image>cWebCheckbox.ico</image>
+			<package>cWebCheckBox.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumn</className>
+			<image>cWebColumn.ico</image>
+			<package>cWebColumn.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumnCheckbox</className>
+			<image>cWebColumnCheckbox.ico</image>
+			<package>cWebColumnCheckBox.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumnCombo</className>
+			<image>cWebColumnCombo.ico</image>
+			<package>cWebColumnCombo.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebCombo</className>
+			<image>cWebCombo.ico</image>
+			<package>cWebCombo.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebCommandBar</className>
+			<image>cWebCommandBar.ico</image>
+			<package>cWebCommandbar.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebDateForm</className>
+			<image>cWebDateForm.ico</image>
+			<package>cWebDateForm.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebDatePicker</className>
+			<image>cWebDatePicker.ico</image>
+			<package>cWebDatePicker.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebEdit</className>
+			<image>cWebEdit.ico</image>
+			<package>cWebEdit.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebForm</className>
+			<image>cWebForm.ico</image>
+			<package>cWebForm.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebGrid</className>
+			<image>cWebGrid.ico</image>
+			<package>cWebGrid.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebHtmlBox</className>
+			<image>cWebHtmlBox.ico</image>
+			<package>cWebHtmlBox.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebHorizontalLine</className>
+			<image>cWebHorizontalLine.ico</image>
+			<package>cWebHorizontalLine.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebIFrame</className>
+			<image>cWebIFrame.ico</image>
+			<package>cWebIFrame.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebImage</className>
+			<image>cWebImage.ico</image>
+			<package>cWebImage.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebLabel</className>
+			<image>cWebLabel.ico</image>
+			<package>cWebLabel.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebList</className>
+			<image>cWebList.ico</image>
+			<package>cWebList.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebMenuBar</className>
+			<image>cWebMenuBar.ico</image>
+			<package>cWebMenuBar.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebMenuItem</className>
+			<image>cWebMenuItem.ico</image>
+			<package>cWebMenuItem.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebMenuItemLoadView</className>
+			<image>cWebMenuItem.ico</image>
+			<package>cWebMenuItemLoadView.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebModalDialog</className>
+			<image>cWebModalDialog.ico</image>
+			<package>cWebModalDialog.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebObject</className>
+			<image>cWebObject.ico</image>
+			<package>cWebObject.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebPanel</className>
+			<image>cWebPanel.ico</image>
+			<package>cWebPanel.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebPromptList</className>
+			<image>cWebList.ico</image>
+			<package>cWebPromptList.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebRadio</className>
+			<image>cWebRadio.ico</image>
+			<package>cWebRadio.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebSlider</className>
+			<image>cWebSlider.ico</image>
+			<package>cWebSlider.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebSpacer</className>
+			<image>cWebSpacer.ico</image>
+			<package>cWebSpacer.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebTabContainer</className>
+			<image>cWebTabContainer.ico</image>
+			<package>cWebTabContainer.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebTabPage</className>
+			<image>cWebTabPage.ico</image>
+			<package>cWebTabPage.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebTimer</className>
+			<image>cWebTimer.ico</image>
+			<package>cWebTimer.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebToolbar</className>
+			<image>cWebToolbar.ico</image>
+			<package>cWebToolbar.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebTreeView</className>
+			<image>cWebTreeView.ico</image>
+			<package>cWebTreeView.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebView</className>
+			<image>cWebView.ico</image>
+			<package>cWebView.pkg</package>
+			<groupName>WebApp Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumnButton</className>
+			<image>cWebColumnButton.ico</image>
+			<package>cWebColumnButton.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumnDate</className>
+			<image>cWebColumnDate.ico</image>
+			<package>cWebColumnDate.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumnImage</className>
+			<image>cWebColumnImage.ico</image>
+			<package>cWebColumnImage.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumnLink</className>
+			<image>cWebColumnLink.ico</image>
+			<package>cWebColumnLink.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColumnSuggestion</className>
+			<image>cWebColumnSuggestion.ico</image>
+			<package>cWebColumnSuggestion.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebFileUploadForm</className>
+			<image>cWebFileUploadForm.ico</image>
+			<package>cWebFileUploadForm.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebFileUploadButton</className>
+			<image>cWebFileUploadButton.ico</image>
+			<package>cWebFileUploadButton.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebProgressBar</className>
+			<image>cWebProgressBar.ico</image>
+			<package>cWebProgressBar.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebSuggestionForm</className>
+			<image>cWebSuggestionForm.ico</image>
+			<package>cWebSuggestionForm.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebGroup</className>
+			<image>cWebGroup.ico</image>
+			<package>cWebGroup.pkg</package>
+			<groupName>Web Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cSplitButton</className>
+			<image>ControlSplitButton.ico</image>
+			<package>cSplitButton.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCommandLinkButton</className>
+			<image>ControlCommandLinkButton.ico</image>
+			<package>cCommandLinkButton.pkg</package>
+			<groupName>Base Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cDbCJGridColumnSuggestion</className>
+			<image>ControldbGridColumnSuggestion.ico</image>
+			<package>cDbCJGridColumnSuggestion.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbSuggestionForm</className>
+			<image>ControlDbSuggestionForm.ico</image>
+			<package>dbSuggestionForm.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbGroup</className>
+			<image>ControldbGroup.ico</image>
+			<package>dfclient.pkg</package>
+			<groupName>Data Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cCharTranslate</className>
+			<image>ControlCharTranslate.ico</image>
+			<package>cCharTranslate.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cSeqFileHelper</className>
+			<image>ControlSeqFileHelper.ico</image>
+			<package>cSeqFileHelper.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cTimer</className>
+			<image>ControlDfTimer.ico</image>
+			<package>cTimer.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColorForm</className>
+			<image>cWebColorForm.ico</image>
+			<package>cWebColorForm.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebColorPicker</className>
+			<image>cWebColorPicker.ico</image>
+			<package>cWebColorPicker.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebListSwipeButton</className>
+			<image>cWebListSwipeButton.ico</image>
+			<package>cWebListSwipeButton.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebMenuButton</className>
+			<image>cWebMenuButton.ico</image>
+			<package>cWebMenuButton.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebMenuList</className>
+			<image>cWebMenuList.ico</image>
+			<package>cWebMenuList.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebParentCombo</className>
+			<image>cWebParentCombo.ico</image>
+			<package>cWebParentCombo.pkg</package>
+			<groupName>Web Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebAccordionContainer</className>
+			<image>cWebAccordionContainer.ico</image>
+			<package>cWebAccordionContainer.pkg</package>
+			<groupName>Web Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebAccordionCard</className>
+			<image>cWebAccordionCard.ico</image>
+			<package>cWebAccordionCard.pkg</package>
+			<groupName>Web Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cWebFloatingPanel</className>
+			<image>cWebFloatingPanel.ico</image>
+			<package>cWebFloatingPanel.pkg</package>
+			<groupName>Web Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>dbParentCombo</className>
+			<image>ControldbComboForm.ico</image>
+			<package>dbParentCombo.pkg</package>
+			<groupName>Data Controls</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cJsonHttpTransfer</className>
+			<image>ControlHttpTransfer.ico</image>
+			<package>cJsonHttpTransfer.pkg</package>
+			<groupName>Internet</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cConnection</className>
+			<image>ControlConnection.ico</image>
+			<package>cConnection.pkg</package>
+			<groupName>Others</groupName>
+			<libraryID>0</libraryID>
+		</class>
+		<class>
+			<className>cRESTfulService</className>
+			<image>ControlObject.ico</image>
+			<package>cRESTfulService.pkg</package>
+			<groupName>Glbl Non-Visible</groupName><libraryID></libraryID>
+		</class>
+		<class>
+			<className>cWebListExpandPanel</className>
+			<image>cWebListExpandPanel.ico</image>
+			<package>cWebListExpandPanel.pkg</package>
+			<groupName>Web Containers</groupName>
+			<libraryID>0</libraryID>
+		</class>
+	</classes>
+</classList>

@@ -1,0 +1,713 @@
+//     Now implementd in 2 parts - see modifications dated  15-APR-1999
+//
+//========================================================================================
+//  DNS Technology
+//
+//  FileName     : TOOLTIP.000
+//  Author       : S G Munn    (sgmunn@compuserve.com)
+//  Date Created : 01/10/1997
+//  Version      : 1.0
+//
+//  Purpose      : Tooltip controller
+//========================================================================================
+//  Parameters   : none
+//               :
+//  Interface    :
+//               :
+//========================================================================================
+//  Usage        : Use tooltip.000 just before the end_object statement of the 'main'
+//               : object.
+//               :
+//               : Also, I have had problems with timers if the dftimer package is used
+//               : inside the 'main' object.  I use dftimer outside main (just after the
+//               : 'use dfallent').
+//               :
+//               :
+//               :    // 11) Status bar - (if using)
+//               :    Use cStatusBar.pkg   //new Statusbar //  Status-Bar object.
+//               :    use tooltip.000
+//               :End_Object
+//               :    // 12) Startit starts the program
+//               :Send startit to main
+//
+//               : for any object you want a tool tip for, define the following in the
+//               : object (or class definition)
+//               :
+//               : function TooltipHint returns string
+//               :     function_return "tool tip string" // or property, or expression etc.
+//               : end_function
+//               :
+//               : <Optional>
+//               : function TooltipHintObject returns integer
+//               :     function_return Object_ID_Of_Alternate_Tool_Tip_Object
+//               : end_function
+//               :
+//========================================================================================
+//  History      :
+//    Task Id    : none
+//    Author     : SGM
+//    Date       : 21/10/1997
+//    Comments   : Added ability for tool tip timer to 'see' the window handle of objects
+//               : within a modal panel.
+//               :
+//    Task Id    : none
+//    Author     : SGM
+//    Date       : 15/12/1997
+//    Comments   : Fixed bug with getting size and location of panel (it was offset by the
+//               : panel's caption bar).
+//               : Removed function requirement to test if object should show a tool tip -
+//               : return a null tool tip string for no tool tip.
+//               : Added ability for object to specify a different tool tip object other
+//               : than the default 'windows like' tool tip.
+//               : The parent object of this PKG does not have to 'main'.  But the PKG
+//               : should still be used at the end of the object.
+//               : Uses PlusPak!'s cTimer class.  This can be changed to use DFTimer
+//               : by changing the compiler directive TOOLTIP_USE_PLUSPAK_CTIMER to NO
+//               :
+//               :
+//    Task Id    : none
+//    Author     : SGM
+//    Date       : 15/06/1998
+//    Comments   : Changed name type POINT to TOOLTIP_POINT to avoid compile problemns
+//               : with pkg's that define a point type as well.
+//               :
+//               :
+//               :
+//               : TODO.
+//               : 1. Remove tool tip when mouse is clicked.
+//               : 2. Allow the 'use tooltip.000' to be anywhere.
+//               :
+//               :
+//               :
+//               :
+//               :
+//               :
+//               :
+//========================================================================================
+// Updated By    : Oliver T. Nelson, Hallmark Insurance, Fresno, CA
+// Update Date   : 04/06/1999
+// Comments      : Basically changed S G Munn's stuff to support multiline tooltips.  They
+//               : are automatically wrapped on word nearest 40 chars per line.  Seems to
+//               : OK, although the method I use is a little flaky.
+
+//===========================================================================================
+// Updated by    : Neil Hamilton, BizzSoft.Com     Adelaide, Australia   15 Apr 1999
+//
+//               : Oliver's version now uses System Colours
+//               : Using suggestion from Merv Renton, CompuSolve, Adelaide, Australia
+//                               : Copy the following lines
+//
+//
+//                  #REPLACE TOOLTIP_USE_PLUSPAK_CTIMER              YES  //or NO
+//
+//                   #IFSAME TOOLTIP_USE_PLUSPAK_CTIMER YES
+//                               use cTimer         // PlusPak! timer control
+//                  #ELSE
+//                               use DFTimer        // DF Timer class
+//                  #ENDIF
+//
+//               :  Paste them into the main program code immediately ABOVE the line:
+//               :         /* DO NOT REMOVE THIS LINE: IDE GENERATED CODE WILL GO HERE */
+//               :
+//               :  Un-Remm the lines.
+//               :  The "use  Tooltip.pkg" I leftin the bottom code of the Panel in the
+//               :  main program code.
+//
+
+//===========================================================================================
+// Updated by    : Garret Mott, Auto-Mate Software    Buel's Gote, VT   25 Nov 2008
+//
+//               : Simply added 8 to the width of the lines as the last letter was getting 
+//               : cut off when line length = 40 char.
+//               : Search for "11/25/2008" to see the 2 lines that were changed
+//               : Should you prefer less space to the right - adding 6 instead of 8 might work
+//
+//               : Changed name to ToolTip000.pkg so the Studio will highlight/color correctly
+//
+
+use Windows
+
+Register_object ToolTipTimer000
+
+integer TooltipControllerID     // the object id of the tool tip timer
+integer DefaultTooltipHintID    // the object id of the default tool tip object
+
+// Point type
+type TOOLTIP_POINT
+    field TOOLTIP_POINT.X as dword
+    field TOOLTIP_POINT.Y as dword
+end_type
+
+// API call to return the position of the mouse
+//external_function GetCursorPos "GetCursorPos" user32.dll pointer lppt returns integer
+
+// API call to return the active window associcated with the calling thread (ie DFRUN)
+external_function GetActiveWindow "GetActiveWindow" user32.dll returns integer
+
+// default function for objects, returns the hint string of an object
+function TooltipHint for DFObject returns string
+    function_return ""
+end_function
+
+// default function for objects, returns the hint object of an object
+function TooltipHintObject for DFObject returns string
+    function_return DefaultTooltipHintID
+end_function
+
+// SGM : 21/10/1997
+// this is a hook for us to get the window handle of a dfpanel class object.
+// this will either be the 'main' window handle, or a dialog's window handle.
+function WindowHandleForToolTip for DFPanel returns integer
+    local integer hd
+    get Window_Handle to hd
+    function_return hd
+end_function
+
+// returns the DF object id that is currently under the mouse.
+// the 'side effect' of this is that it will return the df object id of
+// ANY df object (even ones in a different VDF program!)
+function GetDFObjectUnderMouse global returns integer
+    local string  pnt    //  a TOOLTIP_POINT type
+    local pointer pPnt   //  a pointer to a TOOLTIP_POINT type
+    local integer xx     //  x location
+    local integer yy     //  y location
+    local handle  hd     //  handle of window under mouse
+    local integer iObj   //  the DF object under the mouse location
+
+    filltype TOOLTIP_POINT with 0 to pnt
+
+    GetAddress of pnt to pPnt
+
+    move (GetCursorPos(pPnt)) to windowindex
+
+    getbuff from pnt at TOOLTIP_POINT.X to xx
+    getbuff from pnt at TOOLTIP_POINT.Y to yy
+
+    move (WindowFromPoint(xx,yy)) to hd
+
+    Get_Object_From_Window hd to iObj
+
+    function_return iObj
+end_function
+
+
+class ToolTipLine is a form
+    procedure construct_object
+        local integer iExt
+        forward send construct_object
+        set form_border to border_none
+        get text_extent "Any Text" to iExt
+        set GuiSize to (hi(iExt)) 0
+        set color to (rgb(255,255,225))
+        set focus_mode to nonfocusable
+    end_procedure
+end_class
+
+// this class replaces S G Munn's StandardToolTipLabel000 that was based on a textbox.  I tried using an edit,
+// but the edit class is buggy and the horizontal scroll bar is hard to get rid of.  I tried a grid, but I had
+// an invalid item reference problem that I finally gave up on tracking down.  Then I came upon the idea of
+// using form objects, but they need to have a container so that I wouldn't have to completely rewrite S G
+// Munn's code.  Hence the Container3d class! - OLIVER
+class StandardToolTipLabel000 is a Container3d
+    procedure Construct_Object
+        forward send Construct_Object
+
+        property string sTipUnformatted  // so that it can be cross checked with its passed value
+                                         // to see if there have been any changes to the text.
+        set Border_Style to Border_Normal    // this gives the single blank line that I'm looking for - OLIVER
+
+        set color to (rgb(255,255,225))  // this is what W98 on my machine had for the tooltip color.
+                                         // really this should be changed to read from the registry, but
+                                         // I'm not going to do it! - OLIVER
+
+        object Line_Array is an Array
+        end_object
+
+        // I had to create the objects here because if I dynamically created them, they would
+        // not get displayed in the toolpanel.  I don't know why this was so,  the objects were
+        // being created, they just wouldn't display no matter what I did :-(
+        // Why 7??  Because I wanted 7!! - OLIVER
+        object ToolTipLine000 is a ToolTipLine
+            set value of (line_array(self)) item 0 to Self
+        end_object
+        object ToolTipLine001 is a ToolTipLine
+            set value of (line_array(self)) item 1 to Self
+        end_object
+        object ToolTipLine002 is a ToolTipLine
+            set value of (line_array(self)) item 2 to Self
+        end_object
+        object ToolTipLine003 is a ToolTipLine
+            set value of (line_array(self)) item 3 to Self
+        end_object
+        object ToolTipLine004 is a ToolTipLine
+            set value of (line_array(self)) item 4 to Self
+        end_object
+        object ToolTipLine005 is a ToolTipLine
+            set value of (line_array(self)) item 5 to Self
+        end_object
+        object ToolTipLine006 is a ToolTipLine
+            set value of (line_array(self)) item 6 to Self
+        end_object
+    end_procedure
+
+    procedure Auto_size String Val Integer iLineCount
+        local integer ext iItemCnt
+
+        get Text_Extent Val to ext
+
+        // some hard coded sizes, works though
+        Set Guisize to ((hi(Ext)*iLineCount)+8) (low(Ext)+8)    //GM 11/25/2008 Added +8 because the right letter was sometimes getting cut off
+        send Adjust_logicals
+    end_procedure
+
+    procedure Add_TipLine String sTmp Integer iLine# Integer iTxtExtent
+        local integer iObj
+        get integer_value of (line_array(self)) item iLine# to iObj
+        Set GuiSize of iObj to (hi(iTxtExtent)) (low(iTxtExtent)+8) //GM 11/25/2008 Added +8 because the right letter was sometimes getting cut off
+        set Guilocation of iObj to ((iLine#*(hi(iTxtExtent)))+1) 0  // the +1 adds a little space at the top of the tooltip
+
+        Set value of iObj to sTmp
+        if iLine# lt 7 begin
+            repeat
+                increment iLine#
+                get integer_value of (line_array(self)) item iLine# to iObj
+                set value of iObj to ""
+            until iLine# ge 6
+        end
+    end_procedure
+
+    procedure UpdateTip string sTip
+        local string misc LongestLine tmp tmpchr
+        local integer iCnt iLntoGet iLen iLngTxtExt iTxtExt iTmp
+
+        set sTipUnformatted to sTip
+        trim sTip to sTip
+
+        // I chose 40 as the length of a line because I think
+        // it looked good at this size.  I could easily be changed
+        // and should probably be a property. - OLIVER
+        if (length(sTip)) gt 40 begin
+            calc 40 to iLntoGet
+
+            repeat
+                length sTip to iLen
+                if iLen gt 40 begin
+                    calc 40 to iLntoGet
+
+                    // this loop is for word wrapping.  It is really very primitive!  It
+                    // should have a little more intelligence, but in most cases it works,
+                    // and if it doesn't I can adjust my text to make it fit! - OLIVER
+                    repeat
+                        mid sTip to tmpChr 1 iLntoGet
+                        if tmpChr ne ' ' decrement iLntoGet
+                    until (tmpChr eq ' ' or iLntoGet le 0)
+
+                end
+                else move iLen to iLntoGet
+
+                left sTip to misc iLntoGet
+
+                move "  " to tmp       // pad both sides with spaces
+                append tmp misc "  "   // for a 'border'
+
+                get Text_Extent tmp to iTxtExt
+
+                send add_tipLine tmp iCnt iTxtExt
+
+                if iTxtExt gt iLngTxtExt begin
+                    move iTxtExt to iLngTxtExt
+                    move tmp to LongestLine
+                end
+
+                right sTip to sTip (iLen-iLntoGet)
+                increment iCnt
+            until ((length(sTip)) le 0 or iCnt ge 6)
+        end
+        else if sTip ne "" begin
+            move "  " to tmp
+            append tmp (trim(sTip)) "  "
+            get Text_Extent tmp to iTxtExt
+
+            send Add_TipLine tmp 0 iTxtExt
+
+            move tmp to LongestLine
+            move 1 to iCnt
+        end
+        send Auto_size LongestLine iCnt
+    end_procedure
+
+end_class
+
+//========================================================================================
+//  Name         : StandardToolTip000
+//  Purpose      : The standard tool tip class, looks like the normal windows one.
+//========================================================================================
+class StandardToolTip000 is a ToolPanel
+
+    //====================================================================================
+    //  Name         :
+    //  Scope        : PRIVATE
+    //  Purpose      :
+    //====================================================================================
+
+    //====================================================================================
+    //  Name         : Construct_Object
+    //  Scope        : PRIVATE
+    //  Purpose      : Augmentation
+    //====================================================================================
+    procedure Construct_Object
+        forward send Construct_Object
+        set Border_Style  to BORDER_NORMAL
+        set Caption_Bar   to false
+        set Visible_State to false
+        set Object_Color  to 4103 4120
+
+        // our 'text label' for the tool tip.
+        object ToolTipLabel is a StandardToolTipLabel000
+            set Location     to -1 -2
+        end_object
+    end_procedure
+
+    //====================================================================================
+    //  Name         : LocateToolTip
+    //  Scope        : PRIVATE
+    //  Purpose      : locate the tip just below the mouse (at least off the hot spot)
+    //====================================================================================
+    procedure LocateToolTip
+        local string  pnt    //  a TOOLTIP_POINT type
+        local pointer pPnt   //  a pointer to a TOOLTIP_POINT type
+        local integer xx     //  x location
+        local integer yy     //  y location
+
+        filltype TOOLTIP_POINT with 0 to pnt
+
+        GetAddress of pnt to pPnt
+
+        move (GetCursorPos(pPnt)) to windowindex
+
+        getbuff from pnt at TOOLTIP_POINT.X to xx
+        getbuff from pnt at TOOLTIP_POINT.Y to yy
+
+        // a bit of hard coding, but what the hell
+        set GUILocation to (yy + 20) xx
+        Send Adjust_Logicals    
+    end_procedure
+
+    //====================================================================================
+    //  Name         : ShowToolTip
+    //  Scope        : PRIVATE
+    //  Purpose      : Show the requested tool tip
+    //====================================================================================
+    procedure ShowToolTip string sTip
+        local integer sz
+
+        // don't do anything, if it is visible AND has the same value!
+        if (Visible_State(current_object)) begin
+            // we are already visible, so determine if we need to do anything
+            if ((sTipUnformatted(ToolTipLabel(current_object))) eq sTip) begin
+                // we are already showing this one,
+                procedure_return
+            end
+        end
+        send UpdateTip to (ToolTipLabel(current_object)) sTip
+
+        get Size  of (ToolTipLabel(current_object)) to sz
+        //set Size to ((hi(sz)) + 2) ((low(sz)) + 4)
+        set Size to ((hi(sz)) - 2) ((low(sz)) - 2)
+        send LocateToolTip
+        set Visible_State to true
+    end_procedure
+
+    //====================================================================================
+    //  Name         : HideToolTip
+    //  Scope        : PRIVATE
+    //  Purpose      : get rid of the tool tip
+    //====================================================================================
+    procedure HideToolTip
+        set Visible_State to false
+//        send UpdateTip to (ToolTipLabel(current_object)) ""
+        set Location      to -100 -100
+    end_procedure
+end_class
+
+//========================================================================================
+//  Name         : ToolTipTimer000
+//  Purpose      : Class of object to control the tool tips.  Timer turns them on and off.
+//========================================================================================
+#IFSAME TOOLTIP_USE_PLUSPAK_CTIMER YES
+    class ToolTipTimer000 is a cTimer
+#ELSE
+    class ToolTipTimer000 is a DFTimer
+#ENDIF
+
+    //====================================================================================
+    //  Name         :
+    //  Scope        : PRIVATE
+    //  Purpose      :
+    //====================================================================================
+
+    //====================================================================================
+    //  Name         : Construct_Object
+    //  Scope        : PRIVATE
+    //  Purpose      : Augmentation
+    //====================================================================================
+    procedure Construct_Object
+        forward send Construct_Object
+
+        property integer ToolTipVisible    public false  // are we displaying the tool tip
+        property integer LastToolTipObject public 0      // what was the last tool tip obj
+    end_procedure
+
+    //====================================================================================
+    //  Name         : ShowToolTip
+    //  Scope        : PRIVATE
+    //  Purpose      : Show the requested tool tip
+    //====================================================================================
+    procedure ShowToolTip integer ToolTipObject string sTip
+        local integer currentTipObj
+
+        get LastToolTipObject to currentTipObj
+        if (ToolTipObject ne currentTipObj) begin
+            // the tool tip we want to use is different to the one we used last
+            // so turn it off
+            if (ToolTipVisible(current_object)) send HideToolTip
+        end
+
+        if (ToolTipObject ne 0) begin
+            set LastToolTipObject to ToolTipObject
+            set ToolTipVisible    to true
+
+            send ShowToolTip      to ToolTipObject sTip
+        end
+        else send HideToolTip
+    end_procedure
+
+    //====================================================================================
+    //  Name         : HideToolTip
+    //  Scope        : PRIVATE
+    //  Purpose      : get rid of the current tool tip
+    //====================================================================================
+    procedure HideToolTip
+        local integer currentTipObj
+        if (ToolTipVisible(current_object)) begin
+            get LastToolTipObject to currentTipObj
+            send HideToolTip      to currentTipObj
+            set ToolTipVisible    to false
+        end
+    end_procedure
+
+    //====================================================================================
+    //  Name         : ChangeTimerInterval
+    //  Scope        : PRIVATE
+    //  Purpose      : Hook to change timer interval.  This is because PlusPak! cTimer
+    //               : must be stopped and started to change the timer interval
+    //====================================================================================
+    procedure ChangeTimerInterval integer NewInterval
+        #IFSAME TOOLTIP_USE_PLUSPAK_CTIMER YES
+            if (IsRunning(current_object)) send DoStop
+            set piInterval to NewInterval
+
+        ///***********************************************
+        // taken out because of no PlusPak
+
+            send DoStart
+        #ELSE
+            set Timeout to NewInterval
+        #ENDIF
+    end_procedure
+
+    //====================================================================================
+    //  Name         : CheckHint
+    //  Scope        : PRIVATE
+    //  Purpose      : check to see if a tool tip should be shown
+    //====================================================================================
+    procedure CheckHint
+        local integer isTipActive
+        //local integer showTip
+        local integer iobj
+        local string  sTip
+
+        get ToolTipVisible to isTipActive      // are we already displaying one?
+        move (GetDFObjectUnderMouse()) to iObj // what is the current df object
+        if (iObj ne 0) begin
+            // we have an object
+            // get the tool tip string
+            //get ShowTooltipHint of iObj to showTip        // do we display a hint
+            //if (showTip) get TooltipHint of iObj to sTip  // and what is it
+            get TooltipHint of iObj to sTip
+        end
+
+        if (isTipActive) begin
+            // the tool tip is active, so we either want to turn it off or we've moved to a different object
+            if (sTip ne "") begin
+                // the tool tip is active and we have something to show
+                send ShowToolTip (TooltipHintObject(iObj)) sTip
+            end
+            else begin
+                // the tool tip is active and we don't want to show one
+                send HideToolTip
+                send ChangeTimerInterval 1000
+            end
+        end
+        else begin
+            // the tool tip is not active
+            if (sTip ne "") begin
+                // the tool tip is not active and we have something to show
+                send ShowToolTip (TooltipHintObject(iObj)) sTip
+                send ChangeTimerInterval 200 // make the timer check more (smoother transition from object to object)
+            end
+            else begin
+                // the tool tip is not active and we don't want to show one
+                // nothing to do
+            end
+        end
+    end_procedure
+
+    //====================================================================================
+    //  Name         : CheckRemoveToolTip
+    //  Scope        : PRIVATE
+    //  Purpose      : Check to see if we should hide the tool tip, given that it should
+    //               : not be there!
+    //====================================================================================
+    procedure CheckRemoveToolTip
+        // if the tool tip is active, then get rid of it.
+        if (ToolTipVisible(current_object)) begin
+            send HideToolTip
+            // SGM : 21/10/1997
+            // added this - slow the timer down if we removed it.
+            send ChangeTimerInterval 1000
+        end
+    end_procedure
+
+    //====================================================================================
+    //  Name         : MouseIsOverWindow
+    //  Scope        : PRIVATE
+    //  Purpose      : returns true is the mouse is over this window
+    //====================================================================================
+    function MouseIsOverWindow handle hWind returns integer
+        local string  pnt       // a TOOLTIP_POINT type
+        local pointer pPnt      // a pointer to TOOLTIP_POINT
+        local string  rect      // a tRECT type
+        local pointer pRect     // a pointer to tRECT
+        local integer mx        // mouse x
+        local integer my        // mouse y
+        local integer winLeft   // win left loc
+        local integer winTop    // win top loc
+        local integer winRight  // win right loc
+        local integer winBottom // win bottom loc
+
+        // get the location of the mouse
+        filltype TOOLTIP_POINT with 0 to pnt
+        GetAddress of pnt to pPnt
+        move (GetCursorPos(pPnt)) to windowindex
+        getbuff from pnt at TOOLTIP_POINT.X to mx
+        getbuff from pnt at TOOLTIP_POINT.Y to my
+
+        // get the _real_ origin and extent of the application
+        // using DF's Absolute_GuiOrigin returns us the loctions offset by the
+        // apps caption bar which just causes too many problems
+
+        filltype tRECT with 0 to rect
+        GetAddress of rect to pRect
+        move (GetWindowRect(hWind, pRect)) to windowindex
+        getbuff from rect at tRECT.left    to winLeft
+        getbuff from rect at tRECT.top     to winTop
+        getbuff from rect at tRECT.right   to winRight
+        getbuff from rect at tRECT.bottom  to winBottom
+
+        function_return (((mx gt winLeft) and (mx lt winRight)) and ((my gt winTop) and (my lt winBottom)))
+    end_function
+
+    //====================================================================================
+    //  Name         : OnTimer
+    //  Scope        : PRIVATE
+    //  Purpose      : A timer event has gone, do the checks
+    //====================================================================================
+    procedure OnTimer
+        local handle  hdMain
+        local handle  hd
+        local integer iFoc
+
+        // we have to determine if we are the active window because if there is another df app running
+        // we will get the df object of the object in the other app if the mouse is located there.
+
+        // this causes us to get an unresolved object reference because we're trying to talk to an object
+        // that isn't even in this program!
+
+        move (GetActiveWindow())                    to hd      // the active (DF) window.
+
+        // if the active window handle doesn't equal the window handle of 'main' then we are either dealing
+        // with a modal panel (within our app) or some other app has the windows focus.  what we need to
+        // do now is get the window handle of the panel that is the parent of the focus and check
+        // that against the active window.
+
+        // get the focus
+        get Focus to iFoc
+        // get the window handle of the panel that is the parent (or grand.. parent) of the focus.
+        get WindowHandleForToolTip of (iFoc) to hdMain             // the handle of the window (panel) that has the focus
+
+        // do the tests.
+        if (hd eq hdMain) begin
+            // the active window is the same as the panel with the focus,
+            // but is the mouse over the active window?
+            if (MouseIsOverWindow(current_object,hd)) begin
+                // the window for this app is active and the mouse is actually over the application
+                // not a different VDF
+
+                // check for tool tip hints
+                send CheckHint
+            end
+            else send CheckRemoveToolTip   // remove the tool tip if it is active
+        end
+        else send CheckRemoveToolTip       // remove the tool tip if it is active
+
+    end_procedure
+
+    //====================================================================================
+    //  Name         : DisableToolTips
+    //  Scope        : PUBLIC
+    //  Purpose      : Turn off tool tips
+    //====================================================================================
+    procedure DisableToolTips
+        #IFSAME TOOLTIP_USE_PLUSPAK_CTIMER YES
+            send DoStop
+        #ELSE
+            set Timer_Active_State to false
+        #ENDIF
+    end_procedure
+
+    //====================================================================================
+    //  Name         : EnableToolTips
+    //  Scope        : PUBLIC
+    //  Purpose      : Turn on tool tips
+    //====================================================================================
+    procedure EnableToolTips
+        #IFSAME TOOLTIP_USE_PLUSPAK_CTIMER YES
+
+          //
+            send DoStart
+        #ELSE
+            set Timer_Active_State to true
+        #ENDIF
+    end_procedure
+
+end_class
+
+object StandardToolTip is a StandardToolTip000
+    move (current_object) to DefaultTooltipHintID
+end_object
+
+
+object ToolTipTimer is a ToolTipTimer000
+    move (current_object) to TooltipControllerID
+    //Make DoStart Conditional as elsewhere
+        #IFSAME TOOLTIP_USE_PLUSPAK_CTIMER YES
+            send DoStart
+        #ELSE
+            set Timer_Active_State to true
+        #ENDIF
+end_object
+
+
+
+

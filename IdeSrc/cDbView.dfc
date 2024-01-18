@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class cDbView Is a dbView
+    Set ClassPackage to "cDbView.pkg"
+    Inherit
+End_Class

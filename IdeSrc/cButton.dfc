@@ -1,0 +1,8 @@
+//AB/ CLASSDEF
+Class cButton Is a Button 
+    Set ClassPackage to "cButton.pkg"
+    Inherit
+    Property No_Execute Boolean pbTransparent True 
+    Property No_Execute Boolean pbMap3dColors True 
+    Property No_Execute Integer peImageType itNone 
+End_Class

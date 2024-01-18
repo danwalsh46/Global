@@ -1,0 +1,35 @@
+//AB/ OBJECTDEF
+Object
+    Set Size to 70 150
+
+    Set Line_Width to 3 0
+
+    Set Form_Width    item 0 to 47
+    Set Header_Label  item 0 to "Column 1"
+
+    Set Form_Width    item 1 to 47
+    Set Header_Label  item 1 to "Column 2"
+
+    Set Form_Width    item 2 to 47
+    Set Header_Label  item 2 to "Column 3"
+
+    //AB-StoreStart
+    // example method of how to fill a grid
+    //Procedure DoFillGrid
+    //    Integer iRow iMaxRows
+    //
+    //    Move 20 To iMaxRows
+    //    For iRow From 1 To iMaxRows
+    //        Send Add_Item Msg_None ("Col 1, row " + String (iRow)))
+    //        Send Add_Item Msg_None ("Col 2, row " + String (iRow)))
+    //        Send Add_Item Msg_None ("Col 3, row " + String (iRow)))
+    //    Loop
+    //End_Procedure // DoFillGrid
+
+    //Procedure OnChange Integer iNewItem
+    //    String sValue
+    //
+    //    Get Value iNewItem To sValue // value of changed cell
+    //End_Procedure // OnChange
+    //AB-StoreEnd
+End_Object

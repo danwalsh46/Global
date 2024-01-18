@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblGroup is a Group
+    Set ClassPackage To "cGlblGroup.pkg"
+    Inherit
+End_Class

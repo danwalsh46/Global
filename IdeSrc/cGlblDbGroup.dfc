@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbGroup is a dbGroup
+    Set ClassPackage To "cGlblDbGroup.pkg"
+    Inherit
+End_Class

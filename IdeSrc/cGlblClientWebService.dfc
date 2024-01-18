@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblClientWebService is a cClientWebService
+    Set ClassPackage To "cGlblClientWebService.pkg"
+    Inherit
+End_Class

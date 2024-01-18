@@ -1,0 +1,15 @@
+//AB/ CLASSDEF
+
+Class cGlblDbForm is a dbForm
+    Set ClassPackage To "cGlblDbForm.pkg"
+    Inherit
+    Set ObjectNameMask To "oDbForm<count>"
+    // Tooltips
+    Property No_Execute String  psToolTip  "" // Gets/Sets control tooltip
+    Property No_Execute String  psToolTipTitle  "" // Gets/Sets button tooltip title, shown on the tip in bold, at the Top
+    Property No_Execute Mode    piToolTipIcon TTI_INFO TTI_INFO TTI_NONE TTI_WARNING TTI_ERROR  // Adds standard icon to the ToolTip. To use this property, psToolTipTitle must be set.
+    Property No_Execute Boolean pbToolTipBalloon  True // Indicates that the ToolTip control has the appearance of a cartoon "balloon," with rounded corners and a stem pointing to the item.
+    Property No_Execute Boolean pbToolTips        True // Enables/Disable the tooltip.
+    Property No_Execute Boolean pbAutoLabelAsToolTipTitle True // (pbAutoLabelAsToolTipTitle) If no ToolTipTitle has been specified use the object label as ToolTipTitle?
+    Property No_Execute Boolean pbAutoStatusHelpAsToolTip True // (pbAutoStatusHelpAsToolTip) If no psToolTip has been specified use the Status_Help as ToolTip text?
+End_Class

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblColorDialog is a ColorDialog
+    Set ClassPackage To "cGlblColorDialog.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,26 @@
+//***************************************************************************
+//*
+//* Class:        cGlblBitmapContainer
+//* Package Name: cGlblBitmapContainer.pkg
+//*
+//***************************************************************************
+
+Use DFAllEnt.pkg
+
+Class cGlblBitmapContainer is a BitmapContainer
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+End_Class // cGlblBitmapContainer

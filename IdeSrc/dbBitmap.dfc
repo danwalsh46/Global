@@ -1,0 +1,23 @@
+//AB/ CLASSDEF
+Class dbBitmap is a dbContainer3d ABdbBitmap BitmapMixin DefineBitmapMixin
+    Set Item_Based_Object       To True
+    Set Entry_Item_Object       To True
+    Set Floating_Menu_Id        To BitmapFloater.obj
+    Set Control_Type            To ctDataAware
+    Set Drop_Allowed            To 0
+    Set ObjectNameMask          To "oDbBitmap<count>"
+    Set ObjectNameMaskDataAware To "o<file>_<field>"
+    Set ClassHelpName           To "dbBitmap"
+    Set ClassCETV               To 16                // use TreeView Image #16 (1-based offset)
+    Set ClassPackage            To "dbBitmap.pkg"
+
+    Inherit
+
+    Property Mode Bitmap_Style Bitmap_Actual Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center
+    Property String Initial_Folder "" // Initial folder for open file dialog if enabled (if Allow_Select_Bitmap_state is true)
+    Property No_Execute String Dialog_Caption "Select a bitmap file" // Caption title for open file dialog if enabled (if Allow_Select_Bitmap_state is true)
+    Property Always_Generate Complex Size 80 80
+    Property no_execute boolean Store_With_Pathname_State False // Save the full pathname of the bitmap being displayed back to the database.
+    Property No_Execute Boolean allow_select_bitmap_state False // If true, users will be able to browse a list of the bitmap files in a directory and select one for display.
+    Property NO_VISIBLE NO_GENERATE Integer Help_Id
+End_Class

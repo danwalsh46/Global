@@ -1,0 +1,11 @@
+//AB/ CLASSDEF
+Class dbTabView is a AbstractTabPage ABTabPage ABdbTabView_Mixin Define_ABdbTabView_Mixin
+    Set Control_Type To ctDataContainer
+    Set Floating_Menu_Id TO dbViewTabFloater.obj
+    Set ClassHelpName To "dbTabView"
+    Inherit
+    Property No_Visible No_Generate String Main_DD
+    Property No_Visible No_Generate Integer Server 0
+    Property No_execute Boolean Auto_Clear_DEO_state True // Clear DEOs after successful Save or Delete?
+    Property NO_Execute mode peNeighborHood nhPublic nhPublic nhPrivate nhNo // If a neighborhood (nhPublic) all objects within may address each other with short name. nhPrivate=no short access at all. nhNo=not Neighborhood, check parent (rarely used).
+End_Class

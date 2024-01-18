@@ -1,0 +1,23 @@
+Use Windows.pkg
+
+Class cBackgroundTextBox is a TextBox
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property Integer piParent 0 
+    End_Procedure
+    
+    Procedure Mouse_Up Integer iWindowNumber Integer iPosition
+        Forward Send Mouse_Up iWindowNumber iPosition
+        If (piParent(Self) > 0) Begin 
+            Send Activate to (piParent(Self)) 
+        End
+    End_Procedure
+
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+End_Class

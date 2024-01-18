@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblWinReport2 is a cWinReport2
+    Set ClassPackage To "cGlblWinReport2.pkg"
+    Inherit
+End_Class

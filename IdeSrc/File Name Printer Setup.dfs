@@ -1,0 +1,104 @@
+//AB/ SUBCOMPONENT
+Object Form1 is a Form
+    Set Label to "File Name"
+    Set Label_Col_Offset to 2
+    Set Label_Justification_Mode to jMode_Right
+    Set Prompt_Button_Mode to pb_PromptOn
+    Set Size to 13 161
+    Set Location to 6 49
+
+    //AB-StoreStart
+    Object OpenFile is an OpenDialog
+            Set Dialog_Caption to "Open Dialog Selecotr"
+            Set Filter_String To 'Txt (*.txt)|*.txt|All (*.*)|*.*'
+            Set FileMustExist_State to False
+            //Set Initial_Folder to (CurrentDataPath(ghoWorkSpace))
+            Set ShowFileTitle_state to True
+    End_Object
+    
+    Procedure Prompt
+            local integer bOpen
+            Local integer hDialog
+            Local String sFileTitle sFileName
+            Move (OpenFile(self)) to hDialog
+            Get Show_Dialog of hDialog To bOpen
+            If bOpen Begin
+                    Get File_Name of hDialog To sFileName
+                    Set Value to sFileName
+            End
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Form1
+
+Object Destination is a RadioGroup
+    Set Label to "Output Device:"
+    Set Size to 50 80
+    Set Location to 23 49
+    Set Current_Radio to 0
+    Object Screen is a Radio
+        Set Label to "Screen"
+        Set Size to 10 39
+        Set Location to 15 10
+        Set Status_Help to "Preview the report to screen"
+    End_Object    // Screen
+
+    Object Printer is a Radio
+        Set Label to "Printer"
+        Set Size to 10 37
+        Set Location to 30 10
+        Set Status_Help to "Send the report to the default printer"
+    End_Object    // Printer
+
+    //AB-StoreStart
+    // set the Output_Device_Mode each time the radio button changes
+    
+    Procedure Notify_Select_State  Integer iNewItem  Integer iOldItem
+            Forward Send Notify_Select_State  iNewItem  iOldItem
+            If iNewItem EQ 0 Set Output_Device_Mode  To PRINT_TO_WINDOW
+            Else             Set Output_Device_Mode  To PRINT_TO_PRINTER
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Destination
+
+Object Setup is a Button
+    Set Label to "Printer Setup"
+    Set Location to 80 49
+
+    //AB-StoreStart
+    Procedure OnClick
+        Local Integer Report_obj
+        Get  Report_Object_ID  To Report_obj
+        Send DFPrintSetup      To Report_obj
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Setup
+
+Object Ok_bn is a Button
+    Set Default_State to True
+    Set Label to "Ok"
+    Set Location to 80 104
+
+    //AB-StoreStart
+    Procedure OnClick
+       Delegate Send OK
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Ok_bn
+
+Object Cancel_bn is a Button
+    Set Default_State to True
+    Set Label to "Cancel"
+    Set Location to 80 160
+
+    //AB-StoreStart
+    Procedure OnClick
+       Delegate Send Close_Panel
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Cancel_bn
+

@@ -1,0 +1,34 @@
+//AB/ OBJECTDEF
+Object
+    Set Size to 54 77
+
+    Object oRadio1 is a Radio
+        Set Label to "Radio Label 1"
+        Set Size to 10 61
+        Set Location to 10 5
+    End_Object    // oRadio1
+
+    Object oRadio2 is a Radio
+        Set Label to "Radio Label 2"
+        Set Size to 10 61
+        Set Location to 25 5
+    End_Object    // oRadio2
+
+    Object oRadio3 is a Radio
+        Set Label to "Radio Label 3"
+        Set Size to 10 61
+        Set Location to 40 5
+    End_Object    // oRadio3
+
+    //AB-StoreStart
+    Procedure Notify_Select_State Integer iToItem Integer iFromItem
+        Forward Send Notify_Select_State iToItem iFromItem
+        //for augmentation
+    End_Procedure // Notify_Select_State
+
+    // If you set Current_radio you must set this after the
+    // radio objects have been created AND after Notify_select_State has been
+    // created. i.e. Set in bottom-code at end!!
+    //Set Current_Radio To 0
+    //AB-StoreEnd
+End_Object

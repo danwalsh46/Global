@@ -1,0 +1,60 @@
+// This would be inserted in your main package to be used in all programs:
+
+// Statement of purpose:
+// When using a reread command in VDF you will unfortunately lock many more
+// files than are necessary.  In order to only lock the files necessary I
+// use the following procedure to set all files to readonly, manually set
+// the files being worked on to (default) and then reset all back at the end.
+// This is what a data dictionary does in a VDF program for it's file structure.
+// - Authored by Pete Donovan
+Object FileModeArray Is An Array
+    // 0 = File Number
+    // 1 = Non-Default FileMode Existing Before Change By ChangeAllFileModes Procedure
+End_Object
+Procedure Write_Attribute_Array Integer iFile Integer iFileMode
+    Integer iCounter hArray iExists
+    Move (FileModeArray(Self)) To hArray
+    For iCounter From 0 To 1000
+        Get Array_Value Of hArray Item ((iCounter * 2) + 0) To iExists
+        If (Not(iExists) Or (iExists = iFile)) Begin
+            Set Array_Value Of hArray Item ((iCounter * 2) + 0) To iFile
+            Set Array_Value Of hArray Item ((iCounter * 2) + 1) To iFileMode
+        End
+        If (Not(iExists) Or (iExists = iFile)) Break
+    Loop
+End_Procedure
+Procedure Clear_FileModeArray
+    Send Delete_Data To (FileModeArray(Self))
+End_Procedure
+Function Is_NonStandardFileMode Integer iFile Returns Integer
+    Integer iCounter iExists iNonStandardFileMode hArray
+    Move (FileModeArray(Self)) To hArray
+    For iCounter From 0 To 1000
+        Get Array_Value Of hArray Item ((iCounter * 2) + 0) To iExists
+        If (Not(iExists)) Function_Return 0 // Not Listed In Array
+        If (iExists = iFile) Begin
+            Get Array_Value Of hArray Item ((iCounter * 2) + 1) To iNonStandardFileMode
+            Function_Return iNonStandardFileMode
+        End
+    Loop
+    Function_Return
+End_Function
+//Here is the main procedure:
+Procedure ChangeAllFileModes Integer iMode
+    Integer iFile iExistingFileMode iNonStandardFileMode
+    If (iMode = DF_FileMode_ReadOnly) Send Clear_FileModeArray
+    Repeat
+        // Get Each Opened File, One At A Time...
+        Get_Attribute DF_File_Next_Opened Of iFile To iFile
+        If (Not(iFile)) Break
+        If (iMode = DF_Filemode_ReadOnly) Begin  // Setting All Files To Readonly
+            Get_Attribute DF_File_Mode Of iFile To iExistingFileMode
+            If (iExistingFileMode <> DF_Filemode_Default) Send Write_Attribute_Array iFile iExistingFileMode
+        End
+        If (iMode = DF_Filemode_Default) Begin  // Setting All Files Back To Default
+            Get Is_NonStandardFileMode iFile To iNonStandardFileMode
+        End
+        If (iNonStandardFileMode) Set_Attribute DF_File_Mode Of iFile To iNonStandardFileMode
+        Else                      	     Set_Attribute DF_File_Mode Of iFile To iMode
+    Loop
+End_Procedure

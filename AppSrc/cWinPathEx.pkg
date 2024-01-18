@@ -1,0 +1,190 @@
+// cWinPathEx.pkg
+// Compiled by Sergey V. Natarov (senatc@postman.ru)
+//
+
+Use cWinPathEx.h
+
+Function SWAPathFindExtension Global String sPath Returns String
+    String sRetVal
+    Pointer pExtension pPath
+    Move (sPath - Character (0)) To sPath
+    GetAddress Of sPath To pPath
+    Move (PathFindExtensionEf(pPath)) To pExtension
+    Move (pExtension - pPath) To pPath
+    Move (Right (sPath, Length (sPath) - pPath)) To sRetVal
+    Function_Return (Trim (CString (sRetVal)))
+End_Function // PathFindExtension
+
+Function SWAPathIsDirectory Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsDirectoryEf(AddressOf (sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsDirectory
+
+Function SWAPathFileExists Global String sPath returns integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathFileExistsEf(AddressOf (sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathFileExists
+
+Function SWAPathFindFileName Global String sPath Returns String
+    String sRetVal
+    Pointer pFileName pPath
+    Move (sPath - Character (0)) To sPath
+    GetAddress Of sPath To pPath
+    Move (PathFindFileNameEf(pPath)) To pFileName
+    Move (pFileName - pPath) To pPath
+    Move (Right (sPath, Length (sPath) - pPath)) To sRetVal
+    Function_Return (Trim (CString(sRetVal)))
+End_Function // PathFindFileName
+
+Function SWAPathIsDirectoryEmpty Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsDirectoryEmptyEf(AddressOf (sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsDirectoryEmpty
+
+Function SWAPathIsFileSpec Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsFileSpecEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsFileSpec
+
+Function SWAPathIsHTMLFile Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsHTMLFileEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsHTMLFile
+
+Function SWAPathIsLFNFileSpec Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsLFNFileSpecEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsLFNFileSpec
+
+Function SWAPathIsNetworkPath Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsNetworkPathEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsNetworkPath
+
+Function SWAPathIsRelative Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsRelativeEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsRelative
+
+Function SWAPathIsRoot Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsRootEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsRoot
+
+Function SWAPathIsSameRoot Global String sPath1 String sPath2 Returns Integer
+    Boolean bRetVal
+    Move (sPath1 - Character (0)) To sPath1
+    Move (sPath2 - Character (0)) To sPath2
+    Move (PathIsSameRootEf(AddressOf(sPath1), AddressOf(sPath2))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsSameRoot
+
+Function SWAPathIsSystemFolder Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsSystemFolderEf(AddressOf(sPath), 0)) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsSystemFolder
+
+Function SWAPathIsUNC Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsUNCEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsUNC
+
+Function SWAPathIsUNCServer Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsUNCServerEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsUNCServer
+
+Function SWAPathIsUNCServerShare Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsUNCServerShareEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsUNCServerShare
+
+Function SWAPathIsURL Global String sPath Returns Integer
+    Boolean bRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathIsURLEf(AddressOf(sPath))) To bRetVal
+    Function_Return bRetVal
+End_Function // PathIsURL
+                      
+Function SWAPathRemoveArgs Global String sPath Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathRemoveArgsEf(AddressOf(sPath))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathRemoveArgs
+
+Function SWAPathRemoveExtension Global String sPath Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathRemoveExtensionEf(AddressOf(sPath))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathRemoveExtension
+
+Function SWAPathRemoveFileSpec Global String sPath Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathRemoveFileSpecEf(AddressOf(sPath))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathRemoveFileSpec
+
+Function SWAPathRenameExtension Global String sPath String sExt Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (sExt - Character (0)) To sExt
+    Move (PathRenameExtensionEf(AddressOf(sPath), AddressOf(sExt))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathRenameExtension
+
+Function SWAPathSkipRoot Global String sPath Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathSkipRootEf(AddressOf(sPath))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathSkipRoot
+
+Function SWAPathStripPath Global String sPath Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathStripPathEf(AddressOf(sPath))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathStripPath
+
+Function SWAPathStripToRoot Global String sPath Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathStripToRootEf(AddressOf(sPath))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathStripToRoot
+
+Function SWAPathUndecorate Global String sPath Returns String
+    Pointer pRetVal
+    Move (sPath - Character (0)) To sPath
+    Move (PathUndecorateEf(AddressOf(sPath))) To pRetVal
+    Function_Return (CString(sPath))
+End_Function // PathUndecorate

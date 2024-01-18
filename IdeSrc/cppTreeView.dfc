@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+Class cppTreeView Is a Edit
+    Set ClassPackage to "cppTreeView.pkg"
+    Inherit
+    Property Always_Generate Complex Size 70 70
+End_Class

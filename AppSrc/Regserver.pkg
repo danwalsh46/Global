@@ -1,0 +1,126 @@
+//************************************************************************
+//*** Automatic registration and deregistration of OCX and DLL files.
+//************************************************************************
+//*** Regserver.pkg
+//*** Version: 1.0
+//*** Copyright (c) 2004 NordTeam Gruppen
+//***
+//*** Author......: Allan Kim Eriksen
+//*** Created.....: 14/07 2004
+//*** Last updated:
+//************************************************************************
+// This Function makes it possible to register and deregister OCX and DLL files
+// that is designed for selfregistration. This is a replacement of windows command file
+// REGSVR32.EXE that you can use inside your application.
+// I use it to activate OCX and DLL files that is in use of my applications during activation
+// of the applications. I have all OCX and DLL files that is needed for the application placed
+// in the PROGRAMS directory and if the OCX or DLL has not been registred in windows for the
+// machine that is running the application, it will be registered automatically. This eliminate
+// the need for running an installer every time a new ocx or dll is used in new versions of my
+// applications. This also assures that no other application (or user) has removed the ocx or dll 
+// registration.
+//
+// How to use:
+// 
+// Get RegServer "[your path]\Bszip.ocx" REGSERVER_REGISTER to bOk
+// (Register bszip.ocx in the path you specified. Ie. path to programs directory)
+//
+// Get RegServer "[your path]\Bszip.ocx" REGSERVER_UNREGISTER to bOk
+// (Unregister bszip.ocx in the path you specified. Ie. path to programs directory)
+//
+// Get RegServer "[your path]\Bszip.ocx" REGSERVER_REGISTER "{A726C70A-3AE3-4E65-8213-F74C8537B68F}" to bOk
+// (Register bszip.ocx as above but only if it has not already been registered. This can be
+// useful during startup of your application.)
+// Remember that the Class ID can be found in the package you genereated with FlexCOM for the OCX or DLL file.
+//
+// Get RegServer "[your path]\Bszip.ocx" REGSERVER_UNREGISTER "{A726C70A-3AE3-4E65-8213-F74C8537B68F}" to bOk
+// (Unregister bszip.ocx as above but only if it has not already been unregistered.
+
+Use GlobalReg.pkg   // Global access to the windows registration database.
+
+Define REGSERVER_REGISTER   For True
+Define REGSERVER_UNREGISTER For False
+Define WAIT_OBJECT_0        For |CI$0
+
+Type RegInteger
+    Field RegInteger.iValue as DWord
+End_Type
+
+External_Function grGetProcAddress "GetProcAddress" kernel32.dll ;
+    Handle hModule ;
+    String sProcName ;
+    Returns Integer
+    
+External_Function grCreateThread "CreateThread" kernel32.dll ;
+    Pointer lpThreadAttributes ;    // not used
+    Integer dwStackSize ;           // not used
+    Pointer lpStartAddress ;
+    Pointer lpParameter ;           // not used
+    Integer dwCreationFlags ;       // not used
+    Pointer lpThreadID ;
+    Returns Handle
+
+External_Function grWaitForSingleObject "WaitForSingleObject" kernel32.dll ;
+    Handle hHandle ;
+    Integer dwMilliseconds ;
+    Returns Integer
+    
+External_Function grExitThread "ExitThread" kernel32.dll ;
+    Integer dwExitCode ;
+    Returns Integer // Not really, but dataflex wants a return value.
+
+External_Function grGetExitCodeThread "GetExitCodeThread" kernel32.dll ;
+    Handle hHandle ;    
+    Pointer lpExitCode ;
+    Returns Integer
+
+External_Function grCloseHandle "CloseHandle" kernel32.dll ;
+    Handle hObject ;        // handle to object
+    Returns Integer
+
+//************************************************************************
+// Runs a registration or deregistraion of a DLL or OCX file.
+// bRegMode can be REGSERVER_REGISTER or REGSERVER_UNREGISTER
+// If sCLSID is provided the registration or deregistraion is only done
+// if it has not already been done.
+// Returns True if the operation was sucessful.
+//************************************************************************
+Function RegServer Global String sFilePath Boolean bRegMode String sCLSID Returns Boolean
+    String sFunction sThreadID sExitCode
+    Handle hModuleHandle hThreadHandle
+    Integer iFunctionAddress lpThreadID iWaitResult lpExitCode iDummy
+    Integer iExitCode
+    Boolean bResult bFound
+    Move False To bResult
+    If (num_arguments > 2) Begin
+        If (Left(sCLSID, 1) <> "{") Move ("{"+sCLSID+"}") To sCLSID
+        Get DoesGlobalKeyExists HKEY_CLASSES_ROOT ("CLSID\"+sCLSID) To bFound
+        If (bFound = True And bRegMode = REGSERVER_REGISTER) Function_Return True
+        If (bFound = False And bRegMode = REGSERVER_UNREGISTER) Function_Return True
+    End
+    Move (LoadLibrary(sFilePath)) To hModuleHandle
+    If (hModuleHandle <> 0) Begin
+        If (bRegMode = REGSERVER_REGISTER) Move "DllRegisterServer" To sFunction
+        Else Move "DllUnregisterServer" To sFunction
+        Move (grGetProcAddress(hModuleHandle, sFunction)) To iFunctionAddress
+        If (iFunctionAddress <> 0) Begin
+            ZeroType RegInteger To sThreadID
+            GetAddress Of sThreadID To lpThreadID
+            Move (grCreateThread(0, 0, iFunctionAddress, 0, 0, lpThreadID)) To hThreadHandle
+            If (hThreadHandle <> 0) Begin
+                Move (grWaitForSingleObject(hThreadHandle, 5000)) To iWaitResult
+                Move (Not(iWaitResult)) To bResult
+                If (iWaitResult <> WAIT_OBJECT_0) Begin
+                    ZeroType RegInteger To sExitCode
+                    GetAddress Of sExitCode To lpExitCode
+                    Move (grGetExitCodeThread(hThreadHandle, lpExitCode)) To iDummy
+                    GetBuff From sExitCode At RegInteger.iValue To iExitCode
+                    Move (grExitThread(iExitCode)) To iDummy
+                End
+                Move (grCloseHandle(hThreadHandle)) To iDummy
+            End
+        End
+        Move (FreeLibrary(hModuleHandle)) To iDummy
+    End
+    Function_Return bResult
+End_Function

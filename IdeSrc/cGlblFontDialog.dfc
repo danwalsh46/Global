@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblFontDialog is a FontDialog
+    Set ClassPackage To "cGlblFontDialog.pkg"
+    Inherit
+End_Class

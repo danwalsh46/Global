@@ -1,0 +1,22 @@
+//AB/ CLASSDEF
+Class cMapiHandler Is A AbstractNonVisualContainer
+    Set ClassCETV      To 35       // use TreeView Image #35
+    Set ClassHelpName  To "cMapiHandler"
+    Set ClassPackage   To "cMapiHandler.pkg"
+    Set ObjectNameMask To "oMapiHandler<count>"
+
+    Inherit
+    
+    Property No_Visible No_Generate String  Bitmap "cMapiHandler.Bmp"
+
+    Property No_Execute Boolean pbGuaranteeFiFo True  // Flag to tell if messages from mapi must be sorted in date time order. FiFo = First-In, First-Out
+    Property No_Execute Boolean pbPeek True           // Flag to tell whether MapiReadMail should flag an unread message as been read.
+    Property No_Execute Boolean pbLongMsgId True      // Flag to tell using a long message-id or a short one. Preferable is True.
+    Property No_Execute Boolean pbUnreadOnly False    // Flag to tell if only unread messages must be returned or not.
+    Property No_Execute Boolean pbEnvelopeOnly True   // Flag to tell if only the header should be returned or not. Only header is faster. Default is only the header. Normally true for scanning mail and false for reading-displaying mail.
+    Property No_Execute Boolean pbBodyAsFile False    // Flag to store the message as file attachment.
+    Property No_Execute Boolean pbSuppressAttach True // Flag to tell whether the attachments should be written out to disk or not. Normally false for scanning mail and true for real reading (for display).
+    Property No_Execute String  psUserName ""         // Username to use for connecting to MAPI on logon.
+    Property No_Execute String  psPassword ""         // Password to use for connecting to MAPI on logon.
+    Property No_Execute Boolean pbReportErrors False  // On MAPI errors, report them directly or not.
+End_Class

@@ -1,0 +1,863 @@
+Use Windows.pkg
+Use msgbox.pkg
+Use DTFUNC.PKG
+//
+// "Message Box 2.0"
+//  Copyright 2014 Davidian Busines Services
+//  Free for use for any purpose, provided as-is 
+//  Report bugs/send enhancements to:  matthewd@datatechag.com
+//
+// new and improved message box replacement "2.0"
+//  1. Works with new font system in 17.1 (not hardcoded to Microsoft Sans Serif)
+//  2. Backwards compatible with old 15.0 Message Box replacement, including Help button and Checkbox control
+//  3. Can be used via struct interface to define more elaborate message boxes, including support for:
+//      A. Multiple sections of text
+//      B. font size/bold/italic/underline formatting of text in each section (17.0+)
+//      C. Multiple checkboxes
+//      D. mini-icons (16x16 bitmaps)
+//      E. Buttons other than Ok/Cancel/Yes/No/Abort/Retry/Fail
+//
+// Possible future enhancements:
+//  Set maximum width and wrap text accordingly (defined in struct member .iWidth)
+//  Specify monitor dialog should appear on (via .hMonitor monitor handle struct member, refer to LOCATE_ON_MONITOR code in auto_loc_mixin.pkg)
+//  Input dialog (for dates/strings/numbers/etc)
+//  Add other predefined bitmaps
+//  Add multilingual support for predefined button text (may require resizing of buttons/adjustments to sizing logic)
+
+#Replace MBR_CHECKED                |CI$01000000
+#Replace MBR_MASK                   |CI$0000000F
+#Replace MB_ICONDOWNLOAD            |CI$00000050
+#Replace MB_DEFBUTTONMASK           |CI$00000F00
+
+Struct tmbMessageText
+    String sMessage
+    String sBitmap              // "mini-icon" 16x16 icon that will appear to the left of the text section
+    Integer iFontPointHeight
+    Boolean bBold               // bold text
+    Boolean bItalic             // italic
+    Boolean bUnderline          // underline
+    Boolean bCheckbox           // if true, this message is a checkbox
+    Boolean bChecked            // default state of checkbox
+    Handle _hoCheckbox          // private, handle to checkbox object
+End_Struct
+
+Struct tmbButtons
+    String sLabel               // label (not required if a predefined button)
+    Boolean bDefault            // set to true for one button
+    Integer iType               // return value when this button is clicked, MBR_Yes, MBR_OK, MBR_No, etc.
+End_Struct
+
+Struct tmbMessageBox
+    String sTitle               // title of message box
+    String sBitmap              // bitmap to display
+    Integer iBitmap             // predefined bitmaps to display
+    Integer iWidth              // not implemented
+    Integer iHelp               // help id (if zero, no help button)
+    Handle hMonitor             // not implemented
+    tmbMessageText[] Message    // 1 or more messages/checkboxes to display
+    tmbButtons[] Button         // 1 or more buttons 
+    Integer iRetVal             // return value of button clicked
+End_Struct
+
+Struct tmbDeferredCheckbox
+    String sLabel               // label for checkbox
+    Integer iY                  // vertical pos for checkbox
+    Integer iMsgIndex           // index into tmbMessageText array for source of checkbox
+End_Struct
+
+Class cmbTextBox is a TextBox
+    // dummy message
+    Procedure Set CurrentButtonState Integer iState
+    End_Procedure
+End_Class
+
+Class cmbButton is a Button
+    Procedure construct_object
+        Property Integer piButtonType_private
+        Forward Send Construct_Object
+        Set Size to 14 50
+        Set Default_State to False
+    End_Procedure
+    
+    Procedure Set piButtonType Integer iType
+        Set piButtonType_private to iType
+        If (iType=-1) Begin
+            Set label to "&Help"              // -1
+        End
+        If (iType=MBR_Ok) Begin
+            Set label to "&Ok"            // 1
+        End
+        If (iType=MBR_Cancel) Begin
+            Set label to "&Cancel"    // 2
+        End
+        If (iType=MBR_Abort) Begin
+            Set label to "&Abort"      // 3
+        End
+        If (iType=MBR_Retry) Begin
+            Set label to "&Retry"      // 4
+        End
+        If (iType=MBR_Ignore) Begin
+            Set label to "&Ignore"    // 5        
+        End
+        If (iType=MBR_Yes) Begin
+            Set label to "&Yes"          // 6
+        End
+        If (iType=MBR_No) Begin
+            Set label to "&No"            // 7
+        End
+    End_Procedure
+
+    Procedure OnClick
+        If (piButtonType_private(Self)>=0) Begin
+            Delegate Send OnClick (piButtonType_private(Self))
+        End
+        Else Begin
+            Send help HELP_CONTEXT_ID
+        End
+    End_Procedure
+End_Class
+
+Class cMessageBox_mixin is a cObject
+    Procedure Define_cMessageBox_mixin
+        Forward Send Construct_Object
+        Property Integer piButtonPressed 0
+    
+        Set Size to 89 211
+        Set Label to "Message Box"
+        Set Location to 2 2
+        Set Border_Style to Border_Normal
+        Set Sysmenu_Icon to False
+        Set Minimize_Icon to False
+        Set Extended_Window_Style to WS_EX_TOOLWINDOW False
+        Set Locate_Mode to CENTER_ON_SCREEN
+        
+        Object oBitmap is a BitmapContainer
+            Set Size to 20 22
+            Set guiSize to 48 48
+            Set Location to 6 6
+            Set Bitmap to "info256.bmp/3d"
+            Set Border_Style to Border_None
+        End_Object    // oBitmap
+    End_Procedure
+
+    Procedure Set CurrentButtonState Integer iState
+    End_Procedure
+    
+    Procedure ShowMessageBox tmbMessageBox ByRef Msg 
+        Integer i 
+        Handle[] hoObject
+        
+        Get ConstructMessageBox (&Msg) to hoObject
+        Send Popup
+        // get any checkbox values back into the struct
+        For i from 0 to (SizeOfArray(Msg.Message)-1)
+            If (Msg.Message[i]._hoCheckbox<>0) Begin
+                Get checked_state of Msg.Message[i]._hoCheckbox to Msg.Message[i].bChecked
+            End
+        Loop
+        // destroy objects
+        For i from 0 to (Sizeofarray(hoObject)-1)
+            Send Destroy to hoObject[i]
+        Loop
+        Get piButtonPressed to Msg.iRetVal
+    End_Procedure
+
+    // these are the default bitmaps 
+    Function IconBitmap Integer iIcon Returns String
+        Move (iIcon iand MB_ICONMASK) to iIcon
+        If (iIcon=MB_ICONEXCLAMATION) Begin
+            Function_Return "warning256.bmp/3d"
+        End
+        If (iIcon=MB_ICONHAND) Begin
+            Function_Return "stop256.bmp/3d"
+        End
+        If (iIcon=MB_ICONASTERISK) Begin
+            Function_Return "info256.bmp/3d"
+        End
+        If (iIcon=MB_ICONQUESTION) Begin
+            Function_Return "question256.bmp/3d"
+        End
+        If (iIcon=MB_ICONDOWNLOAD) Begin
+            Function_Return "download256.bmp/3d"
+        End
+    End_Function
+        
+    Function ConstructMessageBox tmbMessageBox ByRef Msg Returns Handle[]
+        String sCR sText sLabel
+        String[] sMsg
+        Integer i iCnt iLine iLineCnt yPos xPos iSize iMaxLength iWidth iFirstButton iFirstxPos iCheckboxCnt xMaxPos xMsgPos iLineWidth
+        Handle hoObj
+        Handle[] hoObject
+        tmbDeferredCheckbox[] Checkboxes
+
+        Set private.Current_Action_button to 0
+        Set piButtonPressed to 0        // possible if Alt+F4 used
+        
+        Move (character(13)) to sCR
+        Move 8 to yPos
+        If (Msg.sBitmap<>'') Begin
+            Set Bitmap of oBitmap to Msg.sBitmap                
+        End
+        Else If (Msg.ibitmap<>0) Begin
+            Set Bitmap of oBitmap to (IconBitmap(Self,Msg.iBitmap))
+        End
+        Set Label to Msg.sTitle
+        //
+        // following loop creates textbox/checkbox/bitmap objects for each line of the each message
+        //  line breaks should be indicated with the \n sequence
+        For i from 0 to (SizeofArray(Msg.Message)-1)
+            Move (Msg.Message[i].sMessage+"\n") to sText
+            Move (Replaces("\n",sText,sCR)) to sText
+            Move (ParseString2(sText,sCR)) to sMsg  
+            //
+            Move 40 to xMsgPos
+            For iLine from 0 to (SizeOfArray(sMsg)-1)
+                If (Msg.Message[i].bCheckbox and iLine=0) Begin
+                    // checkbox object creation is deferred until after the buttons to set up the desired tab order
+                    // we remember the settings here and use them after the buttons are created
+                    Move (SizeOfArray(Checkboxes)) to iCheckboxCnt
+                    Move sMsg[iLine] to Checkboxes[iCheckboxCnt].sLabel
+                    If (i=SizeofArray(msg.message)-1) Begin
+                        Add 8 to yPos 
+                    End
+                    Move yPos to checkboxes[iCheckboxCnt].iY
+                    Move i to Checkboxes[iCheckboxCnt].iMsgIndex
+                    Get size of hoObj to iSize
+                    Move 0 to hoObj
+                    Add (Hi(iSize)) to yPos
+                End
+                Else Begin
+                    If (Msg.Message[i].sBitmap<>'' and iLine=0) Begin
+                        Object oBitmap is a BitmapContainer
+                            Set GuiSize to 16 16
+                            Set Location to yPos xMsgPos
+                            Set Bitmap to Msg.Message[i].sBitmap
+                            Set Border_Style to Border_None
+                            Move Self to hoObj
+                        End_Object
+                        Send Add_Focus to hoObj Self
+                        Move hoObj to hoObject[SizeOfArray(hoObject)]
+                        Move 54 to xMsgPos
+                    End
+                    // indent text box position for multi-line checkbox message
+                    If (Msg.Message[i].bCheckbox) Begin
+                        Move 50 to xMsgPos
+                    End
+                    If (sMsg[iLine]<>'') Begin
+                        Object oTextBox is a cmbTextbox
+                            #IF (!@>=170)
+                            If (Msg.Message[i].iFontPointHeight<>0) Begin
+                                Set FontPointHeight to Msg.Message[i].iFontPointHeight
+                            End
+                            If (Msg.Message[i].bBold) Begin
+                                Set FontWeight to 800
+                            End
+                            If (Msg.Message[i].bItalic) Begin
+                                Set FontItalics to True
+                            End
+                            If (Msg.Message[i].bUnderline) Begin
+                                Set FontUnderline to True
+                            End
+                            #ENDIF
+                            Set Auto_Size_State to True
+                            Set Transparent_State to True
+                            Set Label to sMsg[iLine]
+                            Set Location to yPos xMsgPos
+                            Set Justification_Mode to jMode_Left
+                            Move Self to hoObj 
+                            Get size of hoObj to iSize
+                            Add (hi(iSize)) to yPos
+                        End_Object
+                        Send Add_Focus to hoObj Self
+                    End
+                    Else Begin
+                        // blank line, just increase yPos
+                        Add (Hi(iSize)) to yPos
+                        Move 0 to hoObj
+                    End
+                End
+                If (hoObj<>0) Begin 
+                    // store object in array for destruction later
+                    Move hoObj to hoObject[SizeOfArray(hoObject)]
+                    // determine longest element so we know how wide to make the dialog
+                    Move (Low(iSize)+If(Msg.Message[i].sBitmap<>'',14,0)) to iLineWidth
+                    If (iLineWidth>iMaxLength) Begin
+                        Move iLineWidth to iMaxLength                
+                    End
+                End
+            Loop
+            Add 4 to yPos
+        Loop
+        Add 8 to yPos
+        //
+        // determine button horizontal positioning
+        Move (SizeOfArray(Msg.Button)) to iCnt
+        If (Msg.iHelp<>0) Begin
+            Add 1 to iCnt
+        End
+        Move ((iCnt*50)+((iCnt-1)*4)) to iWidth
+        If (iMaxLength<120) Begin
+            Move 120 to iMaxLength
+        End
+        If (iWidth>=iMaxLength+80) Begin
+            Move (iWidth+20) to iMaxLength
+        End
+        Move (((iMaxLength+80)-iWidth)/2) to xPos            
+        Move xPos to iFirstxPos
+        //
+        For i from 0 to (SizeOfArray(Msg.Button)-1)
+            If (Msg.Button[i].bDefault) Begin
+                Move i to iFirstButton
+                Move xPos to iFirstxPos
+            End
+            Add 54 to xPos
+        End
+        
+        If (yPos<50) Begin
+            Move 50 to yPos
+        End
+        // create the buttons: default button first, then the rest in order
+        Move iFirstButton to i
+        Move iFirstxPos to xPos
+        Repeat
+            #IF (!@>=170)
+            Get Create (RefClass(cmbButton)) to hoObj
+            #ELSE
+            Get Create U_cmbButton to hoObj
+            #ENDIF
+            Set Label of hoObj to Msg.Button[i].sLabel
+            Set Location of hoObj to yPos xPos
+            Set piButtonType of hoObj to Msg.Button[i].iType
+            Move hoObj to hoObject[SizeOfArray(hoObject)]
+            If (Pos("&",label(hoObj))>0) Begin
+                Send SetupAccelerator hoObj
+            End
+            If (xMaxPos<xPos) Begin
+                Move xPos to xMaxPos
+            End
+            Send Add_Focus to hoObj Self
+            Add 1 to i
+            If (i>SizeOfArray(Msg.Button)-1) Begin
+                Move 0 to i
+                Move (((iMaxLength+80)-iWidth)/2) to xPos            
+            End
+            Else Begin
+                Add 54 to xPos
+            End
+        Until (i=iFirstButton)
+        
+        // if a help id was included, create the help button
+        If (msg.iHelp<>0) Begin
+            Object oButton is a cmbButton
+                Set piButtonType to -1
+                Set Location to yPos (xMaxPos+54)
+                Set Help_Id to Msg.iHelp
+                Move Self to hoObj
+                Move hoObj to hoObject[SizeOfArray(hoObject)]
+            End_Object                
+            If (Pos("&",label(hoObj))>0) Begin
+                Send SetupAccelerator hoObj
+            End
+        End
+        Set size to (yPos+18) (iMaxLength+80)
+        
+        For i from 0 to (SizeOfArray(Checkboxes)-1)
+            Object oCheckbox is a Checkbox
+                Set Auto_Size_State to True
+                Set FontSize to 14 0
+                Set Label to Checkboxes[i].sLabel
+                Set Location to Checkboxes[i].iY 40
+                Move Self to hoObj 
+                Move Self to Msg.Message[checkboxes[i].iMsgIndex]._hoCheckbox
+                Set Checked_State to Msg.Message[checkboxes[i].iMsgIndex].bChecked
+            End_Object
+            Send Add_Focus to hoObj Self
+            Move hoObj to hoObject[SizeOfArray(hoObject)]            
+        Loop
+        
+        Function_Return hoObject        // return an array of object IDs
+    End_Function
+
+    Procedure OnClick Integer iButton
+        Set piButtonPressed to iButton
+        Send stop_modal_ui
+    End_Procedure
+    
+    Procedure SetupAccelerator Handle hoObj
+        String sLabel
+        Get label of hoObj to sLabel
+        Move (Uppercase(Mid(sLabel,1,Pos("&",sLabel)+1))) to sLabel
+        If (sLabel="A") Begin
+            On_Key Key_A Send KeyAction to hoObj
+        End
+        If (sLabel="B") Begin
+            On_Key Key_B Send KeyAction to hoObj
+        End
+        If (sLabel="C") Begin
+            On_Key Key_C Send KeyAction to hoObj
+        End
+        If (sLabel="D") Begin
+            On_Key Key_D Send KeyAction to hoObj
+        End
+        If (sLabel="E") Begin
+            On_Key Key_E Send KeyAction to hoObj
+        End
+        If (sLabel="F") Begin
+            On_Key Key_F Send KeyAction to hoObj
+        End
+        If (sLabel="G") Begin
+            On_Key Key_G Send KeyAction to hoObj
+        End
+        If (sLabel="H") Begin
+            On_Key Key_H Send KeyAction to hoObj
+        End
+        If (sLabel="I") Begin
+            On_Key Key_I Send KeyAction to hoObj
+        End
+        If (sLabel="J") Begin
+            On_Key Key_J Send KeyAction to hoObj
+        End
+        If (sLabel="K") Begin
+            On_Key Key_K Send KeyAction to hoObj
+        End
+        If (sLabel="L") Begin
+            On_Key Key_L Send KeyAction to hoObj
+        End
+        If (sLabel="M") Begin
+            On_Key Key_M Send KeyAction to hoObj
+        End
+        If (sLabel="N") Begin
+            On_Key Key_N Send KeyAction to hoObj
+        End
+        If (sLabel="O") Begin
+            On_Key Key_O Send KeyAction to hoObj
+        End
+        If (sLabel="P") Begin
+            On_Key Key_P Send KeyAction to hoObj
+        End
+        If (sLabel="Q") Begin
+            On_Key Key_Q Send KeyAction to hoObj
+        End
+        If (sLabel="R") Begin
+            On_Key Key_R Send KeyAction to hoObj
+        End
+        If (sLabel="S") Begin
+            On_Key Key_S Send KeyAction to hoObj
+        End
+        If (sLabel="T") Begin
+            On_Key Key_T Send KeyAction to hoObj
+        End
+        If (sLabel="U") Begin
+            On_Key Key_U Send KeyAction to hoObj
+        End
+        If (sLabel="V") Begin
+            On_Key Key_V Send KeyAction to hoObj
+        End
+        If (sLabel="W") Begin
+            On_Key Key_W Send KeyAction to hoObj
+        End
+        If (sLabel="X") Begin
+            On_Key Key_X Send KeyAction to hoObj
+        End
+        If (sLabel="Y") Begin
+            On_Key Key_Y Send KeyAction to hoObj
+        End
+        If (sLabel="Z") Begin
+            On_Key Key_Z Send KeyAction to hoObj
+        End
+        If (sLabel="Z") Begin
+            On_Key Key_Z Send KeyAction to hoObj
+        End
+        If (sLabel="0") Begin
+            On_Key Key_0 Send KeyAction to hoObj
+        End
+        If (sLabel="1") Begin
+            On_Key Key_1 Send KeyAction to hoObj
+        End
+        If (sLabel="2") Begin
+            On_Key Key_2 Send KeyAction to hoObj
+        End
+        If (sLabel="3") Begin
+            On_Key Key_3 Send KeyAction to hoObj
+        End
+        If (sLabel="4") Begin
+            On_Key Key_4 Send KeyAction to hoObj
+        End
+        If (sLabel="5") Begin
+            On_Key Key_5 Send KeyAction to hoObj
+        End
+        If (sLabel="6") Begin
+            On_Key Key_6 Send KeyAction to hoObj
+        End
+        If (sLabel="7") Begin
+            On_Key Key_7 Send KeyAction to hoObj
+        End
+        If (sLabel="8") Begin
+            On_Key Key_8 Send KeyAction to hoObj
+        End
+        If (sLabel="9") Begin
+            On_Key Key_9 Send KeyAction to hoObj
+        End
+    End_Procedure
+
+    // helper functions that return a tmbButton struct for predefined buttons    
+    Function mbOkButton Returns tmbButtons
+        tmbButtons RetVal
+        Move MBR_Ok to RetVal.iType
+        Function_Return RetVal
+    End_Function
+    
+    Function mbCancelButton Returns tmbButtons
+        tmbButtons RetVal
+        Move MBR_Cancel to RetVal.iType
+        Function_Return RetVal
+    End_Function
+    
+    Function mbYesButton Returns tmbButtons
+        tmbButtons RetVal
+        Move MBR_Yes to RetVal.iType
+        Function_Return RetVal
+    End_Function
+    
+    Function mbNoButton Returns tmbButtons
+        tmbButtons RetVal
+        Move MBR_No to RetVal.iType
+        Function_Return RetVal
+    End_Function
+    
+    Function mbAbortButton Returns tmbButtons
+        tmbButtons RetVal
+        Move MBR_Abort to RetVal.iType
+        Function_Return RetVal
+    End_Function
+    
+    Function mbRetryButton Returns tmbButtons
+        tmbButtons RetVal
+        Move MBR_Retry to RetVal.iType
+        Function_Return RetVal
+    End_Function
+    
+    Function mbIgnoreButton Returns tmbButtons
+        tmbButtons RetVal
+        Move MBR_Ignore to RetVal.iType
+        Function_Return RetVal
+    End_Function
+    
+    Function StandardButtons Integer iButton1 Integer iButton2 Integer iButton3 Integer iButton4 Returns tmbButtons[]
+        tmbButtons[] RetVal
+        Move iButton1 to RetVal[0].iType
+        If (num_arguments>1) Begin
+            Move iButton2 to RetVal[1].iType
+        End
+        If (num_arguments>2) Begin
+            Move iButton3 to RetVal[2].iType
+        End
+        If (num_arguments>3) Begin
+            Move iButton3 to RetVal[3].iType
+        End
+    End_Function
+    
+End_Class
+
+Class cMessageBoxPanel is a ModalPanel
+    Procedure construct_object 
+        Forward Send Construct_Object
+        Send Define_cMessageBox_mixin
+    End_Procedure
+    
+    Import_Class_Protocol cMessageBox_mixin 
+End_Class
+
+// following three classes are experimental
+
+Class cMessageBoxTitle is a Container3d
+    Procedure Construct_object
+        Forward Send Construct_Object
+        Set Border_Style to Border_None
+        Set Location to 0 0
+        Object oTitle is a TextBox
+            Set peAnchors to anTopLeftRight
+            Set Location to 0 0   
+            Set Color to clLtGray
+        End_Object
+    End_Procedure
+    
+    Procedure Set label String Val
+        Integer iSize
+        Set Label of oTitle to Val
+        Delegate Get Size to iSize 
+        Set Size to 10 (Low(iSize))
+        Set Size of oTitle to 10 (Low(iSize))
+    End_Procedure
+End_Class
+
+Class cMessageBoxContainer is a Container3d
+    Procedure Construct_object
+        Forward Send Construct_Object
+        Set Border_Style to border_none
+        Send Define_cMessageBox_mixin
+        Set Location to 11 0
+        Set Visible_State to True
+        Set Shadow_State to False
+        Property Handle[] phoObjects
+    End_Procedure
+    
+    Import_Class_Protocol cMessageBox_mixin 
+    
+    Procedure RefreshPreview tmbMessageBox ByRef Msg
+        Handle[] hoObject
+        Integer i
+        
+        Get phoObjects to hoObject
+        For i from 0 to (Sizeofarray(hoObject)-1)
+            Send Destroy to hoObject[i]
+        Loop
+        Get ConstructMessageBox (&Msg) to hoObject
+        Set phoObjects to hoObject
+    End_Procedure
+    
+    Procedure Set label String Val
+        Delegate Set Label to Val
+    End_Procedure
+    
+    Procedure Set Size Integer iHeight Integer iWidth
+        Forward Set Size to iHeight iWidth
+        Delegate Set Size to (iHeight+10) iWidth
+        Set Location to 11 0
+        Send Adjust_Logicals
+        Delegate Send Adjust_Logicals
+    End_Procedure
+
+End_Class
+
+Class cMessageBoxPreview is a Container3d
+    
+    Procedure construct_object
+        Forward Send Construct_Object
+        Object oTitle is a cMessageBoxTitle
+        End_Object
+        Object oPreviewer is a cMessageBoxContainer
+        End_Object
+        Send Add_Focus to oPreviewer Self
+    End_Procedure
+    
+    Procedure Set label String Val
+        Set Label of oTitle to Val
+    End_Procedure
+
+    Procedure createButton 
+        Send CreateButton to oPreviewer
+    End_Procedure
+    
+    Procedure RefreshPreview tmbMessageBox ByRef Msg
+        Send RefreshPreview to oPreviewer (&Msg)
+        Broadcast Set Visible_State to True
+    End_Procedure
+End_Class
+
+// create the main object that is used to display message boxes
+Object oMessageBox is a cMessageBoxPanel
+End_Object
+
+// a standard message to access the enhanced message box functionality
+//  by passing a struct
+Procedure ShowMessageBox tmbMessageBox ByRef Msg
+    Send ShowMessageBox to (oMessageBox(Self)) (&Msg)    
+End_Procedure
+
+// substitutes for the standard message box procedures/functions
+//  plus some extras (WarningBox, WarningCancelBox, AbortRetryIgnoreBox)
+Procedure StopBox String sText String sLabel Integer iHelp
+    tmbMessageBox mb
+    
+    Move sText to mb.Message[0].sMessage
+    Move "stop256.bmp/3d" to mb.sBitmap
+    If (num_arguments>=2) Begin
+        Move sLabel to mb.sTitle
+    End
+    Else Begin
+        Move "Stop" to mb.sTitle
+    End
+    If (num_arguments>=3) Begin
+        Move iHelp to mb.iHelp
+    End
+    Get mbOkButton of (oMessageBox(Self)) to mb.Button[0]
+    Send ShowMessageBox to (oMessageBox(Self)) (&mb)
+End_Procedure
+
+Procedure WarningBox String sText String sLabel Integer iHelp
+    tmbMessageBox mb
+    
+    Move sText to mb.Message[0].sMessage
+    Move "warning256.bmp/3d" to mb.sBitmap
+    If (num_arguments>=2) Begin
+        Move sLabel to mb.sTitle
+    End
+    Else Begin
+        Move "Warning" to mb.sTitle
+    End
+    If (num_arguments>=3) Begin
+        Move iHelp to mb.iHelp
+    End
+    Get mbOkButton of (oMessageBox(Self)) to mb.Button[0]
+    Send ShowMessageBox to (oMessageBox(Self)) (&mb)
+End_Procedure
+
+Procedure InfoBox String sText String sLabel Integer iHelp
+    tmbMessageBox mb
+    
+    Move sText to mb.Message[0].sMessage
+    Move "info256.bmp/3d" to mb.sBitmap
+    If (num_arguments>=2) Begin
+        Move sLabel to mb.sTitle
+    End
+    Else Begin
+        Move "Information" to mb.sTitle
+    End
+    If (num_arguments>=3) Begin
+        Move iHelp to mb.iHelp
+    End
+    Get mbOkButton of (oMessageBox(Self)) to mb.Button[0]
+    Send ShowMessageBox to (oMessageBox(Self)) (&mb)
+End_Procedure
+
+Function WarningCancelBox String sText String sLabel Integer iHelp Returns Integer
+    tmbMessageBox mb
+    
+    Move sText to mb.Message[0].sMessage
+    Move "warning256.bmp/3d" to mb.sBitmap
+    If (num_arguments>=2) Begin
+        Move sLabel to mb.sTitle
+    End
+    Else Begin
+        Move "Warning" to mb.sTitle
+    End
+    If (num_arguments>=3) Begin
+        Move iHelp to mb.iHelp
+    End
+    Get mbOkButton of (oMessageBox(Self)) to mb.Button[0]
+    Get mbCancelButton of (oMessageBox(Self)) to mb.Button[1]
+    Send ShowMessageBox to (oMessageBox(Self)) (&mb)
+    Function_Return mb.iRetVal
+End_Function
+
+Function YesNoBox String sText String sLabel Integer iDefButton Integer iHelp String sCheckbox Boolean bChecked Returns Integer 
+    tmbMessageBox mb
+    Move sText to mb.Message[0].sMessage
+    Get mbYesButton of (oMessageBox(Self)) to mb.Button[0]
+    Get mbNoButton of (oMessageBox(Self)) to mb.Button[1]
+    If (num_arguments>=2) Begin
+        Move sLabel to mb.sTitle
+    End
+    Else Begin
+        Move "Question" to mb.sTitle
+    End
+    If (num_arguments>=3) Begin
+        If ((iDefButton iand MB_ICONMASK)<>0) Begin
+            Get IconBitmap of (oMessageBox(Self)) (iDefButton iand MB_ICONMASK) to mb.sBitmap
+        End
+        Else Begin
+            Move "question256.bmp/3d" to mb.sBitmap
+        End
+        Move (iDefButton iand MB_DEFBUTTONMASK) to iDefButton
+        Move (iDefButton=MB_DEFBUTTON1) to mb.Button[0].bDefault
+        Move (iDefButton=MB_DEFBUTTON2) to mb.Button[1].bDefault
+    End
+    If (num_arguments>=4) Begin
+        Move iHelp to mb.iHelp
+    End
+    If (num_arguments>=5) Begin
+        Move sCheckbox to mb.Message[1].sMessage
+        Move True to mb.Message[1].bCheckbox
+        If (num_arguments>=6) Begin
+            Move bChecked to mb.Message[1].bChecked
+        End
+    End
+    Send ShowMessageBox to (oMessageBox(Self)) (&mb)
+    If (num_arguments>=5 and mb.Message[1].bChecked) Begin
+        Move (MBR_CHECKED ior mb.iRetVal) to mb.iRetVal
+    End
+    Function_Return mb.iRetVal
+End_Function
+
+Function YesNoCancelBox String sText String sLabel Integer iDefButton Integer iHelp String sCheckbox Boolean bChecked Returns Integer 
+    tmbMessageBox mb
+    Move sText to mb.Message[0].sMessage
+    Get mbYesButton of (oMessageBox(Self)) to mb.Button[0]
+    Get mbNoButton of (oMessageBox(Self)) to mb.Button[1]
+    Get mbCancelButton of (oMessageBox(Self)) to mb.Button[2]
+    If (num_arguments>=2) Begin
+        Move sLabel to mb.sTitle
+    End
+    Else Begin
+        Move "Question" to mb.sTitle
+    End
+    If (num_arguments>=3) Begin
+        If ((iDefButton iand MB_ICONMASK)<>0) Begin
+            Get IconBitmap of (oMessageBox(Self)) (iDefButton iand MB_ICONMASK) to mb.sBitmap
+        End
+        Else Begin
+            Move "question256.bmp/3d" to mb.sBitmap
+        End
+        Move (iDefButton iand MB_DEFBUTTONMASK) to iDefButton
+        Move (iDefButton=MB_DEFBUTTON1) to mb.Button[0].bDefault
+        Move (iDefButton=MB_DEFBUTTON2) to mb.Button[1].bDefault
+        Move (iDefButton=MB_DEFBUTTON3) to mb.Button[2].bDefault
+    End
+    If (num_arguments>=4) Begin
+        Move iHelp to mb.iHelp
+    End
+    If (num_arguments>=5) Begin
+        Move sCheckbox to mb.Message[1].sMessage
+        Move True to mb.Message[1].bCheckbox
+        If (num_arguments>=6) Begin
+            Move bChecked to mb.Message[1].bChecked
+        End
+    End
+    Send ShowMessageBox to (oMessageBox(Self)) (&mb)
+    If (num_arguments>=5 and mb.Message[1].bChecked) Begin
+        Move (MBR_CHECKED ior mb.iRetVal) to mb.iRetVal
+    End
+    Function_Return mb.iRetVal
+End_Function
+
+Function AbortRetryIgnoreBox String sText String sLabel Integer iDefButton Integer iHelp String sCheckbox Boolean bChecked Returns Integer 
+    tmbMessageBox mb
+    Move sText to mb.Message[0].sMessage
+    Get mbAbortButton of (oMessageBox(Self)) to mb.Button[0]
+    Get mbRetryButton of (oMessageBox(Self)) to mb.Button[1]
+    Get mbIgnoreButton of (oMessageBox(Self)) to mb.Button[2]
+    If (num_arguments>=2) Begin
+        Move sLabel to mb.sTitle
+    End
+    Else Begin
+        Move "Problem" to mb.sTitle
+    End
+    If (num_arguments>=3) Begin
+        If ((iDefButton iand MB_ICONMASK)<>0) Begin
+            Get IconBitmap of (oMessageBox(Self)) (iDefButton iand MB_ICONMASK) to mb.sBitmap
+        End
+        Else Begin
+            Move "warning256.bmp/3d" to mb.sBitmap
+        End
+        Move (iDefButton iand MB_DEFBUTTONMASK) to iDefButton
+        Move (iDefButton=MB_DEFBUTTON1) to mb.Button[0].bDefault
+        Move (iDefButton=MB_DEFBUTTON2) to mb.Button[1].bDefault
+        Move (iDefButton=MB_DEFBUTTON3) to mb.Button[2].bDefault
+    End
+    If (num_arguments>=4) Begin
+        Move iHelp to mb.iHelp
+    End
+    If (num_arguments>=5) Begin
+        Move sCheckbox to mb.Message[1].sMessage
+        Move True to mb.Message[1].bCheckbox
+        If (num_arguments>=6) Begin
+            Move bChecked to mb.Message[1].bChecked
+        End
+    End
+    Send ShowMessageBox to (oMessageBox(Self)) (&mb)
+    If (num_arguments>=5 and mb.Message[1].bChecked) Begin
+        Move (MBR_CHECKED ior mb.iRetVal) to mb.iRetVal
+    End
+    Function_Return mb.iRetVal
+End_Function

@@ -1,0 +1,90 @@
+Use File_Dlg
+
+//Type may be "EBS" or "Text"
+Function TEOpenFileDialog Global String Type Returns String
+  Local String Fname Temp_Filter
+  Local String PropVal
+  Local Integer retval
+  Local integer OpenFileObj
+
+  Object OpenFile is a OpenDialog
+    Set NoChangeDir_State to True
+    if (Type EQ "EBS");
+      Move  ("EBS (*.col)"+character(0)+"*.col"+character(0)) to Temp_Filter
+    else if (Type EQ "Text") ;
+      Move ("Text Files (*.txt)"+character(0)+"*.txt"+character(0)) to Temp_Filter
+    else if (Type EQ "PRN") ;
+      Move ("Text Files (*.Prn)"+character(0)+"*.Prn"+character(0)) to Temp_Filter
+    Else if (Type EQ "TMP") ;
+     Move ("Text Files (*.tmp)"+character(0)+"*.tmp"+character(0)) to Temp_Filter
+    else if (Type EQ "EST") ;
+      Move ("Estimate Files (*.Est)"+character(0)+"*.Est"+character(0)) to Temp_Filter
+    else if (Type EQ "ZIP") ;
+      Move ("Zip Files (*.Zip)"+character(0)+"*.Zip"+character(0)) to Temp_Filter
+    else if (Type EQ "Excel") ;
+      Move ("Excel Files (*.xls)"+character(0)+"*.xls"+character(0)) to Temp_Filter
+    else if (Type EQ "XRS") ;
+      Move ("Internal Spreadsheet Files (*.xrs)"+character(0)+"*.xrs"+character(0)) to Temp_Filter
+    else if (Type EQ "CHT") ;
+      Move ("Timesketch Files (*.cht)"+character(0)+"*.cht"+character(0)) to Temp_Filter
+    else if (Type EQ "EXE") ;
+      Move ("Executable Files (*.exe)"+character(0)+"*.exe"+character(0)) to Temp_Filter
+    else Move "" to Temp_Filter
+
+    Set Filter_String to (Temp_Filter + "All Files (*.*)"+character(0)+"*.*"+Character(0)+ Character(0))
+    Move Current_Object to OpenFileObj
+  End_Object
+
+  Get Show_Dialog of OpenFileObj to Retval
+  If RetVal Move (File_Name(OpenFileObj)) to fName
+  Send Destroy_Object to OpenFileObj
+  Function_Return Fname
+End_Procedure
+
+Function TESaveFileDialog Global String Type String sFolder string sFile_Title Returns string
+  Local String Fname Temp_Filter
+  Local String PropVal
+  Local Integer retval
+  Local integer SaveFileObj
+
+  Object SaveFile is a SaveAsDialog
+
+    if (Type EQ "EBS");
+      Move  ("EBS (*.col)"+character(0)+"*.col"+character(0)) to Temp_Filter
+    else if (Type EQ "Text") ;
+      Move ("Text Files (*.txt)"+character(0)+"*.txt"+character(0)) to Temp_Filter
+    else if (Type EQ "PRN") ;
+      Move ("Text Files (*.Prn)"+character(0)+"*.Prn"+character(0)) to Temp_Filter
+    Else if (Type EQ "TMP") ;   //mas 8/7/97
+      Move ("Text Files (*.tmp)"+character(0)+"*.tmp"+character(0)) to Temp_Filter
+    else if (Type EQ "EST") ;
+      Move ("Estimate Files (*.Est)"+character(0)+"*.Est"+character(0)) to Temp_Filter
+    else if (Type EQ "JOB") ;
+      Move ("Job Files (*.Job)"+character(0)+"*.Job"+character(0)) to Temp_Filter
+    else if (Type EQ "ZIP") ;
+      Move ("Zip Files (*.Zip)"+character(0)+"*.Zip"+character(0)) to Temp_Filter
+    else if (Type EQ "Excel") ;
+      Move ("Excel Files (*.xls)"+character(0)+"*.xls"+character(0)) to Temp_Filter
+    else if (Type EQ "XRS") ;
+      Move ("Internal Spreadsheet Files (*.xrs)"+character(0)+"*.xrs"+character(0)) to Temp_Filter
+    else if (Type EQ "CHT") ;
+      Move ("Timesketch Files (*.cht)"+character(0)+"*.cht"+character(0)) to Temp_Filter
+    else if (Type EQ "EXE") ;
+      Move ("Executable Files (*.exe)"+character(0)+"*.exe"+character(0)) to Temp_Filter
+    else if (Type eq "CSV") ;
+      Move ("Comma Delimited Files (*.csv)"+character(0)+"*.csv"+character(0)) to Temp_Filter
+    else Move "" to Temp_Filter
+
+    If (sFolder ne "") Set Initial_Folder to sFolder
+    If (sFile_Title ne "") Set File_Title to sFile_Title
+    Set Filter_String to (Temp_Filter + "All Files (*.*)"+character(0)+"*.*"+Character(0)+ Character(0))
+
+    Move Current_Object to SaveFileObj
+  End_Object
+  Get Show_Dialog of SaveFileObj to Retval
+  If RetVal Move (File_Name(SaveFileObj)) to fName
+  Send Destroy_Object to SaveFileObj
+  Function_Return Fname
+End_Procedure
+
+

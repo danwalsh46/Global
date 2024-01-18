@@ -1,0 +1,438 @@
+//TH-Header
+//*****************************************************************************************
+// Copyright (c) 2003 cWindowsEx Framework
+// All rights reserved.
+// $Authors     : Sergey V. Natarov (senatc@postman.ru)
+//                Chris Spenser
+//                Nils G. Svedmyr
+//
+// $FileName    : cWinButtonBase.pkg
+// $Created     :
+//
+//*****************************************************************************************
+//TH-RevisionStart
+//TH-RevisionEnd
+
+Use cWinButton.h
+
+Class cWinCTabButton Is A cBaseWinControl
+
+    Procedure Construct_Object
+        Set External_Class_Name "DFWINBUTTON"   To "BUTTON"
+        Set External_Message WM_DRAWITEM        To Wmsg_onDrawItem
+        Set External_Message WM_ERASEBKGND      To WMMSG_Erasebkgnd
+        //Set External_Message WM_SETFOCUS        To External_SetFocus
+        //Set External_Message WM_KILLFOCUS       To External_KillFocus
+        //
+        Forward Send Construct_Object
+        //
+        // ************************************************************ //
+        // *** SYSTEM PROPERTIES ************************************** //
+        // ************************************************************ //
+        //
+        // PointerOnly//System
+        Property Boolean pbPointerOnly          Public False
+        Property Integer piCaptureHwnd          Public 0
+        //
+        Property Integer piTextAlign            Public 0
+        //
+        Property Integer piClicked              Public False
+        //
+        // ************************************************************ //
+        // *** PUBLIC PROPERTIES ************************************** //
+        // ************************************************************ //
+        //
+        // Bitmaps//Public
+        Property Integer piBitmapAlign          Public 0
+        Property Integer piTransparentColor     Public clFuchsia
+        //
+        // Appearance//Public
+        Property Integer piFlatState            Public False
+        //
+        Property Integer piDrawBorder           Public False
+        Property Integer piDrawFocus            Public False
+        Property Integer piMessage                     0
+        //
+        Property Integer piCTabButtonState      Public 0
+        Property Integer Private.Button_State   Public 0
+        //
+        Property Integer Button_Id              Public -1
+        //
+    End_Procedure // Construct_Object
+    
+    // CTabImages
+    Procedure Set Button_State Integer iState
+        Set piCTabButtonState To iState
+        Set Private.Button_State To iState
+    End_Procedure
+    Function Button_State Returns Integer
+        Function_Return (Private.Button_State(Self))
+    End_Function
+    
+    // Added so that the FlatState property can be Broadcast Set while the
+    // program is running:
+    Procedure Set piFlatState Integer iState
+      Handle hWnd
+      Set piFlatState   To iState
+      Get Window_Handle To hWnd
+      Send PaintButton (GetDC(hWnd))
+    End_Procedure // piFlatState
+
+    //
+    // ---------------------- POINTER ONLY --------------------------
+    Procedure Set Pointer_Only_State Boolean bState
+        Set pbPointerOnly To bState
+        If (bState = (True)) Begin
+            Set piDrawFocus To False
+            Set Skip_state To True
+        End // If (bState = (True)) Begin
+        Else Begin
+            Set piDrawFocus To True
+            Set Skip_state To False
+        End // Else Begin
+    End_Procedure // Set Pointer_Only_State
+
+    Function Pointer_Only_State Returns Integer
+        Function_Return (pbPointerOnly(Self))
+    End_Function // Pointer_Only_State
+
+    Procedure Mouse_Down2 Integer iPara0 Integer iPara1
+        If (pbPointerOnly(Self)) Procedure_Return
+        Forward Send Mouse_Down2 iPara0 iPara1
+    End_Procedure // Mouse_Down2
+
+    Procedure Mouse_Up2 Integer iPara0 Integer iPara1
+        If (pbPointerOnly(Self)) Procedure_Return
+        Forward Send Mouse_Up2 iPara0 iPara1
+    End_Procedure // Mouse_Up2
+
+    Procedure Mouse_Down Integer iPara0 Integer iPara1
+        Local Integer iRet iMsg iObj
+        If (pbPointerOnly(Self)) Begin
+            Set piCaptureHwnd To (GetCaptureEf())
+            Move (SetCapture(window_handle(Self))) To iRet
+            Set piClicked To True
+            Set piCTabButtonState To CTAB_DOWN
+            Send PaintSelectedButton (GetDC(Window_Handle(Self)))
+            Procedure_Return
+        End
+        Forward Send Mouse_down iPara0 iPara1
+    End_Procedure // Mouse_Down
+
+    Procedure Mouse_Up Integer iPara0 Integer iPara1
+        Integer iRet hBtn hWnd 
+        If (pbPointerOnly(Self)) Begin
+            Forward Send Mouse_Up iPara0 iPara1
+            Get Window_Handle To hWnd
+            Move (SetCapture(piCaptureHwnd(Self))) To iRet
+            Get ObjectHandle  To hBtn
+            Set piCaptureHwnd To 0
+            If (piCTabButtonState(Self)=CTAB_DOWN) Set piCTabButtonState To CTAB_OVER
+            Send PaintButton (GetDC(hWnd))
+            If ((hBtn=hWnd)And(piClicked(Self))) Begin
+                Send OnClick
+                Delegate Get Page_Change (Button_Id(Self)) To iRet
+            End
+            Set piClicked To False
+            Procedure_Return
+        End
+        Forward Send Mouse_Up iPara0 iPara1
+    End_Procedure // Mouse_Up
+
+    Procedure Mouse_Click Integer iPara0 Integer iPara1
+    End_Procedure // Mouse_Click
+
+    Procedure Mouse_Click2 Integer iPara0 Integer iPara1
+    End_Procedure // Mouse_Click2
+    //
+    // -------------------------- LABEL --------------------------------
+    Procedure Set ButtonTextAlign Integer iFlag
+        Set piTextAlign To iFlag
+        If (iFlag=BTA_CENTER)       Set piTextAlignFlags To (DT_CENTER  Ior DT_VCENTER Ior DT_SINGLELINE)
+        Else If (iFlag=BTA_HCENTER) Set piTextAlignFlags To (DT_CENTER  Ior DT_WORDBREAK)
+        Else If (iFlag=BTA_VCENTER) Set piTextAlignFlags To (DT_VCENTER Ior DT_VCENTER Ior DT_SINGLELINE)
+        Else If (iFlag=BTA_RIGHT)   Set piTextAlignFlags To (DT_RIGHT   Ior DT_VCENTER Ior DT_SINGLELINE)
+        Else If (iFlag=BTA_BOTTOM)  Set piTextAlignFlags To (DT_BOTTOM  Ior DT_CENTER Ior DT_SINGLELINE)
+    End_Procedure // Set ButtonTextAlign
+
+    Function ButtonTextAlign Returns Integer
+        Function_Return (piTextAlign(Self))
+    End_Function // ButtonTextAlign
+
+    // -------------------------- ICON ----------------------------------
+    Function BitmapLocation Returns Integer
+        If (phImageList(Self)=0) Function_Return 0
+        Integer iH iW iX iY iBX iBY iAl
+        Get piBitmapHeight To iH
+        Get piBitmapWidth  To iW
+        Move (Hi(GuiSize(Self))) To iY
+        Move (Low(GuiSize(Self))) To iX
+        Get piBitmapAlign To iAl
+        If (iAl=BBA_CENTER) Begin
+            Move ((iX/2)-(iW/2)) To iBX
+            Move ((iY/2)-(iH/2)) To iBY
+        End
+        Else If (iAl=BBA_VCENTER) Begin
+            Move 6               To iBX
+            Move ((iY/2)-(iH/2)) To iBY
+        End
+        Else If (iAl=BBA_HCENTER) Begin
+            Move ((iX/2)-(iW/2)) To iBX
+            Move 6               To iBY
+        End
+        Else If (iAl=BBA_BOTTOM) Begin
+            Move ((iX/2)-(iW/2)) To iBX
+            Move (iY-iH-6)       To iBY
+        End
+        Else If (iAl=BBA_RIGHT) Begin
+            Move (iX-iW-6) To iBX
+            Move ((iY/2)-(iH/2)) To iBY
+        End
+        Function_Return (iBX+(iBY*65536))
+    End_Function // BitmapLocation
+
+    Procedure Page Integer iFlag
+        Set Window_Style BS_OWNERDRAW To True
+        Forward Send page iFlag
+    End_Procedure // Page
+
+    //
+    // ---------------------------- Painting -----------------------------
+    //
+    // Shadowing Object.
+    Procedure Set Enabled_State Integer iFlag
+        Integer iRet
+        Set Private.pbShadowState To (Not(iFlag))
+        If iFlag Set Focus_Mode      To focusable
+        Else     Set Focus_Mode      To nonfocusable
+        Send RedrawControl
+    End_Procedure // Set Enabled_State
+
+    Function Enabled_State Returns Integer
+        Function_Return ((Private.pbShadowState(Self)) = (False))
+    End_Procedure // Enabled_State
+
+    Procedure ButtonLabel Handle hDC Handle hImageList Integer iX Integer iY Integer iGap Integer iShad
+        Integer iRet iBorder iColor iBX iBY iBA
+        Integer iT iB iL iR
+        Handle  hOldF
+        String sData sRc sSRc
+        Pointer lpData lpRc lpSRc
+        //
+        If (hImageList <> 0) Begin
+            Move (piBitmapHeight(Self)+2) To iBY
+            Move (piBitmapWidth(Self)+2)  To iBX
+            Get piBitmapAlign  To iBA
+        End // If (hImageList <> 0) Begin
+        // Font
+        Move (SelectObject(hDc, ControlFont(Self))) To hOldF
+        // Rectangle
+        Move (Not(piDrawBorder(Self))) To iBorder
+        //
+        If (iGap <> 0) Begin
+            Move 6 To iT
+            Move 8 To iL
+            Move (iX-8) To iR
+            Move (iY-8) To iB
+        End // If (iGap <> 0) Begin
+        Else Begin
+            Move 7 To iT
+            Move 9 To iL
+            Move (iX-7) To iR
+            Move (iY-7) To iB
+        End // Else Begin
+        If (hImageList <> 0) Begin
+            If (iBA=BBA_LEFT)           Move (iL+iBX) To iL
+            Else If (iBA=BBA_TOP)       Move (iT+iBY) To iT
+            Else If (iBA=BBA_RIGHT)     Move (iR-iBX) To iR
+            Else If (iBA=BBA_BOTTOM)    Move (iB-iBY) To iB
+        End // If (hImageList <> 0) Begin
+        //
+        ZeroType tRect To sRc
+        Put iT To sRc At tRect.Top
+        Put iL To sRc At tRect.Left
+        Put iR To sRc At tRect.Right
+        Put iB To sRc At tRect.Bottom
+        GetAddress Of sRc To lpRc
+        //
+        If (iShad <> 0) Begin
+            ZeroType tRect To sSRc
+            Put iT+1 To sSRc At tRect.Top
+            Put iL+1 To sSRc At tRect.Left
+            Put iR+1 To sSRc At tRect.Right
+            Put iB+1 To sSRc At tRect.Bottom
+            GetAddress Of sSRc To lpSRc
+        End // If (iShad <> 0) Begin
+        //
+        Move (ToAnsi(Label(Self))+Character(0)) To sData
+        GetAddress Of sData To lpData
+        If (iShad <> 0) Begin
+            Move (SetTextColor(hDc, clWhite)) To iRet
+            Move (DrawText(hDc, lpData, -1, lpSRc, piTextAlignFlags(Self) )) To iRet
+            Move (SetTextColor(hDc, clDkGray)) To iRet
+            Move (DrawText(hDc, lpData, -1, lpRc, piTextAlignFlags(Self) )) To iRet
+            // Another way
+//            Move (DrawStateEf(hDC, 0, 0, lpData, Length(sData)-1, 11, 7, iX, iY, DST_TEXT iOr DSS_DISABLED)) To iRet
+        End // If (iShad <> 0) Begin
+        Else Move (DrawText(hDc, lpData, -1, lpRc, piTextAlignFlags(Self) )) To iRet
+        //
+        Move (SelectObject(hDc, hOldF)) To hOldF
+    End_Procedure // ButtonLabel
+
+    Procedure ButtonFace Handle hDC Integer iGap
+        Integer iRet iColor iX iY iTextColor iBX iBY iShad iTA iBorder
+        Handle hBrush hPen hOldB hOldP hImageList iGMode iGFrom iGTo
+        Integer hCTabImageList
+        Move 0 To iBY
+        Move 0 To iBX
+        Move 0 To hImageList
+
+        Get piColor       To iColor
+        Get piTextColor   To iTextColor
+        Get piDrawBorder  To iBorder
+        Get Private.pbShadowState To iShad
+        //
+        Move (CreateSolidBrush(iColor))         To hBrush
+        Move (CreatePenEf(PS_SOLID, 1, iColor)) To hPen
+        Move (SelectObject(hDC, hPen))          To hOldP
+        Move (SelectObject(hDC, hBrush))        To hOldB
+        Move (Hi(guisize(Self)))                To iY
+        Move (Low(guisize(Self)))               To iX
+
+        Move (Rectangle(hDC, 0, 0, iX, iY)) To iRet
+
+        Delegate Get phCTabImages To hCTabImageList
+        If (hCTabImageList <> 0) Get phImageList Of hCTabImageList To hCTabImageList
+        // Color
+        Move (SetBkMode(hDC, TRANSPARENT))   To iRet
+        Move (SetTextColor(hDc, iTextColor)) To iRet
+        If (hCTabImageList<>0) Move (ImageList_DrawEf(hCTabImageList, piCTabButtonState(Self), hDC, 0, 0, ILD_NORMAL)) To iRet
+
+        Get phImageList To hImageList
+        If (hImageList <> 0) Get phImageList Of hImageList To hImageList
+
+        // Icon
+        If (hImageList <> 0) Begin
+            Get BitmapLocation To iRet
+            Move (Hi(iRet))    To iBY
+            Move (Low(iRet))   To iBX
+            If (iShad <> 0)    Move (ImageList_DrawEf(hImageList,0,hDC,iBX,iBY, ILD_BLEND50))    To iRet
+            Else Begin
+                If (iGap <> 0) Move (ImageList_DrawEf(hImageList,0,hDC,iBX,iBY, ILD_NORMAL))     To iRet
+                Else           Move (ImageList_DrawEf(hImageList,0,hDC,iBX+1,iBY+1, ILD_NORMAL)) To iRet
+            End // Else Begin
+        End // If (hImageList <> 0) Begin
+
+        // Label
+        If (Label(Self) <> "") Send ButtonLabel hDC hImageList iX iY iGap iShad
+
+        Move (SelectObject(hDC, hOldP)) To hOldP
+        Move (SelectObject(hDC, hOldB)) To hOldB
+        Move (DeleteObject(hPen))       To iRet
+        Move (DeleteObject(hBrush))     To iRet
+    End_Procedure // ButtonFace
+
+    Procedure PaintButton Handle hDc
+        Integer iRet iFlag
+        Pointer pRect
+        String  sRect
+        If (piDrawBorder(Self) <> 0) Begin
+            ZeroType tRect To sRect
+            Put (Hi(GUISIZE(Self)))   To sRect At tRect.Bottom
+            Put (Low(GUISIZE(Self)))  To sRect At tRect.Right
+            GetAddress Of sRect       To pRect
+            Move DFCS_BUTTONPUSH      To iFlag
+            If (piFlatState(Self) <> 0) Move (iFlag Ior DFCS_FLAT)    To iFlag
+            Move (DrawFrameControlEf(hDc, pRect, DFC_BUTTON, iFlag )) To iRet
+        End // If (piDrawBorder(Self) <> 0) Begin
+        Send ButtonFace hDC True
+    End_Procedure // PaintButton
+
+    Procedure PaintSelectedButton Handle hDc
+        Integer iRet
+        Pointer pRect
+        String  sRect
+        If (piDrawBorder(Self) <> 0) Begin
+            ZeroType tRect To sRect
+            Put (Hi(GUISIZE(Self)))  To sRect At tRect.Bottom
+            Put (Low(GUISIZE(Self))) To sRect At tRect.Right
+            GetAddress Of sRect To pRect
+            Move (DrawFrameControlEf(hDc, pRect, DFC_BUTTON, (DFCS_BUTTONPUSH Ior DFCS_PUSHED ) )) To iRet
+        End // If (piDrawBorder(Self) <> 0) Begin
+        Send ButtonFace hDC False
+        Send PaintFocus hDc
+    End_Procedure // PaintSelectedButton
+
+    Procedure PaintFocus Handle hDc
+        If (Not(piDrawFocus(Self))) Procedure_Return
+        Pointer pRect
+        String  sRect
+        Integer iX iY iRet
+        Move (Low(GuiSize(Self))-3) To iX
+        Move (Hi(GuiSize(Self))-3)  To iY
+        ZeroType  tRect             To sRect
+        Put 3  To sRect At tRect.Top
+        Put 3  To sRect At tRect.Left
+        Put iY To sRect At tRect.Bottom
+        Put iX To sRect At tRect.Right
+        GetAddress Of sRect         To pRect
+        Move (DrawFocusRectEf(hDC, pRect)) To iRet
+    End_Procedure // PaintFocus
+
+    // ----------------------- PRIVATE EVENTS -------------------------
+    Procedure WMMSG_Erasebkgnd Integer wParam Integer lParam
+        Procedure_Return 1
+    End_Procedure // WMMSG_Erasebkgnd
+
+    Procedure WMSG_OnDrawItem Integer wParam Integer lParam
+        Integer iRet
+        Integer iAct iState hDC
+        String sItemStr
+        Pointer pItemStr
+        ZeroType DRAWITEMSTRUCT To sItemStr
+        GetAddress Of sItemStr To pItemStr
+        Move (CopyMemory(pItemStr, lParam, DRAWITEMSTRUCT_SIZE)) To iRet
+        GetBuff From sItemStr At DRAWITEMSTRUCT.itemAction       To iAct
+        GetBuff From sItemStr At DRAWITEMSTRUCT.itemState        To iState
+        GetBuff From sItemStr At DRAWITEMSTRUCT.hDC              To hDC
+        If (iAct=ODA_DRAWENTIRE)           Send PaintButton hDC
+        If (iAct=ODA_SELECT And iState=16) Send PaintButton hDC
+        If (iAct=ODA_SELECT And iState=17) Send PaintSelectedButton hDC
+        If (iState=ODS_FOCUS)              Send PaintFocus hDc
+        Send OnPaint hDC iAct iState
+    End_Procedure // WMSG_OnDrawItem
+
+    // ----------------- PUBLIC EVENTS -------------------
+    Procedure OnPaint Integer hDC Integer iAct Integer iState
+    End_Procedure // OnPaint
+
+    Procedure Command Integer wPara Integer lPara
+        Integer iMsg
+        If (Hi(wPara)=BN_CLICKED) Begin
+           Get piMessage To iMsg
+           If iMsg Send iMsg
+           Else Send OnClick
+       End // If (Hi(wPara)=BN_CLICKED) Begin
+    End_Procedure // Command
+
+    Procedure OnClick
+    End_Procedure // OnClick
+
+    Procedure WMSG_onMouseMove Integer wParam Integer lParam
+        If ((piCTabButtonState(Self)<>CTAB_OVER)And(piCTabButtonState(Self)<>CTAB_DOWN)) Begin
+            Set piCTabButtonState To CTAB_OVER
+            Send RedrawControl
+        End
+        Forward Send WMSG_onMouseMove wParam lParam
+    End_Procedure // WMSG_onMouseMove
+
+    Procedure WMSG_onMouseLeave Integer wParam Integer lParam
+        Forward Send WMSG_onMouseLeave wParam lParam
+        If (piCTabButtonState(Self)<>CTAB_DEFAULT) Begin
+            Set piCTabButtonState To (Private.Button_State(Self))
+            Send RedrawControl
+        End
+    End_Procedure // WMSG_onMouseLeave
+
+End_Class
+

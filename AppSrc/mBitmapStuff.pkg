@@ -1,0 +1,94 @@
+//*****************************************************************************************
+// Copyright (c) 2000 Michael Kurz
+// All rights reserved.
+// If you want to use this source in your applications conatct: <MichaelKurz@gmx.at>
+//
+// $FileName    : mBitmapStuff.pkg
+// $ProjectName : Shared Methods.
+// $Author      : Michael Kurz <MichaelKurz@gmx.at>
+// $Created     : 04-25-2001 @ 16:00
+//
+// Contents:
+//      Some useful functions when working with Bitmaps.
+//
+//      -APIBitmapSize string sBmp returns complex
+//
+// $Rev History
+//
+//*****************************************************************************************
+
+Use mPointer.pkg
+
+#IFDEF Get_LoadBitmap
+#ELSE
+//     Load Bitmap.
+Function LoadBitmap Global String sBMPe Integer iX Integer iY Integer iTransparent Returns Handle
+    Local String  sBMP
+    Local Pointer pBMP
+    Local Handle  hBMP
+    Move sBMPe              To sBMP
+    GetAddress Of sBMP      To pBMP
+    If iTransparent Move (LoadImageEf(0,pBMP,IMAGE_BITMAP,iX,iY,(LR_LOADFROMFILE+LR_CREATEDIBSECTION+LR_LOADTRANSPARENT+LR_LOADMAP3DCOLORS)))  To hBMP
+    Else            Move (LoadImageEf(0,pBMP,IMAGE_BITMAP,iX,iY,(LR_LOADFROMFILE+LR_CREATEDIBSECTION)))                     To hBMP
+    Function_Return hBMP
+End_Function
+#ENDIF
+
+#IFDEF Get_LoadIcon
+#ELSE
+    // Load Bitmap.
+Function LoadIcon Global String sBMPe Integer iX Integer iY Integer iTransparent Returns Handle
+    Local String  sBMP
+    Local Pointer pBMP
+    Local Handle  hBMP
+    Move sBMPe              To sBMP
+    GetAddress Of sBMP      To pBMP
+    If iTransparent Move (LoadImageEf(0,pBMP,IMAGE_ICON,iX,iY,(LR_LOADFROMFILE+LR_CREATEDIBSECTION+LR_LOADTRANSPARENT)))  To hBMP
+    Else            Move (LoadImageEf(0,pBMP,IMAGE_ICON,iX,iY,(LR_LOADFROMFILE+LR_CREATEDIBSECTION)))                     To hBMP
+    Function_Return hBMP
+End_Function
+#ENDIF
+
+
+#IFDEF Get_APIBitmapSize
+#ELSE
+    // Size of the Bitmap.
+Function APIBitmapSize Global String sBMP Returns Integer
+    Local_Buffer  sBmpInfo pBmpInfo BITMAPt_Size
+    Local Handle  hBMP
+    Local Integer iRet iHeight iWidth
+    Move (LoadBitmap(sBmp,0,0,0))                       To hBMP
+    If hBMP Begin
+        Move (GetObjectAPIEf(hBMP,BITMAPt_Size,pBmpInfo))    To iRet
+        GetBuff From sBmpInfo At BITMAPt.bmWidth        To iWidth
+        GetBuff From sBmpInfo At BITMAPt.bmHeight       To iHeight
+        Move (DeleteObject(hBMP))                       To iRet
+        Function_Return (iWidth+(iHeight*65536))
+    End
+    Function_Return 0
+End_Function
+
+//cfs added to return bitmap size from a handle
+#IFDEF Get_BitmapSizeFromHandle
+#ELSE
+    // Size of the Bitmap.
+Function BitmapSizeFromHandle Global handle hBMP Returns Integer
+    Local_Buffer  sBmpInfo pBmpInfo BITMAPt_Size
+    //Local Handle  hBMP
+    Local Integer iRet iHeight iWidth
+    //Move (LoadBitmap(sBmp,0,0,0))                       To hBMP
+    If hBMP Begin
+        Move (GetObjectAPIEf(hBMP,BITMAPt_Size,pBmpInfo))    To iRet
+        GetBuff From sBmpInfo At BITMAPt.bmWidth        To iWidth
+        GetBuff From sBmpInfo At BITMAPt.bmHeight       To iHeight
+        Move (DeleteObject(hBMP))                       To iRet
+        Function_Return (iWidth+(iHeight*65536))
+    End
+    Function_Return 0
+End_Function
+
+#ENDIF
+
+
+
+#ENDIF

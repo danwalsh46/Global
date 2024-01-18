@@ -1,0 +1,220 @@
+Use UI
+Use DTFUNC.PKG
+
+// returns an array of strings that includes "tokens" and delimeters
+Function ParseString3 Global String sStr String sDelims Returns String[]
+    String[] sRetVal
+    Integer i j p p2
+    
+    If (Right(sStr,1)<>right(sDelims,1)) Move (sStr+left(sDelims,1)) to sStr
+    Repeat
+        // find next delimeter
+        Move 0 to p
+        For j from 1 to (Length(sDelims))
+            If (p=0) Move (Pos(Mid(sDelims,1,j),sStr)) to p
+            Else Begin
+                Move (Pos(Mid(sDelims,1,j),sStr)) to p2
+                If (p2<>0 and p2<p) Move p2 to p
+            End
+        Loop
+        Move (left(sStr,p-1)) to sRetVal[i]
+        Move (Mid(sStr,1,p)) to sRetVal[i+1]
+        Add 2 to i
+        Move (mid(sStr,Length(sStr),p+1)) to sStr
+    Until (sStr='')
+    Function_Return sRetVal
+End_Function
+// a class for merging data from database fields (either the file buffer or a data dictionary object)
+//  into a string (e.g. a text file, RTF document, etc.)
+//
+// the merge fields take the format [FILENAME.FIELDNAME]
+//  custom "virtual" fields may be handled: if the FIELDNAME does not exist in the data file, then
+//  a CustomField function is called with the virtual field name as a parameter for you to return a
+//  string value.  a common application for this is a one character ascii field with a validation table
+//  your virtual field can lookup the value of a field in the validation table to get the associated
+//  description for that value
+//
+// an expression may be included inside the brackest that will be evaluated, e.g.:
+//  [(BillToAddressLine(self,1))]
+//  this will call a function that must exist in the cMergeField object
+//
+// multiple fields can be specified within the brackets, e.g. [FILENAME.FIELDNAME1|FILENAME.FIELDNAME2]
+//  the first non-blank field value will be used in this case.
+//
+// string operations (+-*) can be included in the brackets.  a | must be included inside the brackets to trigger
+//  the evaluation logic.  literal strings may be included enclosed in single or double quotes.  examples:
+//  [ARINVC.SHIP_3|ARCUST.CITY-','*ARCUST.STATE*ARCUST.ZIP] 
+//   (this will use the ship to address line 2 if not blank, otherwise it will use the customer city/st/zip)
+//  [APVEND.CITY-","*APVEND.STATE*APVEND.ZIP|]
+//   (this will concatenate the city/state/zip, the | at the end triggers the evaluation logic)
+//
+// field start and end markers and the field separator may be set by properties
+//  defaults are [, ], and |
+//  at this time they each must be one character
+
+
+
+Class cMergeField is a cObject
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property String psStartField '['
+        Property String psEndField ']'
+        Property String psFieldDelimeter '|'
+        Property String[] pFilenames
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Handle hFile
+        String[] sFiles
+        
+        Forward Send End_Construct_Object
+        
+        For hFile from 0 to 4096
+            Move '' to sFiles[hFile]
+        Loop
+        
+        Move 0 to hFile
+        repeat
+            Get_Attribute DF_FILE_NEXT_USED of hFile to hFile
+            If (hFile<>0) Get_Attribute DF_FILE_LOGICAL_NAME of hFile to sFiles[hFile]
+        Until (hFile=0)
+        Set pFilenames to sFiles
+        
+    End_Procedure
+
+    // stub for overriding
+    Function CustomField Integer iFile Handle hoServer String sFieldName Returns String
+        Function_Return ''
+    End_Function
+    
+    Function MergeField String sTemplate Handle hoServer Returns String
+        Integer[] iStartPos iEndPos iFile iField
+        String[] sField sFieldName sFiles sFields sValue
+        String sStartField sEndField sFilename sFieldValue sFieldDel sFieldList sOldFieldValue
+        Integer i j iPos iFields iFileCount iFileNum iStart iEnd iFieldCnt k iAppend
+        Handle hoFields
+        
+        Get pFilenames to sFiles
+        Move (SizeOfArray(sFiles)-1) to iFileCount
+        Get psStartField to sStartField
+        Get psEndField to sEndField
+        Get psFieldDelimeter to sFieldDel
+        Move 0 to iPos
+        Move 0 to i
+        Get Create U_Set to hoFields
+        
+        Repeat
+            Move (Pos(sStartField,sTemplate,iPos)) to iStart
+            If (iStart>0) Begin
+                Move (Pos(sEndField,sTemplate,iStart)) to iEnd
+                If (iEnd>iStart) Begin
+                    Send add_element to hoFields (Mid(sTemplate,iEnd-iStart-1,iStart+1)) 
+                    If (iEnd>iStart) Move (iEnd+1) to iPos
+                    Move iStart to iStartPos[i]
+                    Move iEnd to iEndPos[i]
+                    Add 1 to i
+                End
+                Else Move 0 to iStart
+            End
+        Until (iStart=0)
+
+        For i from 0 to (Item_Count(hoFields)-1)
+            Get Value of hoFields item i to sField[i]
+        Loop
+        Send Destroy to hoFields
+        
+        Send ignore_error to Error_Object_Id 4100
+        Move (SizeOfArray(sField)-1) to iFields
+        For i from 0 to iFields
+            If (Left(sField[i],1)="(") Begin
+                Move 0 to iFile[i]
+                Move 0 to iField[i]                
+            End
+            Else Begin
+                If (Pos(sFieldDel,sField[i])=0) Begin
+                    Move (Pos('.',sField[i])) to iPos
+                    Move (Left(sField[i],iPos-1)) to sFilename
+                    Move 0 to iFile[i]
+                    For j from 0 to iFileCount
+                        If (sfilename=sFiles[j]) Move j to iFile[i]
+                        If (iFile[i]<>0) Break
+                    Loop
+                    If (iFile[i]<>0) Begin
+                        Move (mid(sField[i],Length(sField[i]),iPos+1)) to sFieldName[i]
+                        Field_Map iFile[i] sFieldName[i] to iField[i]
+                    End
+                    If (hoServer<>0) Begin
+                        If (iFile[i]<>0 and iField[i]<>0) Get file_field_current_value of hoServer iFile[i] iField[i] to sValue[i]
+                        Else If (iFile[i]<>0) Get CustomField iFile[i] hoServer sFieldName[i] to sValue[i]
+                        Else If (Left(sField[i],1)='(') Move (Eval(sField[i])) to sValue[i]
+                    End
+                    Else Begin
+                        If (iFile[i]<>0 and iField[i]<>0) Get_Field_Value iFile[i] iField[i] to sValue[i]
+                        Else If (iFile[i]<>0) Get CustomField iFile[i] hoServer sFieldName[i] to sValue[i]
+                        Else If (Left(sField[i],1)='(') Move (Eval(sField[i])) to sValue[i]
+                    End
+                End
+                Else Begin
+                    // this handles selecting the first non-blank field from a list of fields 
+                    //  separated by a delimeter "|".  fields may be concatenated using standard
+                    //  VDF operations: -+*.  Literal strings may be included by enclosing in 
+                    //  double or single quotes
+                    Move '' to sFieldValue
+                    Move (ParseString3(sField[i],sFieldDel+"+-*")) to sFields
+                    Move (SizeOfArray(sFields)-1) to iFieldCnt
+                    Move (sField[i]+sFieldDel) to sFieldList
+                    For k from 0 to iFieldCnt
+                        If (sFields[k]='|' and sFieldValue<>'') Break
+                        If (sFields[k]='+') Move 1 to iAppend
+                        Else If (sFields[k]="-") Move 2 to iAppend
+                        Else If (sFields[k]="*") Move 3 to iAppend
+                        Else If ((Left(sFields[k],1)='"' or Left(sFields[k],1)="'") and left(sFields[k],1)=Right(sFields[k],1)) Begin
+                            // handle literal string
+                            Move sFieldValue to sOldFieldValue
+                            Move (Mid(sFields[k],length(sFields[k])-2,2)) to sFieldValue
+                            // handle appends
+                            If (iAppend=1) Move (sOldFieldValue+sFieldValue) to sFieldValue
+                            If (iAppend=2) Move (sOldFieldValue-sFieldValue) to sFieldValue
+                            If (iAppend=3) Move (sOldFieldValue*sFieldValue) to sFieldValue
+                            Move 0 to iAppend
+                        End
+                        Else If (sFields[k]<>'|') Begin
+                            Move (Pos('.',sFields[k])) to iPos
+                            Move (Left(sFields[k],iPos-1)) to sFilename
+                            Move 0 to iFile[i]
+                            For j from 0 to iFileCount
+                                If (sfilename=sFiles[j]) Move j to iFile[i]
+                                If (iFile[i]<>0) Break
+                            Loop
+                            If (iFile[i]<>0) Begin
+                                Move (mid(sFields[k],Length(sFields[k]),iPos+1)) to sFieldName[i]
+                                Field_Map iFile[i] sFieldName[i] to iField[i]
+                                Move sFieldValue to sOldFieldValue
+                                If (iField[i]=0) Get CustomField iFile[i] hoServer sFieldName[i] to sFieldValue
+                                Else begin
+                                    If (hoServer<>0) Get file_field_current_value of hoServer iFile[i] iField[i] to sFieldValue
+                                    Else Get_Field_Value iFile[i] iField[i] to sFieldValue
+                                End
+                                // handle appends
+                                If (iAppend=1) Move (sOldFieldValue+sFieldValue) to sFieldValue
+                                If (iAppend=2) Move (sOldFieldValue-sFieldValue) to sFieldValue
+                                If (iAppend=3) Move (sOldFieldValue*sFieldValue) to sFieldValue
+                                Move 0 to iAppend
+                            End
+                        End
+                    Loop            
+                    Move sFieldValue to sValue[i]
+                End
+            End
+        Loop
+        Send trap_error to Error_Object_Id 4100
+        
+        For i from 0 to iFields
+            Move (sStartField+sField[i]+sEndField) to sField[i]
+            Move (Replaces(sField[i],sTemplate,trim(sValue[i]))) to sTemplate
+        Loop
+        
+        Function_Return sTemplate
+    End_Function
+End_Class

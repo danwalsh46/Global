@@ -1,0 +1,4956 @@
+// Visual DataFlex COM proxy classes generated from C:\PROGRA~1\CODEJO~1\ActiveX\XTREME~1.1\Bin\CODAFA~1.OCX
+Use FlexCom20.pkg
+
+
+// Image State
+Define OLEXTPImageState for Integer
+    Define OLExtpImageNormal for 0
+    Define OLExtpImageDisabled for 1
+    Define OLExtpImageHot for 2
+    Define OLExtpImageChecked for 3
+    Define OLExtpImagePressed for 4
+
+Define OLEXTPColorManagerColor for Integer
+    Define OLESTDCOLOR_BACKGROUND for 1
+    Define OLESTDCOLOR_ACTIVECAPTION for 2
+    Define OLESTDCOLOR_INACTIVECAPTION for 3
+    Define OLESTDCOLOR_MENU for 4
+    Define OLESTDCOLOR_WINDOW for 5
+    Define OLESTDCOLOR_WINDOWFRAME for 6
+    Define OLESTDCOLOR_MENUTEXT for 7
+    Define OLESTDCOLOR_WINDOWTEXT for 8
+    Define OLESTDCOLOR_CAPTIONTEXT for 9
+    Define OLESTDCOLOR_ACTIVEBORDER for 10
+    Define OLESTDCOLOR_INACTIVEBORDER for 11
+    Define OLESTDCOLOR_APPWORKSPACE for 12
+    Define OLESTDCOLOR_HIGHLIGHT for 13
+    Define OLESTDCOLOR_HIGHLIGHTTEXT for 14
+    Define OLESTDCOLOR_BTNFACE for 15
+    Define OLESTDCOLOR_BTNSHADOW for 16
+    Define OLESTDCOLOR_GRAYTEXT for 17
+    Define OLESTDCOLOR_BTNTEXT for 18
+    Define OLESTDCOLOR_INACTIVECAPTIONTEXT for 19
+    Define OLESTDCOLOR_BTNHIGHLIGHT for 20
+    Define OLESTDCOLOR_3DDKSHADOW for 21
+    Define OLESTDCOLOR_3DLIGHT for 22
+    Define OLESTDCOLOR_INFOTEXT for 23
+    Define OLESTDCOLOR_INFOBK for 24
+    Define OLESTDCOLOR_HOTLIGHT for 26
+    Define OLESTDCOLOR_GRADIENTACTIVECAPTION for 27
+    Define OLESTDCOLOR_GRADIENTINACTIVECAPTION for 28
+    Define OLEXPCOLOR_TOOLBAR_FACE for 30
+    Define OLEXPCOLOR_HIGHLIGHT for 31
+    Define OLEXPCOLOR_HIGHLIGHT_BORDER for 32
+    Define OLEXPCOLOR_HIGHLIGHT_PUSHED for 33
+    Define OLEXPCOLOR_HIGHLIGHT_CHECKED for 36
+    Define OLEXPCOLOR_HIGHLIGHT_CHECKED_BORDER for 37
+    Define OLEXPCOLOR_ICONSHADDOW for 34
+    Define OLEXPCOLOR_GRAYTEXT for 35
+    Define OLEXPCOLOR_TOOLBAR_GRIPPER for 38
+    Define OLEXPCOLOR_SEPARATOR for 39
+    Define OLEXPCOLOR_DISABLED for 40
+    Define OLEXPCOLOR_MENUBAR_FACE for 41
+    Define OLEXPCOLOR_MENUBAR_EXPANDED for 42
+    Define OLEXPCOLOR_MENUBAR_BORDER for 43
+    Define OLEXPCOLOR_MENUBAR_TEXT for 44
+    Define OLEXPCOLOR_HIGHLIGHT_TEXT for 45
+    Define OLEXPCOLOR_TOOLBAR_TEXT for 46
+    Define OLEXPCOLOR_PUSHED_TEXT for 47
+    Define OLEXPCOLOR_TAB_INACTIVE_BACK for 48
+    Define OLEXPCOLOR_TAB_INACTIVE_TEXT for 49
+    Define OLEXPCOLOR_HIGHLIGHT_PUSHED_BORDER for 50
+    Define OLEXPCOLOR_3DFACE for 51
+    Define OLEXPCOLOR_3DSHADOW for 52
+    Define OLEXPCOLOR_FRAME for 54
+    Define OLEXPCOLOR_SPLITTER_FACE for 55
+    Define OLEXPCOLOR_LABEL for 56
+    Define OLEXPCOLOR_STATICFRAME for 57
+
+Define OLEXTPCurrentSystemTheme for Integer
+    // No known theme in use
+    Define OLExtpSystemThemeUnknown for 0
+    // Blue theme in use
+    Define OLExtpSystemThemeBlue for 1
+    // Olive theme in use
+    Define OLExtpSystemThemeOlive for 2
+    // Silver theme in use
+    Define OLExtpSystemThemeSilver for 3
+    // Silver theme in use
+    Define OLExtpSystemThemeRoyale for 4
+    // Silver theme in use
+    Define OLExtpSystemThemeAero for 5
+    // Use OS theme.
+    Define OLExtpSystemThemeAuto for 6
+
+// ToolTip Style
+Define OLEXTPToolTipStyle for Integer
+    Define OLExtpToolTipStandard for 0
+    Define OLExtpToolTipBalloon for 1
+    Define OLExtpToolTipOffice for 2
+    Define OLExtpToolTipRTF for 3
+    Define OLExtpToolTipLuna for 4
+    Define OLExtpToolTipOffice2007 for 5
+    Define OLExtpToolTipHTML for 6
+
+// ToolTip Icon
+Define OLEXTPToolTipIcon for Integer
+    Define OLExtpToolTipIconNone for 0
+    Define OLExtpToolTipIconInfo for 1
+    Define OLExtpToolTipIconWarning for 2
+    Define OLExtpToolTipIconError for 3
+
+Define OLEOLEDropConstants for Integer
+    Define OLEccOLEDropNone for 0
+    Define OLEccOLEDropManual for 1
+
+Define OLEXTPColumnAlignment for Integer
+    Define OLExtpAlignmentLeft for 0
+    Define OLExtpAlignmentCenter for 1
+    Define OLExtpAlignmentRight for 2
+    Define OLExtpAlignmentVCenter for 4
+    Define OLExtpAlignmentWordBreak for 16
+    Define OLExtpAlignmentTextMask for 255
+    Define OLExtpAlignmentIconLeft for 1048576
+    Define OLExtpAlignmentIconCenter for 2097152
+    Define OLExtpAlignmentIconRight for 4194304
+    Define OLExtpAlignmentIconTop for 16777216
+    Define OLExtpAlignmentIconVCenter for 33554432
+    Define OLExtpAlignmentIconBottom for 67108864
+    Define OLExtpAlignmentIconMask for 267386880
+
+Define OLEXTPGroupRowIconAlignment for Integer
+    Define OLExtpGroupRowIconUnknown for 0
+    Define OLExtpGroupRowIconLeft for 1
+    Define OLExtpGroupRowIconBeforeText for 2
+    Define OLExtpGroupRowIconAfterText for 4
+    Define OLExtpGroupRowIconRight for 8
+    Define OLExtpGroupRowIconVTop for 256
+    Define OLExtpGroupRowIconVCenter for 512
+    Define OLExtpGroupRowIconVCenterToText for 1024
+    Define OLExtpGroupRowIconVBottom for 2048
+
+Define OLEXTPColumnBestFitMode for Integer
+    Define OLExtpBestFitModeVisibleData for 0
+    Define OLExtpBestFitModeAllData for 1
+
+Define OLEXTPReportEditStyle for Integer
+    Define OLExtpEditStyleMultiline for 4
+    Define OLExtpEditStyleAutoVScroll for 64
+    Define OLExtpEditStyleAutoHScroll for 128
+    Define OLExtpEditStyleUppercase for 8
+    Define OLExtpEditStyleLowercase for 16
+    Define OLExtpEditStyleNumber for 8192
+    Define OLExtpEditStyleReadOnly for 2048
+
+Define OLEXTPReportGridStyle for Integer
+    Define OLExtpGridNoLines for 0
+    Define OLExtpGridSmallDots for 1
+    Define OLExtpGridLargeDots for 2
+    Define OLExtpGridDashes for 3
+    Define OLExtpGridSolid for 4
+
+Define OLEXTPReportColumnStyle for Integer
+    Define OLExtpColumnShaded for 0
+    Define OLExtpColumnFlat for 1
+    Define OLExtpColumnExplorer for 2
+    Define OLExtpColumnOffice2003 for 3
+    Define OLExtpColumnOffice2007 for 4
+
+Define OLEXTPReportTreeStructureStyle for Integer
+    Define OLExtpTreeStructureNone for 0
+    Define OLExtpTreeStructureSolid for 1
+    Define OLExtpTreeStructureDots for 2
+
+Define OLEXTPReportBorderStyle for Integer
+    Define OLExtpBorderNone for 0
+    Define OLExtpBorderFlat for 1
+    Define OLExtpBorderStaticEdge for 2
+    Define OLExtpBorderClientEdge for 3
+    Define OLExtpBorderFrame for 4
+
+Define OLEXTPReportHitTestInfoCode for Integer
+    Define OLExtpHitTestUnknown for 0
+    Define OLExtpHitTestHeader for 1
+    Define OLExtpHitTestGroupBox for 2
+    Define OLExtpHitTestReportArea for 3
+
+Define OLEXTPReportCustomDraw for Integer
+    Define OLExtpCustomDrawItem for 1
+    Define OLExtpCustomMeasureRow for 2
+    Define OLExtpCustomBeforeDrawRow for 4
+    Define OLExtpCustomDrawPreviewItem for 8
+
+Define OLEXTPReportDragDrop for Integer
+    Define OLExtpReportAllowDrop for 1
+    Define OLExtpReportAllowDragCopy for 2
+    Define OLExtpReportAllowDragMove for 4
+    Define OLExtpReportAllowDrag for 6
+
+Define OLEXTPReportFreezeColsDividerStyle for Integer
+    Define OLExtpReportFreezeColsDividerThin for 1
+    Define OLExtpReportFreezeColsDividerBold for 2
+    Define OLExtpReportFreezeColsDividerHeader for 4
+    Define OLExtpReportFreezeColsDividerShade for 8
+
+Define OLEXTPReportFixedRowsDividerStyle for Integer
+    Define OLExtpReportFixedRowsDividerNone for 0
+    Define OLExtpReportFixedRowsDividerThin for 1
+    Define OLExtpReportFixedRowsDividerBold for 2
+    Define OLExtpReportFixedRowsDividerShade for 4
+    Define OLExtpReportFixedRowsDividerOutlook for 8
+
+// CLSID: {8B97BA3A-FE51-4E7E-B3C0-A798DDD174E9}
+Class cCJIReportRecord is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComPreviewText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComPreviewText String value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComExpanded Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComExpanded Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTag Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_VARIANT to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTag Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_VARIANT to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComVisible Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComVisible Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Gets an item from the collection by its index.
+    { MethodType=Property DesignTime=False }
+    Function ComItem Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new item to the collection.
+    Function ComAddItem Variant llValue Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_VARIANT llValue
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+
+    // Deletes all of the items from the collection
+    Procedure ComDeleteAll
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 5 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComChilds Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 6 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComIndex Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 10 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComPreviewItem Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 12 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComParentRecord Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 13 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {8119957E-3096-4792-B180-D404D55E8532}
+Class cCJReportRecord is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRecord
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psProgID to "{8119957E-3096-4792-B180-D404D55E8532}"
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {EB97BA3A-FE51-4E7E-B3C0-A798DDD174E9}
+Class cCJIReportRecordItemConstraint is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaption Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaption String value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComData Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComData Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIndex Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {E119957E-3096-4792-B180-D404D55E8532}
+Class cCJReportRecordItemConstraint is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRecordItemConstraint
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {B5989CE5-E015-4F87-885D-DE3326A63BEA}
+Class cCJIReportRow is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComRecord Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComRecord Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComExpanded Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComExpanded Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelected Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSelected Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIndex Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupRow Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComChilds Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 4 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComParentRow Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 5 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComEnsureVisible
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 8 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComNextSiblingRow Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 9 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComGetRect Integer ByRef llleft Integer ByRef lltop Integer ByRef llright Integer ByRef llbottom
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 4
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llleft
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) lltop
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llright
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llbottom
+        Send InvokeComMethod to hDispatchDriver 101 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComGetItemRect Variant llItem Integer ByRef llleft Integer ByRef lltop Integer ByRef llright Integer ByRef llbottom
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 5
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llItem
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llleft
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) lltop
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llright
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llbottom
+        Send InvokeComMethod to hDispatchDriver 11 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {B119957E-3096-4792-B180-D404D55E8532}
+Class cCJReportRow is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRow
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {253A9CA8-51EA-4C67-AB9B-E6B1A446953D}
+Class cCJIReportHyperlink is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComHyperTextBegin Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHyperTextBegin Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHyperTextLen Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHyperTextLen Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to value
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {7493355C-D005-4F90-8530-AB276AFD8400}
+Class cCJReportHyperlink is a cComAutomationObject
+    Import_Class_Protocol cCJIReportHyperlink
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {E4BA5027-B4A5-492F-ADA0-56E1B0772A53}
+Class cCJIReportColumn is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaption Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaption String value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComVisible Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComVisible Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAlignment Returns OLEXTPColumnAlignment
+        OLEXTPColumnAlignment retVal
+        Get ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAlignment OLEXTPColumnAlignment value
+        Set ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTreeColumn Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTreeColumn Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortAscending Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSortAscending Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortable Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSortable Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowDrag Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowDrag Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIndex Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComIndex Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComItemIndex Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComItemIndex Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComResizable Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComResizable Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAutoSize Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAutoSize Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComWidth Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComWidth Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIcon Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 13 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComIcon Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 13 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupable Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 14 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupable Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 14 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowInFieldChooser Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 15 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowInFieldChooser Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 15 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComEditable Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComEditable Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowRemove Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 19 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowRemove Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 19 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTag Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_VARIANT to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTag Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_VARIANT to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTooltip Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 21 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTooltip String value
+        Set ComProperty of (phDispatchDriver(Self)) 21 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 22 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFooterText String value
+        Set ComProperty of (phDispatchDriver(Self)) 22 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderAlignment Returns OLEXTPColumnAlignment
+        OLEXTPColumnAlignment retVal
+        Get ComProperty of (phDispatchDriver(Self)) 23 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHeaderAlignment OLEXTPColumnAlignment value
+        Set ComProperty of (phDispatchDriver(Self)) 23 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterAlignment Returns OLEXTPColumnAlignment
+        OLEXTPColumnAlignment retVal
+        Get ComProperty of (phDispatchDriver(Self)) 24 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFooterAlignment OLEXTPColumnAlignment value
+        Set ComProperty of (phDispatchDriver(Self)) 24 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAutoSortWhenGrouped Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 25 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAutoSortWhenGrouped Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 25 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterFont Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 27 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFooterFont Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 27 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComDrawFooterDivider Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 28 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComDrawFooterDivider Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 28 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComDrawHeaderRowsVGrid Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 29 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComDrawHeaderRowsVGrid Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 29 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComDrawFooterRowsVGrid Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 30 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComDrawFooterRowsVGrid Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 30 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComBestFitMode Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 32 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBestFitMode Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 32 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComEditOptions Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 17 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComMove Integer llIndex
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Send InvokeComMethod to hDispatchDriver 18 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComBestFit
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 26 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComEnsureVisible
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 31 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {2119957E-3096-4792-B180-D404D55E8532}
+Class cCJReportColumn is a cComAutomationObject
+    Import_Class_Protocol cCJIReportColumn
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {15989CE5-E015-4F87-885D-DE3326A63BEA}
+Class cCJIReportRecordItemMetrics is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFont Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFont Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComText String value
+        Set ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupRowIcon Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupRowIcon Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_I4 to value
+    End_Procedure
+
+    // Combination of flags from enum XTPGroupRowIconAlignment.
+    { MethodType=Property DesignTime=False }
+    Function ComGroupRowIconAlignment Returns OLEXTPGroupRowIconAlignment
+        OLEXTPGroupRowIconAlignment retVal
+        Get ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Combination of flags from enum XTPGroupRowIconAlignment.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupRowIconAlignment OLEXTPGroupRowIconAlignment value
+        Set ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_I4 to value
+    End_Procedure
+
+    // Combination of flags from enum XTPColumnAlignment.
+    { MethodType=Property DesignTime=False }
+    Function ComColumnAlignment Returns OLEXTPColumnAlignment
+        OLEXTPColumnAlignment retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Combination of flags from enum XTPColumnAlignment.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComColumnAlignment OLEXTPColumnAlignment value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_I4 to value
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {FDE9957E-3096-4792-B180-D404D55E8532}
+Class cCJReportRecordItemMetrics is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRecordItemMetrics
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {B6989CE5-E015-4F87-885D-DE3326A63BEA}
+Class cCJIReportGroupRow is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComExpanded Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComExpanded Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelected Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSelected Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupCaption Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 100 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupCaption String value
+        Set ComProperty of (phDispatchDriver(Self)) 100 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIndex Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupRow Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComChilds Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 4 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComParentRow Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 5 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComEnsureVisible
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 8 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComNextSiblingRow Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 9 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComGetRect Integer ByRef llleft Integer ByRef lltop Integer ByRef llright Integer ByRef llbottom
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 4
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llleft
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) lltop
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llright
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llbottom
+        Send InvokeComMethod to hDispatchDriver 101 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {B319957E-3096-4792-B180-D404D55E8532}
+Class cCJReportGroupRow is a cComAutomationObject
+    Import_Class_Protocol cCJIReportGroupRow
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {A87BCC77-27BF-4CB1-9ABF-1788D9835223}
+Class cCJIReportColumnOrder is a Mixin
+
+    // Gets the number of rows in  the collection.
+    { MethodType=Property DesignTime=False }
+    Function ComCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Gets an item from the collection by its index.
+    { MethodType=Property DesignTime=False }
+    Function ComColumn Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new column to the collection.
+    Procedure ComAdd Variant llColumn
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llColumn
+        Send InvokeComMethod to hDispatchDriver 2 OLE_VT_VOID
+    End_Procedure
+
+    // Deletes all of the columns from the collection
+    Procedure ComDeleteAll
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 5 OLE_VT_VOID
+    End_Procedure
+
+    Function ComIndexOf Variant llColumn Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llColumn
+        Get InvokeComMethod of hDispatchDriver 6 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComRemoveAt Integer llIndex
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Send InvokeComMethod to hDispatchDriver 7 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {A03455AF-3543-4D3E-88F9-4F8822200142}
+Class cCJReportColumnOrder is a cComAutomationObject
+    Import_Class_Protocol cCJIReportColumnOrder
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {D87BCC77-27BF-4CB1-9ABF-1788D9835113}
+Class cCJIReportSelectedRows is a Mixin
+
+    // Gets the number of rows in  the collection.
+    { MethodType=Property DesignTime=False }
+    Function ComCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new row to the collection.
+    Procedure ComAdd Variant llRow
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRow
+        Send InvokeComMethod to hDispatchDriver 2 OLE_VT_VOID
+    End_Procedure
+
+    // Deletes all of the rows
+    Procedure ComDeleteAll
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 5 OLE_VT_VOID
+    End_Procedure
+
+    // Gets an row from the collection by its index.
+    { MethodType=Property DesignTime=False }
+    Function ComRow Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {D03455AF-3543-4D3E-88F9-4F8822200142}
+Class cCJReportSelectedRows is a cComAutomationObject
+    Import_Class_Protocol cCJIReportSelectedRows
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {F87BCC77-27BF-4CB1-9ABF-1788D9835223}
+Class cCJIReportRows is a Mixin
+
+    // Gets the number of rows in  the collection.
+    { MethodType=Property DesignTime=False }
+    Function ComCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Gets an row from the collection by its index.
+    { MethodType=Property DesignTime=False }
+    Function ComRow Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+
+    // Finds row corresponded with specified record.
+    Function ComFindRow Variant llRecord Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Finds row corresponded with specified record (throughout the tree).
+    Function ComFindRowInTree Variant llRecord Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {F03455AF-3543-4D3E-88F9-4F8822200142}
+Class cCJReportRows is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRows
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {FDEDD6BE-9FF2-4A6B-A5B8-3F60333F6870}
+Class cCJIFormulaMulDivC is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComMultiplier Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMultiplier Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComDivisor Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComDivisor Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComConstant Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComConstant Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_I4 to value
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {48048866-66D3-4E74-9B28-1FF48C22FDB1}
+Class cCJFormulaMulDivC is a cComAutomationObject
+    Import_Class_Protocol cCJIFormulaMulDivC
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {A5989CE5-E015-4F87-885D-DE3326A63BEA}
+Class cCJIReportPaintManager is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComVerticalGridStyle Returns OLEXTPReportGridStyle
+        OLEXTPReportGridStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComVerticalGridStyle OLEXTPReportGridStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHorizontalGridStyle Returns OLEXTPReportGridStyle
+        OLEXTPReportGridStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHorizontalGridStyle OLEXTPReportGridStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShadeGroupHeadings Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShadeGroupHeadings Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTextFont Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTextFont Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaptionFont Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaptionFont Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComPreviewTextFont Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComPreviewTextFont Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumnStyle Returns OLEXTPReportColumnStyle
+        OLEXTPReportColumnStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComColumnStyle OLEXTPReportColumnStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShadeSortColumn Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShadeSortColumn Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Determines whether the selected item will display as selected when the Report loses focus
+    { MethodType=Property DesignTime=False }
+    Function ComHideSelection Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // Determines whether the selected item will display as selected when the Report loses focus
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHideSelection Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComNoItemsText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComNoItemsText String value
+        Set ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComNoGroupByText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComNoGroupByText String value
+        Set ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComMaxPreviewLines Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMaxPreviewLines Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 14 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 14 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 15 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 15 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGridLineColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGridLineColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShadeSortColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 17 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShadeSortColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 17 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupIndentColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 18 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupIndentColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 18 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupShadeBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 19 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupShadeBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 19 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupShadeBorderColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupShadeBorderColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 21 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 21 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaptionBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 22 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaptionBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 22 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaptionForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 23 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaptionForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 23 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupBoxBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 27 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupBoxBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 27 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHighlightBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 28 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHighlightBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 28 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHighlightForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 29 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHighlightForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 29 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaptionBackGradientColorLight Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 41 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaptionBackGradientColorLight OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 41 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaptionBackGradientColorDark Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 42 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaptionBackGradientColorDark OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 42 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumnHotGradientColorLight Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 43 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComColumnHotGradientColorLight OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 43 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumnHotGradientColorDark Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 44 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComColumnHotGradientColorDark OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 44 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumnPushedGradientColorLight Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 45 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComColumnPushedGradientColorLight OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 45 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumnPushedGradientColorDark Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 46 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComColumnPushedGradientColorDark OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 46 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTreeIndent Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 24 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTreeIndent Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 24 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTreeStructureStyle Returns OLEXTPReportTreeStructureStyle
+        OLEXTPReportTreeStructureStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 25 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTreeStructureStyle OLEXTPReportTreeStructureStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 25 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComNoFieldsAvailableText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 26 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComNoFieldsAvailableText String value
+        Set ComProperty of (phDispatchDriver(Self)) 26 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComDrawSortTriangleAlways Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 30 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComDrawSortTriangleAlways Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 30 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupShadeForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 31 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupShadeForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 31 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComUseColumnTextAlignment Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 32 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComUseColumnTextAlignment Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 32 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComPreviewTextColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 33 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComPreviewTextColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 33 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortByText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 34 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSortByText String value
+        Set ComProperty of (phDispatchDriver(Self)) 34 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComInvertColumnOnClick Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 35 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComInvertColumnOnClick Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 35 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHotTracking Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 36 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHotTracking Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 36 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupRowTextBold Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 37 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupRowTextBold Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 37 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFixedRowHeight Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 38 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFixedRowHeight Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 38 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComUseEditTextAlignment Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 39 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComUseEditTextAlignment Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 39 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComRevertAlignment Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 40 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComRevertAlignment Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 40 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComThemedInplaceButtons Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 51 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComThemedInplaceButtons Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 51 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFixedInplaceButtonHeight Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 52 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFixedInplaceButtonHeight Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 52 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFreezeColsDividerStyle Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 53 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFreezeColsDividerStyle Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 53 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFreezeColsDividerColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 54 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFreezeColsDividerColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 54 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHotDividerColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 55 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHotDividerColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 55 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderRowsDividerStyle Returns OLEXTPReportFixedRowsDividerStyle
+        OLEXTPReportFixedRowsDividerStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 56 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHeaderRowsDividerStyle OLEXTPReportFixedRowsDividerStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 56 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderRowsDividerColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 57 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHeaderRowsDividerColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 57 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterRowsDividerStyle Returns OLEXTPReportFixedRowsDividerStyle
+        OLEXTPReportFixedRowsDividerStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 58 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFooterRowsDividerStyle OLEXTPReportFixedRowsDividerStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 58 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterRowsDividerColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 59 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFooterRowsDividerColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 59 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComDrawGridForEmptySpace Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 60 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComDrawGridForEmptySpace Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 60 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelectedRowBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 62 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSelectedRowBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 62 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelectedRowForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 61 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSelectedRowForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 61 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumnOffice2007CustomThemeBaseColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 63 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComColumnOffice2007CustomThemeBaseColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 63 OLE_VT_I4 to value
+    End_Procedure
+
+    Procedure ComSetPreviewIndent Integer llleft Integer lltop Integer llright Integer llbottom
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 4
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llleft
+        Send DefineParam to hDispatchDriver OLE_VT_I4 lltop
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llright
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llbottom
+        Send InvokeComMethod to hDispatchDriver 13 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComRefreshMetrics
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 64 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderHeightFormula Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 65 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {A119957E-3096-4792-B180-D404D55E8532}
+Class cCJReportPaintManager is a cComAutomationObject
+    Import_Class_Protocol cCJIReportPaintManager
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {E87BCC77-27BF-4CB1-9ABF-1788D9835223}
+Class cCJIReportRecordItemConstraints is a Mixin
+
+    // Gets the number of constraints in the collection.
+    { MethodType=Property DesignTime=False }
+    Function ComCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Gets an constraint from the collection by its index.
+    { MethodType=Property DesignTime=False }
+    Function ComConstraint Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new constraint to the collection.
+    Procedure ComAdd String llCaption Integer llData
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llCaption
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llData
+        Send InvokeComMethod to hDispatchDriver 2 OLE_VT_VOID
+    End_Procedure
+
+    // Deletes all of the constraints from the collection
+    Procedure ComDeleteAll
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 5 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {E03455AF-3543-4D3E-88F9-4F8822200142}
+Class cCJReportRecordItemConstraints is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRecordItemConstraints
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {C17BCC77-27BF-4CB1-9ABF-1788D9835223}
+Class cCJIReportInplaceButton is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComId Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 0 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComId Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 0 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComInsideCellButton Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComInsideCellButton Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComRow Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumn Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComItem Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComGetRect Integer ByRef llleft Integer ByRef lltop Integer ByRef llright Integer ByRef llbottom
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 4
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llleft
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) lltop
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llright
+        Send DefineParam to hDispatchDriver (OLE_VT_BYREF ior OLE_VT_I4) llbottom
+        Send InvokeComMethod to hDispatchDriver 4 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {E03457DA-3555-4D3A-88F9-8D8822209146}
+Class cCJReportInplaceButton is a cComAutomationObject
+    Import_Class_Protocol cCJIReportInplaceButton
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {E17BCC77-27BF-4CB1-9ABF-1788D9835223}
+Class cCJIReportRecordItemEditOptions is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComConstraintEdit Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComConstraintEdit Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowEdit Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowEdit Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelectTextOnEdit Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSelectTextOnEdit Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComEditControlStyle Returns OLEXTPReportEditStyle
+        OLEXTPReportEditStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComEditControlStyle OLEXTPReportEditStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComMaxLength Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMaxLength Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComConstraints Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComAddComboButton
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 3 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComAddExpandButton
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 4 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComRemoveButtons
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 9 OLE_VT_VOID
+    End_Procedure
+
+    Function ComGetInplaceButton Integer llnIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llnIndex
+        Get InvokeComMethod of hDispatchDriver 10 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComInplaceButtonsCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 11 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {E13455AF-3543-4D3E-88F9-4F8822200142}
+Class cCJReportRecordItemEditOptions is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRecordItemEditOptions
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psProgID to "{E13455AF-3543-4D3E-88F9-4F8822200142}"
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {E45E24E1-0C85-41DD-8A5B-DDF486AF03F8}
+Class cCJIReportHyperlinks is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComItem Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComAddHyperlink Integer llHyperTextBegin Integer llHyperTextLen Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llHyperTextBegin
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llHyperTextLen
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComRemove Integer llIndex
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Send InvokeComMethod to hDispatchDriver 3 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComRemoveAll
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 4 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {91A7B9B8-72F2-40DF-933E-181E7309CE31}
+Class cCJReportHyperlinks is a cComAutomationObject
+    Import_Class_Protocol cCJIReportHyperlinks
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {45989CE5-E015-4F87-885D-DE3326A63BEA}
+Class cCJIReportRecordItem is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComBold Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBold Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFormat Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFormat String value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComValue Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_VARIANT to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComValue Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_VARIANT to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComForeColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComForeColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComBackColor Returns OLE_COLOR
+        OLE_COLOR retVal
+        Get ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBackColor OLE_COLOR value
+        Set ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHasCheckbox Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHasCheckbox Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComChecked Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComChecked Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIcon Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComIcon Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaption Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaption String value
+        Set ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupCaption Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupCaption String value
+        Set ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortPriority Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSortPriority Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupPriority Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 13 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComGroupPriority Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 13 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFocusable Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 15 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFocusable Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 15 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComEditable Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComEditable Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTooltip Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 19 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTooltip String value
+        Set ComProperty of (phDispatchDriver(Self)) 19 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTag Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_VARIANT to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTag Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_VARIANT to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIndex Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 6 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComRecord Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 14 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComEditOptions Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 17 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComCreateEditOptions
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 18 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHyperlinks Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 21 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {9119957E-3096-4792-B180-D404D55E8532}
+Class cCJReportRecordItem is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRecordItem
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {587BCC77-27BF-4CB1-9ABF-1788D9835223}
+Class cCJIReportRecords is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComCaseSensitive Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCaseSensitive Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Gets the number of records in the collection.
+    { MethodType=Property DesignTime=False }
+    Function ComCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Gets an item from the collection by its index.
+    { MethodType=Property DesignTime=False }
+    Function ComRecord Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new record to the collection.
+    Function ComAdd Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Deletes all of the records from the collection
+    Procedure ComDeleteAll
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 5 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComRemoveAt Integer llIndex
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Send InvokeComMethod to hDispatchDriver 6 OLE_VT_VOID
+    End_Procedure
+
+    Function ComInsert Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 7 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComInsertAt Integer llIndex Variant llRecord
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Send InvokeComMethod to hDispatchDriver 9 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {503455AF-3543-4D3E-88F9-4F8822200142}
+Class cCJReportRecords is a cComAutomationObject
+    Import_Class_Protocol cCJIReportRecords
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {187BCC77-27BF-4CB1-9ABF-1788D9835223}
+Class cCJIReportColumns is a Mixin
+
+    // Gets the number of controls in the collection.
+    { MethodType=Property DesignTime=False }
+    Function ComCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Gets an item from the collection by its index.
+    { MethodType=Property DesignTime=False }
+    Function ComColumn Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 0 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new column to the collection.
+    Function ComAdd Integer llItemIndex String llCaption Integer llWidth Boolean llResizable Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 4
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llItemIndex
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llCaption
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llWidth
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llResizable
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new column to the collection.
+    Function ComAddEx Integer llItemIndex String llCaption String llInternalName Integer llWidth Boolean llResizable Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 5
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llItemIndex
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llCaption
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llInternalName
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llWidth
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llResizable
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Finds the specified column
+    Function ComFind Integer llItemIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llItemIndex
+        Get InvokeComMethod of hDispatchDriver 4 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Deletes all of the columns from the collection
+    Procedure ComDeleteAll
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 5 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function Com_NewEnum Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver -4 OLE_VT_UNKNOWN to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {103455AF-3543-4D3E-88F9-4F8822200142}
+Class cCJReportColumns is a cComAutomationObject
+    Import_Class_Protocol cCJIReportColumns
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {18B11C4D-E540-4F68-8B20-DDC0E2FE8FA4}
+Class cCJIReportNavigator is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComCurrentFocusInHeadersRows Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCurrentFocusInHeadersRows Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 16 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComCurrentFocusInFootersRows Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 17 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComCurrentFocusInFootersRows Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 17 OLE_VT_BOOL to value
+    End_Procedure
+
+    Procedure ComMoveUp Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 1 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveDown Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 2 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMovePageUp Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 3 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMovePageDown Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 4 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveFirstRow Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 5 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveLastRow Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 6 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveLeft Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 7 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveRight Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 8 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComBeginEdit
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 9 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveFirstColumn
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 10 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveLastColumn
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 11 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveToRow Integer llRowIndex Boolean llSelectBlock Boolean llIgnoreSelection
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 3
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llRowIndex
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llSelectBlock
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llIgnoreSelection
+        Send InvokeComMethod to hDispatchDriver 12 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveToColumn Integer llColumnIndex Boolean llClearIfNonFocusable
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llColumnIndex
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llClearIfNonFocusable
+        Send InvokeComMethod to hDispatchDriver 13 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveFirstVisibleRow
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 14 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComMoveLastVisibleRow
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 15 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// CLSID: {319530AE-23D6-4AD6-9BF6-8F8AD68E4190}
+Class cCJReportNavigator is a cComAutomationObject
+    Import_Class_Protocol cCJIReportNavigator
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {8C0B4099-EF3B-46CA-BE60-3E8FE6C7EAB8}
+Class cCJIReportHitTestInfo is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumn Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComRow Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComItem Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComHt Returns OLEXTPReportHitTestInfoCode
+        Handle hDispatchDriver
+        OLEXTPReportHitTestInfoCode retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 4 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {CB28F65F-D030-4CDC-861E-A2DE4FC0C23D}
+Class cCJReportHitTestInfo is a cComAutomationObject
+    Import_Class_Protocol cCJIReportHitTestInfo
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {07A8E182-54D0-4190-A286-7531F6C71BF7}
+Class cCJIReportToolTipInfo is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComText String value
+        Set ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComRow Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComItem Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CoClass
+// CLSID: {3453345F-D030-4CDC-861E-A2DE4FC0C23D}
+Class cCJReportToolTipInfo is a cComAutomationObject
+    Import_Class_Protocol cCJIReportToolTipInfo
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {E2C53BB4-123F-4C52-A0D5-A9BD3A26BEDA}
+// Dispatch interface for Report Control
+Class cCJ_DReportControl is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComHWnd Returns OLE_HANDLE
+        OLE_HANDLE retVal
+        Get ComProperty of (phDispatchDriver(Self)) -515 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHWnd OLE_HANDLE value
+        Set ComProperty of (phDispatchDriver(Self)) -515 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComEnabled Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) -514 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComEnabled Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) -514 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowGroupBox Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowGroupBox Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComPreviewMode Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComPreviewMode Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowColumnRemove Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowColumnRemove Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowColumnReorder Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowColumnReorder Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowColumnResize Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowColumnResize Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 5 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComMultipleSelection Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMultipleSelection Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 6 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowItemsInGroups Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowItemsInGroups Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 7 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComBorderStyle Returns OLEXTPReportBorderStyle
+        OLEXTPReportBorderStyle retVal
+        Get ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBorderStyle OLEXTPReportBorderStyle value
+        Set ComProperty of (phDispatchDriver(Self)) 8 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowColumnSort Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowColumnSort Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 9 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFieldChooser Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFieldChooser Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 10 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSkipGroupsFocus Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSkipGroupsFocus Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 11 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComIcons Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComIcons Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 12 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFocusedRow Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFocusedRow Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 20 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAllowEdit Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 26 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAllowEdit Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 26 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFocusSubItems Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 27 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFocusSubItems Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 27 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComEditOnClick Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 28 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComEditOnClick Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 28 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAutoColumnSizing Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 29 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAutoColumnSizing Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 29 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowHeader Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 31 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowHeader Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 31 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFilterText Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 33 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFilterText String value
+        Set ComProperty of (phDispatchDriver(Self)) 33 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFocusedColumn Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) 35 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFocusedColumn Variant value
+        Set ComProperty of (phDispatchDriver(Self)) 35 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTopRowIndex Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 37 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTopRowIndex Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 37 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowFooter Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 42 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowFooter Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 42 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Indicates whether the control should draw right-to-left for RTL languages
+    { MethodType=Property DesignTime=False }
+    Function ComRightToLeft Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 43 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // Indicates whether the control should draw right-to-left for RTL languages
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComRightToLeft Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 43 OLE_VT_BOOL to value
+    End_Procedure
+
+    // For languages that support reading order alignment specifies right-to-left reading order
+    { MethodType=Property DesignTime=False }
+    Function ComRightToLeftReading Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 44 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // For languages that support reading order alignment specifies right-to-left reading order
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComRightToLeftReading Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 44 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Count of none-scrolled columns at the left side
+    { MethodType=Property DesignTime=False }
+    Function ComFreezeColumnsCount Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 45 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Count of none-scrolled columns at the left side
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFreezeColumnsCount Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 45 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortLocale Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 47 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSortLocale Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 47 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComReleaseOnDestroy Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 48 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComReleaseOnDestroy Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 48 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Returns/Sets whether this control can act as an OLE drop target.
+    { MethodType=Property DesignTime=False }
+    Function ComOLEDropMode Returns OLEOLEDropConstants
+        OLEOLEDropConstants retVal
+        Get ComProperty of (phDispatchDriver(Self)) 50 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Returns/Sets whether this control can act as an OLE drop target.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComOLEDropMode OLEOLEDropConstants value
+        Set ComProperty of (phDispatchDriver(Self)) 50 OLE_VT_I4 to value
+    End_Procedure
+
+    // Horizontal scrolling by pixels or by whole columns.
+    { MethodType=Property DesignTime=False }
+    Function ComFullColumnScrolling Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 55 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // Horizontal scrolling by pixels or by whole columns.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFullColumnScrolling Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 55 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSendContextMenuForWholeHeaderArea Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 57 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSendContextMenuForWholeHeaderArea Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 57 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHScrollStep Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 100 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHScrollStep Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 100 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortRecordChildren Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 104 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSortRecordChildren Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 104 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFilterHiddenColumns Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 102 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFilterHiddenColumns Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 102 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowHeaderRows Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 62 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowHeaderRows Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 62 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowFooterRows Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 63 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowFooterRows Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 63 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComPinFooterRows Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 64 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComPinFooterRows Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 64 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderRowsAllowEdit Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 67 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHeaderRowsAllowEdit Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 67 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterRowsAllowEdit Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 68 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFooterRowsAllowEdit Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 68 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelectionEnable Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 70 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSelectionEnable Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 70 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComShowRowFocus Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 71 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComShowRowFocus Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 71 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderRowsAllowAccess Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 78 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHeaderRowsAllowAccess Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 78 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterRowsAllowAccess Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 79 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFooterRowsAllowAccess Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 79 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColumns Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 13 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComRecords Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 14 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComPopulate
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 15 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComPaintManager Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 16 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComRedraw
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 17 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComRows Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 18 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelectedRows Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 19 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortOrder Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 21 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComGroupsOrder Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 22 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComSetImageList Variant llImageList
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llImageList
+        Send InvokeComMethod to hDispatchDriver 23 OLE_VT_VOID
+    End_Procedure
+
+    Function ComSaveSettings Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 24 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComLoadSettings String llProfile
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llProfile
+        Send InvokeComMethod to hDispatchDriver 25 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComNavigator Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 46 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComHitTest OLE_XPOS_PIXELS llx OLE_YPOS_PIXELS lly Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llx
+        Send DefineParam to hDispatchDriver OLE_VT_I4 lly
+        Get InvokeComMethod of hDispatchDriver 30 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComSetVirtualMode Integer llRowCount
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llRowCount
+        Send InvokeComMethod to hDispatchDriver 32 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComEnableToolTips Boolean llEnable
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llEnable
+        Send InvokeComMethod to hDispatchDriver 34 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComEditItem Variant llRow Variant llColumn
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRow
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llColumn
+        Send InvokeComMethod to hDispatchDriver 36 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComSetCustomDraw OLEXTPReportCustomDraw llFlags
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llFlags
+        Send InvokeComMethod to hDispatchDriver 38 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComToolTipContext Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 39 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComPrintReport OLE_HANDLE lllHDC
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 lllHDC
+        Send InvokeComMethod to hDispatchDriver 40 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComPrintReport2 Boolean llShowPrintDialog
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llShowPrintDialog
+        Send InvokeComMethod to hDispatchDriver 340 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComDoPropExchange Variant llpPX
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llpPX
+        Send InvokeComMethod to hDispatchDriver 41 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComPrintPreview Boolean llShowPrintDialog
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llShowPrintDialog
+        Send InvokeComMethod to hDispatchDriver 49 OLE_VT_VOID
+    End_Procedure
+
+    Function ComShowPrintPageSetup Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 52 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComPrintOptions Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 51 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Adds a new record to the collection. Number of RecotdItems (as columns count) added to new record.
+    Function ComAddRecord Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 53 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Insets a new record to the collection. Number of RecotdItems (as columns count) added to new record.
+    Function ComInsertRecord Integer llIndex Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llIndex
+        Get InvokeComMethod of hDispatchDriver 54 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Print Preview Options.
+    { MethodType=Property DesignTime=False }
+    Function ComPrintPreviewOptions Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 56 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Remove record, it's row and children if such exists. This method does not change Collapsed/Expanded Groups state.
+    Function ComRemoveRecordEx Variant llRecord Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Get InvokeComMethod of hDispatchDriver 58 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // Remove row, record behaind it and children if such exists. This method does not change Collapsed/Expanded Groups state.
+    Function ComRemoveRowEx Variant llRow Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRow
+        Get InvokeComMethod of hDispatchDriver 59 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComCanCut Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 120 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComCanCopy Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 121 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComCanPaste Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 122 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComCut
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 125 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComCopy
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 126 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComPaste
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 127 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComPopulatedRecordsCount Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 130 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComEditMode Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 131 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComEnableDragDrop String llClipboardString OLEXTPReportDragDrop lldragDrop Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llClipboardString
+        Send DefineParam to hDispatchDriver OLE_VT_I4 lldragDrop
+        Get InvokeComMethod of hDispatchDriver 132 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComCreateRecordsFromDropArray Variant llByteArray Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_VARIANT llByteArray
+        Get InvokeComMethod of hDispatchDriver 133 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComCreateRecords Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 134 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComDragRecords Variant llRecords Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecords
+        Get InvokeComMethod of hDispatchDriver 135 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComSetFieldChooserHandle OLE_HANDLE llhWnd
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llhWnd
+        Send InvokeComMethod to hDispatchDriver 136 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComInplaceEditHwnd Returns OLE_HANDLE
+        Handle hDispatchDriver
+        OLE_HANDLE retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 137 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComSetScrollBars OLE_HANDLE llhScrollBar OLE_HANDLE llvScrollBar
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llhScrollBar
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llvScrollBar
+        Send InvokeComMethod to hDispatchDriver 140 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComAboutBox
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver -552 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderRecords Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 60 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterRecords Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 61 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComHeaderRows Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 65 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComFooterRows Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 66 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComSetWatermarkBitmap Integer llHandle Integer llTransparency Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llHandle
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llTransparency
+        Get InvokeComMethod of hDispatchDriver 72 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComSetWatermarkBitmapFromFile String llPath Integer llTransparency Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llPath
+        Send DefineParam to hDispatchDriver OLE_VT_I4 llTransparency
+        Get InvokeComMethod of hDispatchDriver 73 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComAddRecordEx Variant llRecord
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Send InvokeComMethod to hDispatchDriver 74 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComAddRecordEx2 Variant llRecord Variant llpParentRecord
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llpParentRecord
+        Send InvokeComMethod to hDispatchDriver 75 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComAddRecordEx3 Variant llRecord Variant llpParentRecord Variant llChildIndex
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 3
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llpParentRecord
+        Send DefineParam to hDispatchDriver OLE_VT_VARIANT llChildIndex
+        Send InvokeComMethod to hDispatchDriver 76 OLE_VT_VOID
+    End_Procedure
+
+    Procedure ComUpdateRecord Variant llRecord Boolean llUpdateChildren
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_DISPATCH llRecord
+        Send DefineParam to hDispatchDriver OLE_VT_BOOL llUpdateChildren
+        Send InvokeComMethod to hDispatchDriver 77 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CLSID: {0905FC17-F631-4608-A4E7-EF00A9648B53}
+// Event interface for ReportControl Control
+Class cCJ_DReportControlEvents is a Mixin
+
+    { MethodType=Event }
+    Procedure OnComColumnClick Variant llColumn
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComRowRClick Variant llRow Variant llItem
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComRowDblClick Variant llRow Variant llItem
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComSelectionChanged
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComKeyDown Short ByRef llKeyCode Short llShift
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComKeyUp Short ByRef llKeyCode Short llShift
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComItemCheck Variant llRow Variant llItem
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComBeforeDrawRow Variant llRow Variant llItem Variant llMetrics
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComColumnOrderChanged
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComSortOrderChanged
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComValueChanged Variant llRow Variant llColumn Variant llItem
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComInplaceButtonDown Variant llButton
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComMouseMove Short llButton Short llShift Integer llx Integer lly
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComMouseDown Short llButton Short llShift Integer llx Integer lly
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComMouseUp Short llButton Short llShift Integer llx Integer lly
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComDrawItem Variant llRow Variant llColumn Variant llItem OLE_HANDLE llhDC Integer llleft Integer lltop Integer llright Integer llbottom Boolean ByRef llDoDefault
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComMeasureRow Variant llRow OLE_HANDLE llhDC Integer llWidth Integer ByRef llHeight
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComRowExpanded Variant llRow
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComRequestEdit Variant llRow Variant llColumn Variant llItem Boolean ByRef llCancel
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComBeforeCopyToText Variant llRecord String ByRef llstrText Variant llCancelOperation
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComBeforePasteFromText Variant llRecord String llstrText Variant llCancelOperation
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComBeforePaste Variant llRecord Variant llCancelOperation
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComValueChanging Variant llRow Variant llColumn Variant llItem Variant llNewValue Boolean ByRef llCancel
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComPreviewKeyDown Short ByRef llKeyCode Short llShift Boolean ByRef llCancel
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComBeginDrag Variant llRecords
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComEditCanceled Variant llRow Variant llColumn Variant llItem
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComHyperlinkClick Variant llRow Variant llItem Integer llHyperlinkIndex
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComDrawPreviewItem Variant llRow Variant llItem OLE_HANDLE llhDC Integer llleft Integer lltop Integer llright Integer llbottom Boolean ByRef llDoDefault
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComConstraintSelecting Variant llRow Variant llColumn Variant llItem Variant llConstraint
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComOLEDragOver Variant llData Integer ByRef llEffect Short llButton Short llShift OLE_XPOS_PIXELS llx OLE_YPOS_PIXELS lly Short llstate
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComOLEDragDrop Variant llData Integer ByRef llEffect Short llButton Short llShift OLE_XPOS_PIXELS llx OLE_YPOS_PIXELS lly
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComGetToolTipInfo Variant lltoolTipInfo
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComRecordsDropped Variant llTargetRecord Variant llRecords Boolean llAbove
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComDropRecordsEx Variant llTargetRecord Variant llRecords Boolean llAbove
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComFocusChanging Variant llNewRow Variant llNewColumn Variant llNewItem Boolean ByRef llCancel
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComDragDropCompleted Variant llRecords Integer lldropEffect
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComBeginEdit Variant llRow Variant llColumn Variant llItem
+    End_Procedure
+
+    { MethodType=Event }
+    Procedure OnComInplaceEditChanging Variant llRow Variant llColumn Variant llItem String ByRef llNewValue Boolean ByRef llCancel
+    End_Procedure
+
+    { Visibility=Private }
+    Procedure RegisterComEvents
+        Send RegisterComEvent 1 msg_OnComColumnClick
+        Send RegisterComEvent 2 msg_OnComRowRClick
+        Send RegisterComEvent 3 msg_OnComRowDblClick
+        Send RegisterComEvent 4 msg_OnComSelectionChanged
+        Send RegisterComEvent -602 msg_OnComKeyDown
+        Send RegisterComEvent -604 msg_OnComKeyUp
+        Send RegisterComEvent 5 msg_OnComItemCheck
+        Send RegisterComEvent 6 msg_OnComBeforeDrawRow
+        Send RegisterComEvent 7 msg_OnComColumnOrderChanged
+        Send RegisterComEvent 8 msg_OnComSortOrderChanged
+        Send RegisterComEvent 9 msg_OnComValueChanged
+        Send RegisterComEvent 10 msg_OnComInplaceButtonDown
+        Send RegisterComEvent -606 msg_OnComMouseMove
+        Send RegisterComEvent -605 msg_OnComMouseDown
+        Send RegisterComEvent -607 msg_OnComMouseUp
+        Send RegisterComEvent 11 msg_OnComDrawItem
+        Send RegisterComEvent 12 msg_OnComMeasureRow
+        Send RegisterComEvent 13 msg_OnComRowExpanded
+        Send RegisterComEvent 14 msg_OnComRequestEdit
+        Send RegisterComEvent 15 msg_OnComBeforeCopyToText
+        Send RegisterComEvent 16 msg_OnComBeforePasteFromText
+        Send RegisterComEvent 17 msg_OnComBeforePaste
+        Send RegisterComEvent 18 msg_OnComValueChanging
+        Send RegisterComEvent 19 msg_OnComPreviewKeyDown
+        Send RegisterComEvent 20 msg_OnComBeginDrag
+        Send RegisterComEvent 22 msg_OnComEditCanceled
+        Send RegisterComEvent 23 msg_OnComHyperlinkClick
+        Send RegisterComEvent 24 msg_OnComDrawPreviewItem
+        Send RegisterComEvent 25 msg_OnComConstraintSelecting
+        Send RegisterComEvent 300 msg_OnComOLEDragOver
+        Send RegisterComEvent 301 msg_OnComOLEDragDrop
+        Send RegisterComEvent 26 msg_OnComGetToolTipInfo
+        Send RegisterComEvent 27 msg_OnComRecordsDropped
+        Send RegisterComEvent 28 msg_OnComDropRecordsEx
+        Send RegisterComEvent 29 msg_OnComFocusChanging
+        Send RegisterComEvent 30 msg_OnComDragDropCompleted
+        Send RegisterComEvent 31 msg_OnComBeginEdit
+        Send RegisterComEvent 32 msg_OnComInplaceEditChanging
+    End_Procedure
+End_Class
+
+// CoClass
+// ProgID: Codejock.ReportControl.11.2.1
+// CLSID: {EB588289-EC95-477C-8F55-A1AD47476388}
+// Report Control
+{ CLSID="{EB588289-EC95-477C-8F55-A1AD47476388}" }
+Class cCJReportControl is a cComActiveXControl
+    Import_Class_Protocol cCJ_DReportControl
+    Import_Class_Protocol cCJ_DReportControlEvents
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psProgID to "{EB588289-EC95-477C-8F55-A1AD47476388}"
+        Set psEventId to "{0905FC17-F631-4608-A4E7-EF00A9648B53}"
+        Set psLicenseKey to ("Report Control Copyright (c) 2003-2007 Codejock Software"+ Character(13)+ Character(10)+;
+                             "PRODUCT-ID: Codejock.ReportControl.ActiveX.v11.2"+ Character(13)+ Character(10)+;
+                             "VALIDATE-CODE: HIF-MPA-DRR-OPF")
+        Set peAutoCreate to acDeferredAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {92A5A5D7-39A7-4D1E-868A-589E7EBF158C}
+// Dispatch interface for FieldChooser Control
+Class cCJ_DFieldChooser is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComHWnd Returns OLE_HANDLE
+        OLE_HANDLE retVal
+        Get ComProperty of (phDispatchDriver(Self)) -515 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComHWnd OLE_HANDLE value
+        Set ComProperty of (phDispatchDriver(Self)) -515 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComEnabled Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) -514 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComEnabled Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) -514 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComBorderStyle Returns Short
+        Short retVal
+        Get ComProperty of (phDispatchDriver(Self)) -504 OLE_VT_I2 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBorderStyle Short value
+        Set ComProperty of (phDispatchDriver(Self)) -504 OLE_VT_I2 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComAppearance Returns Short
+        Short retVal
+        Get ComProperty of (phDispatchDriver(Self)) -520 OLE_VT_I2 to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComAppearance Short value
+        Set ComProperty of (phDispatchDriver(Self)) -520 OLE_VT_I2 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSortAscending Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComSortAscending Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to value
+    End_Procedure
+
+    Procedure ComAboutBox
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver -552 OLE_VT_VOID
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComSelectedItem Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 10 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CLSID: {EC40185C-2BD3-4361-8F99-F105C289E03A}
+// Event interface for FieldChooser Control
+Class cCJ_DFieldChooserEvents is a Mixin
+
+    { MethodType=Event }
+    Procedure OnComSelectionChanged
+    End_Procedure
+
+    { Visibility=Private }
+    Procedure RegisterComEvents
+        Send RegisterComEvent 1 msg_OnComSelectionChanged
+    End_Procedure
+End_Class
+
+// CoClass
+// ProgID: Codejock.FieldChooser.11.2.1
+// CLSID: {1F692233-8EF9-42A0-B061-4AD12FAE57F3}
+// FieldChooser Control
+{ CLSID="{1F692233-8EF9-42A0-B061-4AD12FAE57F3}" }
+Class cCJFieldChooser is a cComActiveXControl
+    Import_Class_Protocol cCJ_DFieldChooser
+    Import_Class_Protocol cCJ_DFieldChooserEvents
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psProgID to "{1F692233-8EF9-42A0-B061-4AD12FAE57F3}"
+        Set psEventId to "{EC40185C-2BD3-4361-8F99-F105C289E03A}"
+        Set peAutoCreate to acDeferredAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {AFD6917E-EC88-40A4-9F1A-3CF2CA3F5B59}
+// Global Settings
+Class cCJIReportControlGlobalSettings is a Mixin
+
+    { MethodType=Property DesignTime=False }
+    Function ComResourceFile Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 100 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComResourceFile String value
+        Set ComProperty of (phDispatchDriver(Self)) 100 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComLicense Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 101 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComLicense String value
+        Set ComProperty of (phDispatchDriver(Self)) 101 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTitle Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 102 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTitle String value
+        Set ComProperty of (phDispatchDriver(Self)) 102 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComUseResourceFileLocale Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComUseResourceFileLocale Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComColorManager Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 103 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComVersion Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 104 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComUnicode Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 105 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComOcxPath Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 106 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComCreatePropExchange Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 107 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComUseReportCustomHeap Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    Function ComUseBatchAllocation Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    Procedure ComFreeBatchExtraData
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 4 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CoClass
+// ProgID: Codejock.ReportControlGlobalSettings.11.2.1
+// CLSID: {401DB512-D448-4E2A-ADAC-41C4ECCCEFCF}
+// ReportControl Global Settings
+Class cCJReportControlGlobalSettings is a cComAutomationObject
+    Import_Class_Protocol cCJIReportControlGlobalSettings
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psProgID to "{401DB512-D448-4E2A-ADAC-41C4ECCCEFCF}"
+        Set peAutoCreate to acNoAutoCreate
+    End_Procedure
+End_Class
+
+// CLSID: {D0CD337C-ED8F-4CE1-9E36-403876BEE557}
+Class cCJXtremePrinterInfo is a cComAutomationObject
+
+    { MethodType=Property DesignTime=False }
+    Function ComDeviceName Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComDriverName Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Function ComPortName Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+End_Class
+
+// CLSID: {84D69D54-EA11-4978-8DA5-C1E02798B1F3}
+Class cCJXtremePrintPreviewOptions is a cComAutomationObject
+
+    { MethodType=Property DesignTime=False }
+    Function ComTitle Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTitle String value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to value
+    End_Procedure
+End_Class
+
+// CLSID: {8CABF54D-E75C-4A50-A908-F36D35F098D2}
+Class cCJPrintPageHeaderFooter is a cComAutomationObject
+
+    { MethodType=Property DesignTime=False }
+    Function ComFont Returns Variant
+        Variant retVal
+        Get ComProperty of (phDispatchDriver(Self)) -512 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFont Variant value
+        Set ComProperty of (phDispatchDriver(Self)) -512 OLE_VT_DISPATCH to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComFormatString Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComFormatString String value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTextLeft Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTextLeft String value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTextCenter Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTextCenter String value
+        Set ComProperty of (phDispatchDriver(Self)) 3 OLE_VT_BSTR to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComTextRight Returns String
+        String retVal
+        Get ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComTextRight String value
+        Set ComProperty of (phDispatchDriver(Self)) 4 OLE_VT_BSTR to value
+    End_Procedure
+
+    Procedure ComClear
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 50 OLE_VT_VOID
+    End_Procedure
+End_Class
+
+// CLSID: {C387B651-CAFC-4285-AF96-DCAF75759C25}
+Class cCJReportPrintOptions is a cComAutomationObject
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Function ComMarginLeft Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 201 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMarginLeft Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 201 OLE_VT_I4 to value
+    End_Procedure
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Function ComMarginRight Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 202 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMarginRight Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 202 OLE_VT_I4 to value
+    End_Procedure
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Function ComMarginTop Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 203 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMarginTop Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 203 OLE_VT_I4 to value
+    End_Procedure
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Function ComMarginBottom Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 204 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // Mesurement units are mm*100 or inches*1000. See MarginsMeasureMetrics property.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComMarginBottom Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 204 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComBlackWhitePrinting Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 205 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBlackWhitePrinting Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 205 OLE_VT_BOOL to value
+    End_Procedure
+
+    // The darknest gray color. Value from 255 to 0.
+    { MethodType=Property DesignTime=False }
+    Function ComBlackWhiteContrast Returns Integer
+        Integer retVal
+        Get ComProperty of (phDispatchDriver(Self)) 206 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // The darknest gray color. Value from 255 to 0.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComBlackWhiteContrast Integer value
+        Set ComProperty of (phDispatchDriver(Self)) 206 OLE_VT_I4 to value
+    End_Procedure
+
+    { MethodType=Property DesignTime=False }
+    Function ComLandscape Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 207 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComLandscape Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 207 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Indicates whether the control should repeat header row(s) on every page.
+    { MethodType=Property DesignTime=False }
+    Function ComRepeatHeaderRows Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // Indicates whether the control should repeat header row(s) on every page.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComRepeatHeaderRows Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 1 OLE_VT_BOOL to value
+    End_Procedure
+
+    // Indicates whether the control should repeat footer row(s) on every page.
+    { MethodType=Property DesignTime=False }
+    Function ComRepeatFooterRows Returns Boolean
+        Boolean retVal
+        Get ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // Indicates whether the control should repeat footer row(s) on every page.
+    { MethodType=Property DesignTime=False }
+    Procedure Set ComRepeatFooterRows Boolean value
+        Set ComProperty of (phDispatchDriver(Self)) 2 OLE_VT_BOOL to value
+    End_Procedure
+
+    // This property is True when measurement system of Margins properties is Metrics and False if measurement system is U.S. Measurement system defined in the system regional settings.
+    { MethodType=Property DesignTime=False }
+    Function ComMarginsMeasureMetrics Returns Boolean
+        Handle hDispatchDriver
+        Boolean retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 250 OLE_VT_BOOL to retVal
+        Function_Return retVal
+    End_Function
+
+    // Page Header settings
+    { MethodType=Property DesignTime=False }
+    Function ComHeader Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 251 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Page Footer settings
+    { MethodType=Property DesignTime=False }
+    Function ComFooter Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 252 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // Provide information about current printer which is a system default or selected by user in ShowPrintPageSetup method call.
+    { MethodType=Property DesignTime=False }
+    Function ComPrinterInfo Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 253 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+End_Class

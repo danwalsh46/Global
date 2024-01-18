@@ -1,0 +1,1067 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDataDictionary
+//* Package Name: cGlblDataDictionary.pkg
+//*
+//***************************************************************************
+
+Use Datadict.pkg
+
+// the use of this class assumes the following objects
+// & methods to exist within the programs in which
+// they are used
+Register_Function piUser Returns Integer
+Register_Function psUser Returns String
+
+// the following objects are created when using system logs
+Register_Object oWatchedFieldsArray
+Register_Object oRecordValuesArray
+Register_Object oSystemLogArray
+
+{OverrideProperty=pbUseDDSQLFilters Category="SQL Filters"}
+{OverrideProperty=pbApplyGlobalSQLFilters Category="SQL Filters"}
+{OverrideProperty=psSQLFilter Category="SQL Filters"}
+Class cGlblDataDictionary is a DataDictionary
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+//        // used to allow a null parent record
+//        Property Boolean pbAllowNullRelateState
+//        // used by Request_Find, Find_By_Recnum, Request_Assign
+//        Property Integer piFoundHookMsg
+        // the Syslog file number
+        // usage: set pilogfile to Syslog.File_number
+        // this allows different applications and/or
+        // files to have different file names & numbers
+        Property Integer piLogfile         0
+        // required log fields
+        // log file
+        Property Integer piLogfield1       1
+        // log date
+        Property Integer piLogfield2       2
+        // log time
+        Property Integer piLogfield3       3
+        // record key1
+        Property Integer piLogfield4       4
+        // record key2
+        Property Integer piLogfield5       5
+        // record key3
+        Property Integer piLogfield6       6
+        // user
+        Property Integer piLogfield7       7
+        // log type
+        Property Integer piLogfield8       8
+        // description
+        Property Integer piLogfield9       9
+        // when TRUE this property initiates
+        // System Log functionality
+        Property Integer pbUsesSystemLog   False
+        // when TRUE logging is only active if
+        // changes are made locally
+        Property Integer pbLocalOriginOnly False
+        // when TRUE logging does not occur
+        // on the creation of the record
+        Property Integer pbNoLogOnCreate   False
+        // these hold the field numbers of key fields
+        // stored as part of the Syslog record
+        Property Integer piKey1
+        Property Integer piKey2
+        Property Integer piKey3
+        // the values for the key fields
+        Property String  psKey1
+        Property String  psKey2
+        Property String  psKey3
+        // Syslog records initiated from the DD must
+        // be one of these three types
+        property string  psLogType "U"
+        // B = Business Process error
+        // C = Create
+        // D = Delete
+        // E = Event
+        // F = Failure
+        // U = Update
+        // V = Validate
+        //
+        // the following property is to store the name of
+        // a currently running BPO to refine error reporting
+        Property String  psProcess
+        //
+        Set Cascade_Delete_State to False
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+    Function EmailAddressValidation Integer iField String sEmailAddress Returns Integer
+        #IFDEF Is$WebApp
+        #ELSE
+        If (OPERATION_ORIGIN = Self and sEmailAddress <> "") Begin
+            Boolean bValid
+            Integer iPos iLen iCount iCheck
+            String  sLocal sHost sValid sCheck
+            //
+            Move (Pos("@",sEmailAddress,1)) to iPos
+            // if no @, error
+            If (not(iPos)) Begin
+                Send UserError "Address must contain an '@' symbol" "Invalid Email Address"
+                Function_Return 1
+            End
+            // separate address into name & host
+            Move (Trim(sEmailAddress))                     to sEmailAddress
+            Move (Length(sEmailAddress))                   to iLen
+            Move (Mid(sEmailAddress,(iPos-1),1))           to sLocal
+            Move (Mid(sEmailAddress,(iLen-iPos),(iPos+1))) to sHost
+            // one address only
+            Move (Pos("@",sHost,1)) to iPos
+            If (iPos) Begin
+                Send UserError "One email address only" "Invalid Email Address"
+                Function_Return 1
+            End
+            // check for double dots
+            Move (Pos("..",sEmailAddress,1)) to iPos
+            If (iPos) Begin
+                Send UserError "Address contains a '..' combination" "Invalid Email Address"
+                Function_Return 1
+            End
+            // if address has an '@', if cannot have a '.' immediately before or after it
+            If (sEmailAddress contains ".@" or sEmailAddress contains "@.") Begin
+                Send UserError "Address contains either a '.@' or '@.' combination" "Invalid Email Address"
+                Function_Return 1
+            End
+            // sLocal cannot begin with '.'
+            If (Left(sLocal,1) = ".") Begin
+                Send UserError "Address begins with a '.' character" "Invalid Email Address"
+                Function_Return 1
+            End
+            // sHost cannot end with '.'
+            If (Right(sHost,1) = ".") Begin
+                Send UserError "Address ends with a '.' character" "Invalid Email Address"
+                Function_Return 1
+            End
+            // sHost must have a dot something
+            Move (Pos(".",sHost,1)) to iPos
+            If (not(iPos)) Begin
+                Send UserError "Invalid domain name" "Invalid Email Address"
+                Function_Return 1
+            End
+            // these are the valid characters for an email address
+            Move "0123456789-_abcdefghijklmnopqrstuvwxyz" to sValid
+            Move (sValid + "ABCDEFGHIJKLMNOPQRSTUVWXYZ.") to sValid
+            // check sLocal
+            Move (Length(sLocal)) to iLen
+            Move 1                to iCheck
+            //
+            For iCount from 1 to iLen
+                Move (Mid(sLocal,1,iCheck))   to sCheck
+                Move (sValid contains sCheck) to bValid
+                If (not(bValid)) Begin
+                    Send UserError (sCheck * "is an invalid character") "Invalid Email Address"
+                    Function_Return 1
+                End
+                Increment iCheck
+            Loop
+            // check sHost
+            Move (Length(sHost)) to iLen
+            Move 1               to iCheck
+            //
+            For iCount from 1 to iLen
+                Move (Mid(sHost,1,iCheck))    to sCheck
+                Move (sValid contains sCheck) to bValid
+                If (not(bValid)) Begin
+                    Send UserError (sCheck * "is an invalid character") "Invalid Email Address"
+                    Function_Return 1
+                End
+                Increment iCheck
+            Loop
+        End // If (OPERATION_ORIGIN = Self and sEmailAddress <> "") Begin
+        #ENDIF
+    End_Function
+
+    Function NameValidation Integer iField String sName Returns Integer
+        Integer iLen
+        String  sValue
+        //
+        Move (Left(sName,1)) to sValue
+        If (sValue = '"' or sValue = ' ') Begin
+            Move (Length(sName))           to iLen
+            Move (Right(sName,(iLen-1)))   to sName
+            Set Field_Changed_Value iField to sName
+        End
+        If (Lowercase(sName) = sName) Begin
+            Move (Length(sName))           to iLen
+            Move (Left(sName,1))           to sValue
+            Move (Right(sName,(iLen-1)))   to sName
+            Set Field_Changed_Value iField to (Uppercase(sValue) + sName)
+        End
+    End_Function
+
+    Function PhoneValidation integer iField string sPhone Returns Integer
+        integer iFile iLength
+        string  sFPhone sAc sEx sLo
+        //
+        send Refind_Records
+        //
+        get Main_File                to iFile
+        Get_Field_Value iFile iField to sFPhone
+        Move (trim(sFPhone))         to sFPhone
+        Move (trim(sPhone))          to sPhone
+        If (sPhone = sFPhone) Begin
+            Function_Return
+        End
+        //
+        Move (replaces("-",sPhone,"")) to sPhone
+        Move (Replaces("(",sPhone,"")) to sPhone
+        Move (Replaces(")",sPhone,"")) to sPhone
+        Move (Replaces(".",sPhone,"")) to sPhone
+        Move (Replaces(" ",sPhone,"")) to sPhone
+        Move (length(sPhone))          to iLength
+        if (iLength <= 3) begin
+            set Field_Changed_Value iField to ""
+            function_return
+        end
+        //
+        //if (iLength = 7) begin
+        //    move ("910" + sPhone) to sPhone
+        //    move 10               to iLength
+        //end
+        //
+        if (iLength <> 10) begin
+            Send UserError "Phone Number must be 10 numbers" "Validation Error"
+            function_return 1
+        end
+        //
+        move (mid(sPhone,3,1))             to sAc
+        move (mid(sPhone,3,4))             to sEx
+        move (mid(sPhone,4,7))             to sLo
+        move (sAc + "-" + sEx + "-" + sLo) to sPhone
+        set Field_Changed_Value iField     to sPhone
+    End_Function   // PhoneValidation
+
+    Function TimePickerValidation Integer iField String sTime Returns Integer
+//        If (OPERATION_MODE = MODE_WAITING) Begin
+        Integer iLength iRetval
+        String  sHr sMin
+        //
+        Move (Length(sTime)) to iLength
+        If (iLength <> 6) Begin
+            Repeat
+                Move ("0" + sTime) to sTime
+            Until (Length(sTime)=6)
+        End
+        //
+        Move (Mid(sTime,2,1)) to sHr
+        Move (Mid(sTime,2,3)) to sMin
+        //
+        If (not("00|15|30|45" contains sMin)) Begin
+            Send UserError "Minute value must be 00, 15, 30 or 45" "Validation Error"
+            Move 1 to iRetval
+        End
+        //
+        Function_Return iRetval
+//        End
+    End_Function
+
+    Function CalculateAge DateTime dtDOB DateTime dtToday Returns Integer
+        Integer BMonth DMonth BYear DYear BDay DDay BaseAge
+        //
+        Move (DateGetMonth(dtDOB))   to BMonth
+        Move (DateGetMonth(dtToday)) to DMonth
+        Move (DateGetYear(dtDOB))    to BYear
+        Move (DateGetYear(dtToday))  to DYear
+        Move (DateGetDay(dtDOB))     to BDay
+        Move (DateGetDay(dtToday))   to DDay
+        Move (DYear-BYear)           to BaseAge
+        //
+        If (BMonth > DMonth) Begin
+            Decrement BaseAge
+        End
+        If ((BMonth = DMonth) and ( BDay > DDay)) Begin
+            Decrement BaseAge
+        End
+        //
+        Function_Return BaseAge
+    End_Function
+
+    Procedure Creating
+//        Integer iSrcFile
+//        //
+//        If (pbAllowNullRelateState(Self) and Current_Object <> OPERATION_ORIGIN) Begin
+//            Get Auto_Increment_Source_File to iSrcFile
+//            Set Auto_Increment_Source_File to 0
+//            Forward Send Creating
+//            Set Auto_Increment_Source_File to iSrcFile
+//        End
+//        Else Begin
+        Forward Send Creating
+//        End
+        //
+        If (pbUsesSystemLog(Self)) Begin
+            Send DoResetSystemLogArray
+        End
+    End_Procedure
+
+    Procedure Backout
+        Forward Send Backout
+        //
+        If (pbUsesSystemLog(Self)) Begin
+            Send DoResetSystemLogArray
+        End
+    End_Procedure
+
+    Procedure Update
+        Integer bCancel
+        //
+        Forward Send Update
+        //
+        If (pbUsesSystemLog(Self)) Begin
+            Move ((HasRecord(Self) = False and pbNoLogOnCreate(Self)) or (Operation_Origin <> Self and pbLocalOriginOnly(Self))) to bCancel
+            If bCancel ;
+                Break
+            If (HasRecord(Self)) Begin
+                Set psLogType to "U"
+            End
+            Else Begin
+                Set psLogType to "C"
+            End
+//            If (not(Current_Record(Self)) Set psLogType to "C"
+//            Else                           Set psLogType to "U"
+            Send DoLoadSystemLogArray
+        End
+    End_Procedure // Update
+
+    Procedure Save_Main_File
+//        If (not(pbAllowNullRelateState(Self) and OPERATION_ORIGIN <> Self)) Begin
+        Forward Send Save_Main_File
+        //
+        If (pbUsesSystemLog(Self)) Begin 
+            Send DoProcessSystemLogArray
+        End
+//        End
+    End_Procedure
+
+    Procedure Delete_Main_File
+        Forward Send Delete_Main_File
+        If (pbUsesSystemLog(Self)) Begin
+            Set psLogType to "D"
+            Send DoLoadSystemLogArray
+            Send DoProcessSystemLogArray
+        End
+    End_Procedure
+
+    Procedure DoCreateSystemLogArrays
+        //
+        Object oWatchedFieldsArray is an Array
+            // items are the field numbers
+        End_Object // oWatchedFieldsArray
+        //
+        Object oRecordValuesArray is an Array
+            // the "backout" values of the watched fields
+        End_Object // oRecordValuesArray
+        //
+        Object oSystemLogArray is an Array
+            // items in this array are fields that are watched for changes
+            // and have changed, each item is a string with the field name
+            // original value and new value
+        End_Object // oSystemLogArray
+        //
+    End_Procedure
+    //
+    Procedure DoAddArrayValue Integer hArray String sValue
+        Integer iItem
+        Get Item_Count of hArray            to iItem
+        Set Value      of hArray item iItem to sValue
+    End_Procedure
+
+    Procedure DoInitializeWatchedFields
+        // this procedure is intended for augmentation
+        // at the File subclass level in the following manner
+        //integer hArray
+        //send DoCreateSystemLogArrays
+        //move oWatchedFieldsArray to hArray
+        //// Load the watched fields array where iField is
+        //// the field number from FILE.DEF
+        //send DoAddArrayValue hArray iField0
+        //send DoAddArrayValue hArray iField1
+        //send DoAddArrayValue hArray iFieldEtc
+    End_Procedure
+
+    Procedure DoLoadSystemLogArray
+        Integer hWatchedArray hValueArray hLogArray
+        Integer iMainFile iKey1 iKey2 iKey3
+        Integer iCount iItem iFile iField iValue
+        String  sLogType sWasValue sIsValue sFieldName
+        //
+        Get Main_File                   to iMainFile
+        Get piKey1                      to iKey1
+        Get piKey2                      to iKey2
+        Get piKey3                      to iKey3
+        Get psLogType                   to sLogType
+        Move oRecordValuesArray         to hValueArray
+        Move oWatchedFieldsArray        to hWatchedArray
+        Move oSystemLogArray            to hLogArray
+        Get Item_Count of hWatchedArray to iCount
+        //
+        If (sLogType <> "D") Begin
+            If (iKey1) Begin
+                // check for a related file
+                Get_Attribute DF_FIELD_RELATED_FILE of iMainFile iKey1 to iFile
+                If (iFile) Begin
+                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey1 to iField
+                End
+//                If (iFile = 0) Begin
+//                End
+//                // if related, use the related file value
+//                If (iFile) Begin
+//                    Get Field_Related_Field iValue to iField
+////                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey1 to iField
+//                End
+                // otherwise check for soft relate or use the local value
+                Else Begin
+                    Get Field_Related_File iValue to iFile
+                    If (iFile) Begin
+                        Get Field_Related_Field iValue to iField
+                    End
+                    Else Begin
+                        Move iMainFile to iFile
+                        Move iKey1     to iField
+                    End
+                End
+                // get the value and set the string property
+                Get_Field_Value iFile iField to sIsValue
+                Set psKey1 to sIsValue
+            End
+            If (iKey2) Begin
+                // check for a related file
+                Get_Attribute DF_FIELD_RELATED_FILE of iMainFile iKey2 to iFile
+                If (iFile) Begin
+                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey2 to iField
+                End
+//                If (iFile = 0) Begin
+//                End
+//                // if related, use the related file value
+//                If (iFile) Begin
+//                    Get Field_Related_Field iValue to iField
+////                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey2 to iField
+//                End
+                // otherwise check for soft relate or use the local value
+                Else Begin
+                    Get Field_Related_File iValue to iFile
+                    If (iFile) Begin
+                        Get Field_Related_Field iValue to iField
+                    End
+                    Else Begin
+                        Move iMainFile to iFile
+                        Move iKey2     to iField
+                    End
+                End
+                // get the value and set the string property
+                Get_Field_Value iFile iField to sIsValue
+                Set psKey2 to sIsValue
+//
+//
+//                // check for a related file
+//                Get Field_Related_File iValue to iFile
+////                Get_Attribute DF_FIELD_RELATED_FILE      of iMainFile iKey2 to iFile
+//                // if related, use the related file value
+//                If (iFile) Begin
+//                    Get Field_Related_Field iValue to iField
+////                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey2 to iField
+//                End
+//                // otherwise use the local value
+//                Else Begin
+//                    Move iMainFile to iFile
+//                    Move iKey2     to iField
+//                End // else
+//                // get the value and set the string property
+//                Get_Field_Value iFile iField to sIsValue
+//                Set psKey2 to sIsValue
+            End
+            If (iKey3) Begin
+                // check for a related file
+                Get_Attribute DF_FIELD_RELATED_FILE of iMainFile iKey3 to iFile
+                If (iFile) Begin
+                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey3 to iField
+                End
+//                If (iFile = 0) Begin
+//                End
+//                // if related, use the related file value
+//                If (iFile) Begin
+//                    Get Field_Related_Field iValue to iField
+////                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey3 to iField
+//                End
+                // otherwise check for soft relate or use the local value
+                Else Begin
+                    Get Field_Related_File iValue to iFile
+                    If (iFile) Begin
+                        Get Field_Related_Field iValue to iField
+                    End
+                    Else Begin
+                        Move iMainFile to iFile
+                        Move iKey3     to iField
+                    End
+                End
+                // get the value and set the string property
+                Get_Field_Value iFile iField to sIsValue
+                Set psKey3 to sIsValue
+//
+//
+//                // check for a related file
+//                Get Field_Related_File iValue to iFile
+////                Get_Attribute DF_FIELD_RELATED_FILE      of iMainFile iKey3 to iFile
+//                // if related, use the related file value
+//                If (iFile) Begin
+//                    Get Field_Related_Field iValue to iField
+////                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iKey3 to iField
+//                End
+//                // otherwise use the local value
+//                Else Begin
+//                    Move iMainFile to iFile
+//                    Move iKey3     to iField
+//                End // else
+//                // get the value and set the string property
+//                Get_Field_Value iFile iField to sIsValue
+//                Set psKey3 to sIsValue
+            End
+        End // if (sLogType <> "D")
+        //
+        For iItem from 0 to (iCount - 1)
+            Get Value of hWatchedArray item iItem to iValue
+            // if we are creating there are no old values
+            // against which to compare
+            If (sLogType <> "C") Begin
+                Get Value of hValueArray item iItem to sWasValue
+            End
+            // if we are deleting there are no new values
+            If (sLogType <> "D") Begin
+                // check for a related file
+//                Get Field_Related_File iValue to iFile
+                Get_Attribute DF_FIELD_RELATED_FILE of iMainFile iValue to iFile
+                // if related, use the related file value
+                If (iFile) Begin
+                    Get_Attribute DF_FIELD_RELATED_FIELD of iMainFile iValue to iField
+//                    Get Field_Related_Field iValue to iField
+                End
+                // otherwise check for soft-relate or use the local value
+                Else Begin
+                    Get Field_Related_File iValue to iFile
+                    If (iFile) Begin
+                        Get Field_Related_Field iValue to iField
+                    End
+                    Else Begin
+                        Move iMainFile to iFile
+                        Move iValue    to iField
+                    End
+                End
+                // get the value and set the string property
+                Get_Field_Value iFile iField to sIsValue
+            End // if (sLogType <> "D")
+            // either way, this happens
+            If (sIsValue <> sWasValue) Begin
+                Get_Attribute DF_FIELD_NAME of iMainFile iValue to sFieldName
+                Move (uppercase(sFieldName))                    to sFieldName
+                Send DoAddArrayValue hLogArray ;
+                    (trim(sFieldName) * "FROM" * trim(sWasValue) * "TO" * trim(sIsValue))
+            End
+        Loop
+    End_Procedure
+
+    Procedure DoResetSystemLogArray
+        Integer hWatchedArray hValueArray iCount iItem iFile iField
+        String  sValue
+        //
+        Get Main_File to iFile
+        // start fresh
+        Send Delete_Data of oSystemLogArray
+        //
+        If (piKey1(Self)) Begin
+            Get_Field_Value iFile (piKey1(Self)) to sValue
+            Set psKey1                           to sValue
+        End
+        If (piKey2(Self)) Begin
+            Get_Field_Value iFile (piKey2(Self)) to sValue
+            Set psKey2                           to sValue
+        End
+        If (piKey3(Self)) Begin
+            Get_Field_Value iFile (piKey3(Self)) to sValue
+            Set psKey3                           to sValue
+        End
+        //
+        Move oWatchedFieldsArray        to hWatchedArray
+        Get Item_Count of hWatchedArray to iCount
+        If (iCount <= 0) Begin
+            Procedure_Return
+        End
+        // store the record buffer values
+        // of the watched fields
+        Move oRecordValuesArray to hValueArray
+        Send Delete_Data of hValueArray
+        // watched fields
+        For iItem from 0 to (iCount - 1)
+            Get Value of hWatchedArray item iItem to iField
+            Get_Field_Value iFile iField          to sValue
+            Send DoAddArrayValue hValueArray sValue
+        Loop
+    End_Procedure
+
+    Function IsTimeString Integer iHr Integer iMin Integer iSec Returns String
+        String sHr sMin sSec
+        //
+        If (iHr  < 10) Begin
+            Move ("0" + String(iHr )) to sHr
+        End
+        Else Begin
+            Move               iHr    to sHr
+        End
+        If (iMin < 10) Begin
+            Move ("0" + String(iMin)) to sMin
+        End
+        Else Begin
+            Move               iMin   to sMin
+        End
+        If (iSec < 10) Begin
+            Move ("0" + String(iSec)) to sSec
+        End
+        Else Begin
+            Move               iSec   to sSec
+        End
+        Function_Return (sHr + ":" + sMin + ":" + sSec)
+    End_Function
+
+    Function IsFormattedTime String sTime Returns String
+        Function_Return ( (left (sTime,2))   +":" ;
+                         +(mid  (sTime,2,3)) +":" ;
+                         +(right(sTime,2)) )
+    End_Function
+
+    Function IsLogDescription Integer hArray Integer iCount Returns String
+        Integer iItem
+        String  sArrayValue sCRLF sDescription
+        //
+        Move (character(13) + character(10)) to sCRLF
+        //
+        For iItem from 0 to (iCount - 1)
+            Get String_Value of hArray item iItem           to sArrayValue
+            Move (sDescription + trim(sArrayValue) + sCRLF) to sDescription
+        Loop
+        //Move (sDescription + (Object_Label(Parent(Self))) + sCRLF) to sDescription  //-- RHS 5.13.09
+        Function_Return sDescription
+    End_Function
+
+    // DoProcessSystemLogArray:
+    procedure DoProcessSystemLogArray
+        integer hArray iFileNumber iCount iUser iHr iMin iSec iLogFile
+        string  sUser sLogType sDescription sTime sKey1 sKey2 sKey3 //sObject
+        date    dToday
+        //
+        get piLogFile to iLogFile
+        //
+        move oSystemLogArray     to hArray
+        get Item_Count of hArray to iCount
+        If (iCount <= 0) Begin
+            Procedure_Return
+        End
+        //
+        get Main_File to iFileNumber
+        //
+        get psUser of ghoApplication      to sUser
+        move (trim(sUser))                to sUser
+        get psLogType                     to sLogType
+        //Move (Object_Label(Parent(Self))) to sObject
+        //
+        If (sLogType = "D") Begin
+            move "RECORD DELETED"              to sDescription
+        End
+        Else Begin
+            get IsLogDescription hArray iCount to sDescription
+        End
+        //
+        sysdate dToday iHr iMin iSec
+        get IsTimeString iHr iMin iSec to sTime
+        //
+        get psKey1 to sKey1
+        get psKey2 to sKey2
+        get psKey3 to sKey3
+        //
+        clear iLogFile
+        set_field_value iLogFile (piLogField1(self)) to iFileNumber
+        set_field_value iLogFile (piLogField2(self)) to dToday
+        set_field_value iLogFile (piLogField3(self)) to sTime
+        set_field_value iLogFile (piLogField4(self)) to sKey1
+        set_field_value iLogFile (piLogField5(self)) to sKey2
+        set_field_value iLogFile (piLogField6(self)) to sKey3
+        set_field_value iLogFile (piLogField7(self)) to sUser
+        set_field_value iLogFile (piLogField8(self)) to sLogType
+        set_field_value iLogFile (piLogField9(self)) to sDescription
+        //Set_Field_Value iLogFile 18                  to sObject           // Syslog.Change_Object
+       saverecord iLogFile
+        //
+        send Delete_Data of oSystemLogArray
+        //
+    End_Procedure
+
+    // this procedure is sent by the error handling process within
+    // the DAW Business Processing Object
+    // this procedure name cannot be changed
+    procedure Log_Status string sDescription
+        integer iLogFile iFileNumber iHr iMin iSec iUser
+        string  sTime sUpId sUser sModuleName sProcess //sObject
+        date    dToday
+        //
+        // UP_ID is PPMS specific
+        get_environment "UP_ID"                              to sUpId
+        get piUser of ghoApplication                         to iUser
+        get psUser of ghoApplication                         to sUser
+        if (sUpId <> "") ;
+            move (trim(sUpId) * string(iUser) * trim(sUser)) to sUser
+        else ;
+            move (string(iUser) * trim(sUser))               to sUser
+        //
+        get psProgram of ghoApplication   to sModuleName
+        get psProcess                     to sProcess
+        //Move (Object_Label(Parent(Self))) to sObject
+        //
+        get piLogFile to iLogFile
+        get Main_File to iFileNumber
+        //
+        sysdate dToday iHr iMin iSec
+        get IsTimeString iHr iMin iSec to sTime
+        //
+        clear iLogFile
+        reread
+        set_field_value iLogFile (piLogField1(self)) to iFileNumber
+        set_field_value iLogFile (piLogField2(self)) to dToday
+        set_field_value iLogFile (piLogField3(self)) to sTime
+        set_field_value iLogFile (piLogField4(self)) to sModuleName
+        set_field_value iLogFile (piLogField5(self)) to sProcess
+        set_field_value iLogFile (piLogField7(self)) to sUser
+        set_field_value iLogFile (piLogField8(self)) to "B"
+        set_field_value iLogFile (piLogField9(self)) to sDescription
+        //Set_Field_Value iLogFile 18                  to sObject           // Syslog.Change_Object
+        saverecord iLogFile
+        unlock
+    End_Procedure
+
+//    // DoDDRefresh is sent in DoRefreshView of HCSS_dbView, which is sent during Entering_Scope.
+//    // This procedure either redisplays the current record, or clears if the current record
+//    // has been deleted by another view.
+//    Procedure DoDDRefresh
+//        Integer iCurrentRecord iFile
+//        String  sCode
+//        //
+//        Get Current_Record to iCurrentRecord
+//        If (iCurrentRecord) Begin
+//            Get Main_File to iFile
+//            Clear iFile
+//            Set_Field_Value iFile 0 to iCurrentRecord
+//            Vfind iFile 0 EQ
+//            If (not(Found)) Begin
+//                Send Clear
+//            End
+//            Else Begin
+//                Relate iFile
+//                Send Request_Assign
+//            End
+//        End
+//    End_Procedure
+//
+    Function Request_Validate_And_Save returns integer
+        If (Should_Save(Self) and Request_Validate(Self) = 0) Begin
+            Send Request_Save
+        End
+        function_return (Should_Save(self))
+    End_Function
+
+//    Procedure Request_Find Integer iMode Integer iFile Integer iIndex
+//        Integer iFoundHookMsg
+//        //
+//        Forward Send Request_Find iMode iFile iIndex
+//        //
+//        If ((Found) and piFoundHookMsg(self)) Begin
+//            Get piFoundHookMsg to iFoundHookMsg
+//            Send iFoundHookMsg iFile
+//            Indicate Found True
+//        End
+//    End_Procedure
+
+//    Procedure Find_By_Recnum Integer iFile Integer iRecnum
+//        Integer iFoundHookMsg
+//        //
+//        Forward Send Find_By_Recnum iFile iRecnum
+//        //
+//        If ((Found) and piFoundHookMsg(self)) Begin
+//            Get piFoundHookMsg to iFoundHookMsg
+//            Send iFoundHookMsg iFile
+//            Indicate Found True
+//        End
+//    End_Procedure
+
+//    Procedure Request_Assign Integer iFile
+//        Integer iFoundHookMsg
+//        //
+//        Forward Send Request_Assign iFile
+//        //
+//        If ((Found) and piFoundHookMsg(self)) Begin
+//            Get piFoundHookMsg to iFoundHookMsg
+//            Send iFoundHookMsg iFile
+//            Indicate Found True
+//        End
+//    End_Procedure
+
+//    Procedure FindByRowID Integer iFile RowID riRowId
+//        Integer iFoundHookMsg
+//        //
+//        Forward Send FindByRowId iFile riRowId
+//        //
+//        If ((Found) and piFoundHookMsg(self)) Begin
+//            Get piFoundHookMsg to iFoundHookMsg
+//            Send iFoundHookMsg iFile
+//            Indicate Found True
+//        End
+//    End_Procedure
+
+    // Function to auto-create a unique ID value - without the need to use a system file to autoincrement new ID's.
+    // Syntax:
+    //   Move (NewTableID (hTable, hField, hIDFieldIndex)) to iRetval
+    //   Use it within Procedure Creating in a DD - after the line Forward Send Creating.
+    // Sample:
+    //   Procedure Creating
+    //
+    //     Forward Send Creating
+    //
+    //     Move (NewTableID(Customer.File_Number, 1, 1)) to Customer.ID
+    //  End_Procedure
+    //
+    // Returns:
+    //   The new unique ID.
+    Function NewTableID Global Integer iFileNumber Integer iFieldNumber Integer iIndex Returns Integer
+        Integer iID
+        //
+        Move 1 to iID
+        Clear iFileNumber
+        Fill_Field iFileNumber iFieldNumber With DF_HIGH
+        Vfind iFileNumber iIndex LE
+        If (Found) Begin
+            Get_Field_Value iFileNumber iFieldNumber to iID
+            Increment iID
+        End   
+        Clear iFileNumber
+        Send Request_Entry_Update iFileNumber 3
+        Set_Field_Value iFileNumber iFieldNumber to iID 
+        Function_Return iID
+    End_Function
+
+    //Send this (with a found record) to copy a record with all DD code respected.
+    //Send DefineAllExtendedFields in any DD's involved if there are Text fields
+    //Change any fields you wish & Send Request_Save after this to finish
+    Procedure CopyRecord
+        Integer iMaxField iCurField iDDFile iCurFile iMaxFile iParentFile
+        Handle  hParentDD
+        RowID   rwOld rwCurrentID
+        RowID[] rwParents
+        Boolean bFound
+        String  sData sType
+        
+        Get Data_Set_Server_Count to iMaxFile
+        Decrement iMaxFile
+        For iCurFile from 0 to iMaxFile
+            Get Data_Set_Server iCurFile to hParentDD
+            Get CurrentRowId of hParentDD to rwParents[iCurFile]
+        Loop
+        Get Main_File to iDDFile
+        Get_Attribute DF_FILE_NUMBER_FIELDS of iDDFile to iMaxField
+        Get CurrentRowId to rwOld
+        Send Clear
+        Move (FindByRowID(iDDFile, rwOld)) to bFound
+        If (bFound) Begin
+            For iCurFile from 0 to iMaxFile
+                Get Data_Set_Server iCurFile to hParentDD
+                Get CurrentRowId of hParentDD to rwCurrentID
+                If (not(IsSameRowID(rwCurrentID, rwParents[iCurFile]))) Begin
+                    Get Main_File of hParentDD to iParentFile
+                    Send FindByRowId of hParentDD iParentFile rwParents[iCurFile]
+                End
+            Loop
+            For iCurField from 1 to iMaxField
+                Get_Attribute DF_FIELD_TYPE of iDDFile iCurField to sType
+                If (sType <> DF_OVERLAP) Begin
+                    Get_Field_Value iDDFile iCurField to sData
+                    Set Field_Changed_Value iCurField to sData
+                End
+            Loop
+            Clear iDDFile
+        End
+    End_Procedure
+
+    Function IsSalt Returns String
+        Integer i iASCII
+        String  sChar sSalt
+        //
+        For i from 0 to 15
+            Move (Random(93))  to iASCII
+            Move (iASCII + 34) to iASCII
+            //
+            If (iASCII = 34 or iASCII = 39 or iASCII = 59) Begin
+                Increment iASCII
+            End
+            //
+            Move (Character(iASCII)) to sChar
+            Move (sSalt + sChar)     to sSalt
+        Loop
+//
+//        Integer iRandom
+//        String  sValue sSalt
+//        //
+//        Repeat
+//            Repeat
+//                Move (Random(255)) to iRandom
+//            Until (iRandom >= 1 and iRandom <= 255)
+//            //
+//            Move (Character(iRandom)) to sValue
+//            Move (sSalt + sValue)     to sSalt
+//        Until (Length(sSalt) = 16)
+        //
+        Function_Return sSalt
+    End_Function
+
+    //
+    //  Converts the given time to an string that can be saved in the database.
+    //
+    //  Params:
+    //      dtTime  Time to convert
+    //  Returns:
+    //      String with "HH:MM:SS" format
+    //
+    { Visibility=Private }
+    Function GetTimeToString DateTime dtTime Returns String
+        String sHours sMinutes sSeconds
+        
+        //  Extract parts
+        Move (String(DateGetHour(dtTime)))   to sHours
+        Move (String(DateGetMinute(dtTime))) to sMinutes
+        Move (String(DateGetSecond(dtTime))) to sSeconds
+        
+        //  Fill out with 0
+        If (Length(sHours) = 1) Begin
+            Move ("0" + sHours) to sHours
+        End
+        If (Length(sMinutes) = 1) Begin
+            Move ("0" + sMinutes) to sMinutes
+        End
+        If (Length(sSeconds) = 1) Begin
+            Move ("0" + sSeconds) to sSeconds
+        End
+        
+        Function_Return (sHours + ":" + sMinutes + ":" + sSeconds)
+    End_Function
+    
+    //
+    //  Sets the time of the datetime variable to the time in the string.
+    //
+    //  Params:
+    //      dtTime  Datetime variable to add time to
+    //      sTimeString String with time in the format "HH:MM:SS"
+    //  Returns:
+    //      dtDateTime with the loaded time
+    //
+    { Visibility=Private }
+    Function GetStringToTime DateTime dtTime String sTimeString Returns DateTime
+        String sHours sMinutes sSeconds
+        
+        //  Extract parts
+        Move (Mid(sTimeString, 2, 1)) to sHours
+        Move (Mid(sTimeString, 2, 4)) to sMinutes
+        Move (Mid(sTimeString, 2, 7)) to sSeconds
+        
+        //  Set to DateTime
+        Move (DateSetHour(dtTime, (Integer(sHours)))) to dtTime
+        Move (DateSetMinute(dtTime, (Integer(sMinutes)))) to dtTime
+        Move (DateSetSecond(dtTime, (Integer(sSeconds)))) to dtTime
+        
+        Function_Return dtTime
+    End_Function
+
+    Function IsValidStandardCode String sCode String ByRef sError Returns Boolean
+        Boolean bValid
+        Integer iLength iPos iDec
+        String  sPos
+        //
+        Move (Length(sCode)) to iLength
+        For iPos from 1 to iLength
+            Move (Mid(sCode,1,iPos)) to sPos
+            Move (Ascii(sPos))       to iDec
+            // 0-9 48-57
+            Move (iDec >= 48 and iDec <= 57) to bValid
+            // A-Z 65-90
+            If (not(bValid)) Begin
+                Move (iDec >= 65 and iDec <= 90) to bValid
+            End
+            If (not(bValid)) Begin
+                Move sPos to sError
+                Function_Return
+            End
+        Loop
+        //
+        Function_Return bValid
+    End_Function
+
+    Function StandardCodeValidation Integer iField String sCode Returns Boolean
+        If (not(HasRecord(Self)) and OPERATION_ORIGIN = Self) Begin
+            Boolean bValid
+            String  sError
+            //
+            Get IsValidStandardCode sCode (&sError) to bValid
+            If (not(bValid)) Begin
+                Send UserError ("Invalid character used:" * sError) "Validation error"
+                Function_Return True
+            End
+        End
+    End_Function
+
+    Procedure DoMakeNewCopy
+        Integer iMaxField iCurField iDDFile iCurFile iMaxFile iParentFile iType
+        Handle  hParentDD
+        RowID   rwOld rwCurrentID
+        RowID[] rwParents
+        Boolean bFound
+        String  sData
+        
+        Get Data_Set_Server_Count to iMaxFile
+        Decrement iMaxFile
+        For iCurFile from 0 to iMaxFile
+            Get Data_Set_Server iCurFile to hParentDD
+            Get CurrentRowId of hParentDD to rwParents[iCurFile]
+        Loop
+        Get Main_File to iDDFile
+        Get_Attribute DF_FILE_NUMBER_FIELDS of iDDFile to iMaxField
+        Get CurrentRowId to rwOld
+        Send Clear
+        Move (FindByRowID(iDDFile, rwOld)) to bFound
+        If (bFound) Begin
+            For iCurFile from 0 to iMaxFile
+                Get Data_Set_Server iCurFile to hParentDD
+                Get CurrentRowId of hParentDD to rwCurrentID
+                If (not(IsSameRowID(rwCurrentID, rwParents[iCurFile]))) Begin
+                    Get Main_File of hParentDD to iParentFile
+                    Send FindByRowId of hParentDD iParentFile rwParents[iCurFile]
+                End
+            Loop
+            For iCurField from 1 to iMaxField
+                Get_Attribute DF_FIELD_TYPE of iDDFile iCurField to iType   //GM 20180209 Added this so it won't try to copy overlaps
+                If (iType<>DF_OVERLAP) Begin
+                    Get_Field_Value iDDFile iCurField to sData
+                    Set Field_Changed_Value iCurField to sData
+                End
+            Loop
+            Clear iDDFile
+        End
+    End_Procedure
+End_Class
+
+Object oGlobalYesNoVT is a ValidationTable
+    Set Allow_Blank_State to True
+//    Set Validate_State to False
+    Procedure Fill_List
+        Forward Send Fill_List
+        Send Add_Table_Value "YES"
+        Send Add_Table_Value "NO"
+    End_Procedure
+End_Object

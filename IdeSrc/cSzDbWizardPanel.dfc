@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cSzDbWizardPanel is a dbModalPanel
+    Set ClassPackage To "cSzDbWizard.pkg"
+    Inherit
+End_Class

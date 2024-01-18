@@ -1,0 +1,7 @@
+//AB/ CLASSDEF
+Class cvBitmapContainer is a BitmapContainer
+   Property No_Execute Color piTransparentColor ClFuchsia
+   Property No_Execute Mode  piImageListType ILC_Color ILC_Color ILC_Color4 ILC_Color8 ILC_Color8 ILC_Color16 ILC_Color24 ILC_Color32 ILC_ColorDDB ILC_Mask
+   Inherit
+   Set ClassPackage To "cvBitmapContainer.Pkg"
+End_Class

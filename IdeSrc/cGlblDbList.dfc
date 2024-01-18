@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbList is a dbList
+    Set ClassPackage To "cGlblDbList.pkg"
+    Inherit
+End_Class

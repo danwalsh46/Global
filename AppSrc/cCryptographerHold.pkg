@@ -1,0 +1,1127 @@
+//*****************************************************************************
+//*** cCryptographer.pkg                                                    ***
+//***                                                                       ***
+//*** Author: Ben Weijers                                                   ***
+//***         Data Access Nederland                                         ***
+//***         january 2000                                                  ***
+//***                                                                       ***
+//*** Purpose:                                                              ***
+//***    DataFlex interface to the Windows CryptoAPI.                       ***
+//*****************************************************************************
+
+Use Windows
+Use Dll
+Use Winkern
+
+
+//*****************************************************************************
+//*** Windows API prototypes                                                ***
+//***  Constants                                                            ***
+//*****************************************************************************
+
+Define HP_ALGID                for |CI$0001  // Hash algorithm
+Define HP_HASHVAL              for |CI$0002  // Hash value
+Define HP_HASHSIZE             for |CI$0004  // Hash value size
+Define HP_HMAC_INFO            for |CI$0005  // information for creating an HMAC
+
+
+Define SIMPLEBLOB              for |CI$1
+Define PUBLICKEYBLOB           for |CI$6
+Define PRIVATEKEYBLOB          for |CI$7
+Define PLAINTEXTKEYBLOB        for |CI$8
+
+Define AT_KEYEXCHANGE          for 1
+Define AT_SIGNATURE            for 2
+
+
+//*** Algorithm classes
+Define ALG_CLASS_ANY                For |CI$00000000       // (0)
+Define ALG_CLASS_SIGNATURE          For |CI$00002000       // (1 << 13)
+Define ALG_CLASS_MSG_ENCRYPT        For |CI$00004000       // (2 << 13)
+Define ALG_CLASS_DATA_ENCRYPT       For |CI$00006000       // (3 << 13)
+Define ALG_CLASS_HASH               For |CI$00008000       // (4 << 13)
+Define ALG_CLASS_KEY_EXCHANGE       For |CI$0000A000       // (5 << 13)
+                                                       //
+//*** Algorithm types
+Define ALG_TYPE_ANY                 For |CI$00000000       // (0)
+Define ALG_TYPE_DSS                 For |CI$00000200       // (1 << 9)
+Define ALG_TYPE_RSA                 For |CI$00000400       // (2 << 9)
+Define ALG_TYPE_BLOCK               For |CI$00000600       // (3 << 9)
+Define ALG_TYPE_STREAM              For |CI$00000800       // (4 << 9)
+Define ALG_TYPE_DH                  For |CI$00000A00       // (5 << 9)
+Define ALG_TYPE_SECURECHANNEL       For |CI$00000C00       // (6 << 9)
+
+//*** Generic sub-ids
+Define ALG_SID_ANY                  For |CI$00000000       // (0)
+
+//*** Some RSA sub-ids
+Define ALG_SID_RSA_ANY              For 0
+Define ALG_SID_RSA_PKCS             For 1
+Define ALG_SID_RSA_MSATWORK         For 2
+Define ALG_SID_RSA_ENTRUST          For 3
+Define ALG_SID_RSA_PGP              For 4
+
+//*** Some DSS sub-ids
+Define ALG_SID_DSS_ANY              For 0
+Define ALG_SID_DSS_PKCS             For 1
+Define ALG_SID_DSS_DMS              For 2
+
+//*** Block cipher sub ids
+//*** DES sub_ids
+Define ALG_SID_DES                  For  1
+Define ALG_SID_3DES                 For  3
+Define ALG_SID_DESX                 For  4
+Define ALG_SID_IDEA                 For  5
+Define ALG_SID_CAST                 For  6
+Define ALG_SID_SAFERSK64            For  7
+Define ALG_SID_SAFERSK128           For  8
+Define ALG_SID_3DES_112             For  9
+Define ALG_SID_CYLINK_MEK           For 12
+Define ALG_SID_RC5                  For 13
+
+//*** Fortezza sub-ids
+Define ALG_SID_SKIPJACK             For 10
+Define ALG_SID_TEK                  For 11
+
+//*** KP_MODE
+Define CRYPT_MODE_CBCI              For  6      // ANSI CBC Interleaved
+Define CRYPT_MODE_CFBP              For  7      // ANSI CFB Pipelined
+Define CRYPT_MODE_OFBP              For  8      // ANSI OFB Pipelined
+Define CRYPT_MODE_CBCOFM            For  9      // ANSI CBC + OF Masking
+Define CRYPT_MODE_CBCOFMI           For 10      // ANSI CBC + OFM Interleaved
+
+//*** RC2 sub-ids
+Define ALG_SID_RC2                  For 2
+
+//*** Stream cipher sub-ids
+Define ALG_SID_RC4                  For 1
+Define ALG_SID_SEAL                 For 2
+
+//*** Diffie-Hellman sub-ids
+Define ALG_SID_DH_SANDF             For 1
+Define ALG_SID_DH_EPHEM             For 2
+Define ALG_SID_AGREED_KEY_ANY       For 3
+Define ALG_SID_KEA                  For 4
+
+//*** Hash sub ids
+Define ALG_SID_MD2                  For 1
+Define ALG_SID_MD4                  For 2
+Define ALG_SID_MD5                  For 3
+Define ALG_SID_SHA                  For 4
+Define ALG_SID_SHA1                 For 4
+Define ALG_SID_MAC                  For 5
+Define ALG_SID_RIPEMD               For 6
+Define ALG_SID_RIPEMD160            For 7
+Define ALG_SID_SSL3SHAMD5           For 8
+Define ALG_SID_HMAC                 For 9
+
+//*** secure channel sub ids
+Define ALG_SID_SSL3_MASTER          For 1
+Define ALG_SID_SCHANNEL_MASTER_HASH For 2
+Define ALG_SID_SCHANNEL_MAC_KEY     For 3
+Define ALG_SID_PCT1_MASTER          For 4
+Define ALG_SID_SSL2_MASTER          For 5
+Define ALG_SID_TLS1_MASTER          For 6
+Define ALG_SID_SCHANNEL_ENC_KEY     For 7
+
+//*** Algorithm identifier definitions supported by the Microsoft Base Cryptographic Provider
+Define CALG_MD2                     For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_MD2)
+Define CALG_MD5                     For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_MD5)
+Define CALG_SHA                     For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_SHA)
+Define CALG_SHA1                    For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_SHA1)
+Define CALG_MAC                     For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_MAC)
+Define CALG_RSA_SIGN                For (ALG_CLASS_SIGNATURE Ior ALG_TYPE_RSA Ior ALG_SID_RSA_ANY)
+Define CALG_RSA_KEYX                For (ALG_CLASS_KEY_EXCHANGE Ior ALG_TYPE_RSA Ior ALG_SID_RSA_ANY)
+Define CALG_RC2                     For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_RC2)
+Define CALG_RC4                     For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_STREAM Ior ALG_SID_RC4)
+Define CALG_CYLINK_MEK              For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_CYLINK_MEK)
+Define CALG_HMAC                    For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_HMAC)
+
+//*** Other algorithm identifier definitions
+Define CALG_MD4                     For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_MD4)
+Define CALG_DSS_SIGN                For (ALG_CLASS_SIGNATURE Ior ALG_TYPE_DSS Ior ALG_SID_DSS_ANY)
+Define CALG_DES                     For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_DES)
+Define CALG_3DES_112                For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_3DES_112)
+Define CALG_3DES                    For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_3DES)
+Define CALG_SEAL                    For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_STREAM Ior ALG_SID_SEAL)
+Define CALG_DH_SF                   For (ALG_CLASS_KEY_EXCHANGE Ior ALG_TYPE_DH Ior ALG_SID_DH_SANDF)
+Define CALG_DH_EPHEM                For (ALG_CLASS_KEY_EXCHANGE Ior ALG_TYPE_DH Ior ALG_SID_DH_EPHEM)
+Define CALG_AGREEDKEY_ANY           For (ALG_CLASS_KEY_EXCHANGE Ior ALG_TYPE_DH Ior ALG_SID_AGREED_KEY_ANY)
+Define CALG_KEA_KEYX                For (ALG_CLASS_KEY_EXCHANGE Ior ALG_TYPE_DH Ior ALG_SID_KEA)
+Define CALG_HUGHES_MD5              For (ALG_CLASS_KEY_EXCHANGE Ior ALG_TYPE_ANY Ior ALG_SID_MD5)
+Define CALG_SKIPJACK                For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_SKIPJACK)
+Define CALG_TEK                     For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_TEK)
+Define CALG_SSL3_SHAMD5             For (ALG_CLASS_HASH Ior ALG_TYPE_ANY Ior ALG_SID_SSL3SHAMD5)
+Define CALG_SSL3_MASTER             For (ALG_CLASS_MSG_ENCRYPT Ior ALG_TYPE_SECURECHANNEL Ior ALG_SID_SSL3_MASTER)
+Define CALG_SCHANNEL_MASTER_HASH    For (ALG_CLASS_MSG_ENCRYPT Ior ALG_TYPE_SECURECHANNEL Ior ALG_SID_SCHANNEL_MASTER_HASH)
+Define CALG_SCHANNEL_MAC_KEY        For (ALG_CLASS_MSG_ENCRYPT Ior ALG_TYPE_SECURECHANNEL Ior ALG_SID_SCHANNEL_MAC_KEY)
+Define CALG_SCHANNEL_ENC_KEY        For (ALG_CLASS_MSG_ENCRYPT Ior ALG_TYPE_SECURECHANNEL Ior ALG_SID_SCHANNEL_ENC_KEY)
+Define CALG_PCT1_MASTER             For (ALG_CLASS_MSG_ENCRYPT Ior ALG_TYPE_SECURECHANNEL Ior ALG_SID_PCT1_MASTER)
+Define CALG_SSL2_MASTER             For (ALG_CLASS_MSG_ENCRYPT Ior ALG_TYPE_SECURECHANNEL Ior ALG_SID_SSL2_MASTER)
+Define CALG_TLS1_MASTER             For (ALG_CLASS_MSG_ENCRYPT Ior ALG_TYPE_SECURECHANNEL Ior ALG_SID_TLS1_MASTER)
+Define CALG_RC5                     For (ALG_CLASS_DATA_ENCRYPT Ior ALG_TYPE_BLOCK Ior ALG_SID_RC5)
+
+//*** Provider types
+Define PROV_RSA_FULL                For  1
+Define PROV_RSA_SIG                 For  2
+Define PROV_DSS                     For  3
+Define PROV_FORTEZZA                For  4
+Define PROV_MS_EXCHANGE             For  5
+Define PROV_SSL                     For  6
+Define PROV_RSA_SCHANNEL            For 12
+Define PROV_DSS_DH                  For 13
+Define PROV_EC_ECDSA_SIG            For 14
+Define PROV_EC_ECNRA_SIG            For 15
+Define PROV_EC_ECDSA_FULL           For 16
+Define PROV_EC_ECNRA_FULL           For 17
+Define PROV_SPYRUS_LYNKS            For 20
+
+//*** CryptgetProvParam, dwParam values
+Define PP_ENUMALGS                  For  1
+Define PP_ENUMCONTAINERS            For  2
+Define PP_IMPTYPE                   For  3
+Define PP_NAME                      For  4
+Define PP_VERSION                   For  5
+Define PP_CONTAINER                 For  6
+Define PP_CHANGE_PASSWORD           For  7
+Define PP_KEYSET_SEC_DESCR          For  8       // get/set security descriptor of keyset
+Define PP_CERTCHAIN                 For  9       // for retrieving certificates from tokens
+Define PP_KEY_TYPE_SUBTYPE          For 10
+Define PP_PROVTYPE                  For 16
+Define PP_KEYSTORAGE                For 17
+Define PP_APPLI_CERT                For 18
+Define PP_SYM_KEYSIZE               For 19
+Define PP_SESSION_KEYSIZE           For 20
+Define PP_UI_PROMPT                 For 21
+Define PP_ENUMALGS_EX               For 22
+
+Define CRYPT_FIRST                  For 1
+Define CRYPT_NEXT                   For 2
+
+//*** CryptGetKeyParam, dwParam values
+Define KP_IV                        For  1      // Initialization vector
+Define KP_SALT                      For  2      // Salt value
+Define KP_PADDING                   For  3      // Padding values
+Define KP_MODE                      For  4      // Mode of the cipher
+Define KP_MODE_BITS                 For  5      // Number of bits to feedback
+Define KP_PERMISSIONS               For  6      // Key permissions DWORD
+Define KP_ALGID                     For  7      // Key algorithm
+Define KP_BLOCKLEN                  For  8      // Block size of the cipher
+Define KP_KEYLEN                    For  9      // Length of key in bits
+Define KP_SALT_EX                   For 10      // Length of salt in bytes
+Define KP_P                         For 11      // DSS/Diffie-Hellman P value
+Define KP_G                         For 12      // DSS/Diffie-Hellman G value
+Define KP_Q                         For 13      // DSS Q value
+Define KP_X                         For 14      // Diffie-Hellman X value
+Define KP_Y                         For 15      // Y value
+Define KP_RA                        For 16      // Fortezza RA value
+Define KP_RB                        For 17      // Fortezza RB value
+Define KP_INFO                      For 18      // for putting information into an RSA envelope
+Define KP_EFFECTIVE_KEYLEN          For 19      // setting and getting RC2 effective key length
+Define KP_SCHANNEL_ALG              For 20      // for setting the Secure Channel algorithms
+Define KP_CLIENT_RANDOM             For 21      // for setting the Secure Channel client random data
+Define KP_SERVER_RANDOM             For 22      // for setting the Secure Channel server random data
+Define KP_RP                        For 23
+Define KP_PRECOMP_MD5               For 24
+Define KP_PRECOMP_SHA               For 25
+Define KP_CERTIFICATE               For 26      // for setting Secure Channel certificate data (PCT1)
+Define KP_CLEAR_KEY                 For 27      // for setting Secure Channel clear key data (PCT1)
+Define KP_PUB_EX_LEN                For 28
+Define KP_PUB_EX_VAL                For 29
+
+
+
+//*****************************************************************************
+//*** Windows API prototypes                                                ***
+//***  Types                                                                ***
+//*****************************************************************************
+
+//*** Algorithm type
+Type PROV_ENUMALGS
+    Field Prov_EnumAlgs.aiAlgId   As Integer
+    Field Prov_EnumAlgs.dwBitLen  As Dword
+    Field Prov_EnumAlgs.dwNameLen As dWord
+    Field Prov_EnumAlgs.szName    As Char 20
+End_type // PROV_ENUMALGS
+
+//*** Handle type definitions
+Type ProviderHandle
+    Field ProviderHandle.hCryptProv As Integer
+End_type // ProviderHandle
+
+Type KeyHandle
+    Field KeyHandle.hCryptKey As Integer
+End_type // KeyHandle
+
+Type HashHandle
+    Field HashHandle.hCryptHash As Integer
+End_type // HashHandle
+
+//*** Special type used when we need pointers to dWords
+Type CryptDword
+    Field CryptDword.dwvalue as dWord
+End_Type // CryptDword
+
+
+
+//*****************************************************************************
+//*** Windows API prototypes                                                ***
+//***  Function prototypes                                                  ***
+//*****************************************************************************
+
+External_function CryptAcquireContext "CryptAcquireContextA" advapi32.dll ;
+    Pointer phProv ;
+    Pointer pszContainer ;
+    Pointer pszProvider ;
+    dWord   dwProviderType ;
+    dWord   dwFlags ;
+    Returns Integer
+
+External_function CryptReleaseContext "CryptReleaseContext" advapi32.dll ;
+    Handle hProv ;
+    dWord  dwFlags ;
+    Returns Integer
+
+External_function CryptGetProvParam "CryptGetProvParam" advapi32.dll ;
+    Handle  hProv ;
+    dWord   dwParam ;
+    Pointer pbData ;
+    Pointer pdwDataLen ;
+    dWord   dwFlags ;
+    Returns Integer
+
+External_function CryptCreateHash "CryptCreateHash" advapi32.dll ;
+    Handle  hProv ;
+    Integer AlgId ;
+    Handle  hKey ;
+    dWord   dwFlags ;
+    Pointer phHash ;
+    Returns Integer
+
+External_function CryptHashData "CryptHashData" advapi32.dll ;
+    Handle  hHash ;
+    Pointer pbData ;
+    dWord   dwDataLen ;
+    dWord   dwFlags ;
+    Returns Integer
+
+External_function CryptDestroyHash "CryptDestroyHash" advapi32.dll ;
+    Handle  hHash ;
+    Returns Integer
+
+External_function CryptEncrypt "CryptEncrypt" advapi32.dll ;
+    Handle  hKey ;
+    Handle  hHash ;
+    Integer Final ;
+    dWord   dwFlags ;
+    Pointer pbData ;
+    Pointer pdwDataLen ;
+    dWord   dwBufLen ;
+    Returns Integer
+
+External_function CryptDecrypt "CryptDecrypt" advapi32.dll ;
+    Handle  hKey ;
+    Handle  hHash ;
+    Integer Final ;
+    dWord   dwFlags ;
+    Pointer pbData ;
+    Pointer pdwDataLen ;
+    Returns Integer
+
+External_function CryptDestroyKey "CryptDestroyKey" advapi32.dll ;
+    Handle  hKey ;
+    Returns Integer
+
+External_function CryptDeriveKey "CryptDeriveKey" advapi32.dll ;
+    Handle  hProv ;
+    Integer AlgId ;
+    Handle  hBaseData ;
+    dWord   dwFlags ;
+    Pointer phCryptKey ;
+    Returns Integer
+
+External_function CryptGetKeyParam "CryptGetKeyParam" advapi32.dll ;
+    Handle  hKey ;
+    dWord   dwParam ;
+    Pointer pbData ;
+    Pointer pdwDataLen ;
+    dWord   dwFlags ;
+    Returns Integer
+
+External_Function CryptEnumProviders "CryptEnumProvidersA" advapi32.dll ;
+    dWord dwIndex ;
+    Pointer pdwReserved ;
+    dWord dwFlags ;
+    Pointer pdwProvType ;
+    Pointer pszProvName ;
+    Pointer pcbProvName ;
+    Returns Integer
+
+// Hash functions
+External_Function CryptGetHashParam "CryptGetHashParam" advapi32.dll ;
+    Handle hHash ;
+    dWord dwParam ;
+    Pointer pbData ;
+    Pointer pdwDataLen ;
+    dWord dwFlags ;
+    Returns Integer
+
+External_Function CryptExportKey "CryptExportKey" advapi32.dll ;
+    Handle hKey ;
+    Handle hExpKey ;
+    dWord dwBlobType ;
+    dWord dwFlags ;
+    Pointer pbData ;
+    Pointer pdwDataLen ;
+    Returns Integer
+
+External_Function CryptImportKey "CryptImportKey" advapi32.dll ;
+    Handle hProv ;
+    Pointer pbData ;
+    dWord dwDataLen ;
+    Handle hPubKey ;
+    dWord dwFlags ;
+    Pointer phKey ;
+    Returns Integer
+
+External_Function CryptSignHash "CryptSignHashA" advapi32.dll ;
+    Handle hHash ;
+    dWord dwKeySpec ;
+    Pointer sDescription ;
+    dWord dwFlags ;
+    Pointer pbSignature ;
+    Pointer pdwSigLen ;
+    Returns Integer
+
+External_Function CryptVerifySignature "CryptVerifySignatureA" advapi32.dll ;
+    Handle hHash ;
+    Pointer pbSignature ;
+    dWord dwSigLen ;
+    Handle hPubKey ;
+    Pointer sDescription ;
+    dWord dwFlags ;
+    Returns Integer
+
+External_Function CryptGetUserKey "CryptGetUserKey" advapi32.dll ;
+    Handle hProv ;
+    dWord dwKeySpec ;
+    Pointer phUserKey ;
+    Returns Integer
+
+External_Function CryptGenKey "CryptGenKey" advapi32.dll ;
+    Handle hProv ;
+    dWord Algid ;
+    dWord dwFlags ;
+    Pointer phKey ;
+    Returns Integer
+
+//*****************************************************************************
+//*** Object prototypes.                                                    ***
+//*****************************************************************************
+
+Register_object oAlgorithmArray
+
+//*****************************************************************************
+//*** Class:   Cryptographer                                                ***
+//*** Purpose: Encryption - Decryption handler                              ***
+//***                                                                       ***
+//*** Note:                                                                 ***
+//***   This class has been tested with several cipher algorithms, we have  ***
+//***   found that we cannot use block ciphers. Stream ciphers work         ***
+//***   perfectly though.                                                   ***
+//***                                                                       ***
+//***   When using a block cipher the error NTE_BAD_DATA will be generated  ***
+//***   when decrypting the last block of he ciphertext.                    ***
+//*****************************************************************************
+
+Class cCryptographer Is A dfObject
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        Property String  psProviderName    "Microsoft Base Cryptographic Provider v1.0"
+        Property Integer piProvider        PROV_RSA_FULL
+        Property Integer piHashAlgorithm   CALG_MD5
+        Property Integer piCipherAlgorithm CALG_RC4
+
+        Property String psHashValue
+        Property String psSignature
+
+        Set Focus_Mode To NonFocusable
+    End_Procedure  // Construct_object
+
+    //***
+    //*** Function: AcquireContext
+    //*** Purpose : Acquire an encryption context
+    //***
+    Function AcquireContext Integer liProvider Returns Handle
+        String  lsProvHandle
+        String  lsProvider
+        Pointer lpProvHandle
+        Pointer lpProvider
+        Integer liResult
+
+        //*** If no provider specified use property
+        If (liProvider = 0) Get piProvider To liProvider
+
+        //*** Allocate the provider handle
+        ZeroType ProviderHandle To lsProvHandle
+        GetAddress Of lsProvHandle To lpProvHandle
+
+        Get psProviderName To lsProvider
+        GetAddress Of lsProvider To lpProvider
+
+        //*** Acquire the context
+        Move (CryptAcquireContext(lpProvHandle, 0, lpProvider, liProvider, 0)) To liResult
+        If (Not(liResult)) Move (CryptAcquireContext(lpProvHandle, 0, lpProvider, liProvider, 8)) To liResult
+
+        //**** If successfull get the handle
+        If (liResult) GetBuff From lsProvHandle At ProviderHandle.hCryptProv To liResult
+            Else Move 0 To liResult
+
+        Function_return liResult
+    End_Function  // AcquireContext
+
+    //***
+    //*** Function: ReleaseContext
+    //*** Purpose : Release an encryption context
+    //***
+    Function ReleaseContext Handle lhProv Returns Integer
+        Integer liResult
+
+        //*** Release the context
+        Move (CryptReleaseContext(lhProv, 0)) To liResult
+        Function_return liResult
+    End_Procedure  // ReleaseContext
+
+    //***
+    //*** Function: ProviderName
+    //*** Purpose : Name of the provider
+    //***
+    Function ProviderName Handle lhProv Returns String
+        String  lsProvider
+        String  lsDataLen
+        Pointer lpProvider
+        Pointer lpDataLen
+        Integer liDataLen
+        Integer liResult
+
+        //*** Setup bufer size
+        Move 1024 To liDataLen
+
+        //*** Allocate the string
+        Move (Repeat(Character(0), liDataLen)) To lsProvider
+        GetAddress Of lsProvider To lpProvider
+
+        //*** Alocate the data length
+        ZeroType CryptDword To lsDataLen
+        Put liDatalen To lsDataLen At CryptDword.dwValue
+        GetAddress Of lsDataLen To lpDataLen
+
+        //*** Get the name
+        Move (CryptGetProvParam(lhProv, PP_NAME, lpProvider, lpDataLen, 0)) To liResult
+        If (liResult) Move (Cstring(lsProvider)) To lsProvider
+            Else Move "" To lsProvider
+
+        Function_Return lsProvider
+    End_Function  // ProviderName
+
+    //***
+    //*** Function: BlockLength
+    //*** Purpose : Get the block length for the key
+    //***
+    Function BlockLength Handle lhKey Returns Integer
+        String  lsBlockLength
+        String  lsDataLen
+        Pointer lpBlockLength
+        Pointer lpDataLen
+        Integer liResult
+
+        //*** Alocate the block length
+        ZeroType CryptDword To lsBlockLength
+        GetAddress Of lsBlockLength To lpBlockLength
+
+        //*** Alocate the data length
+        ZeroType CryptDword To lsDataLen
+        Put CryptDword_Size To lsDataLen At CryptDword.dwValue
+        GetAddress Of lsDataLen To lpDataLen
+
+        //*** Get the name
+        Move (CryptGetKeyParam(lhKey, KP_BLOCKLEN, lpBlockLength, lpDataLen, 0)) To liResult
+        If (liResult) GetBuff From lsBlockLength At CryptDword.dwValue To liResult
+            Else Move 0 To liResult
+
+        //*** Block size are returned in bits! So make rounded up bytes out of it
+        Move ((liResult / 8) + If(Mod(liResult, 8), 1, 0)) To liResult
+
+        Function_Return liResult
+    End_Function  // BlockLength
+
+    //***
+    //*** Procedure: EnumAlgorithms
+    //*** Purpose  : Enumerate all supported algorithms
+    //***
+    Procedure EnumAlgorithms Handle lhProv
+        String  lsAlgorithm
+        String  lsDataLen
+        String  lsAlgName
+        Pointer lpAlgorithm
+        Pointer lpDataLen
+        Integer liAlgId
+        Integer liResult
+        Integer liNumItems
+
+        //*** Allocate a storage for the result
+        If (oAlgorithmArray(Self)) Send Delete_data To oAlgorithmArray
+            Else Begin
+                Object oAlgorithmArray Is An Array
+                End_Object // AlgorithmArray
+            End
+
+        //*** Allocate the algorithm
+        ZeroType PROV_ENUMALGS To lsAlgorithm
+        GetAddress Of lsAlgorithm To lpAlgorithm
+
+        //*** Alocate the data length
+        ZeroType CryptDword To lsDataLen
+        Put PROV_ENUMALGS_SIZE To lsDataLen At CryptDword.dwValue
+        GetAddress Of lsDataLen To lpDataLen
+
+        //*** Enumerate
+        Move (CryptGetProvParam(lhProv, PP_ENUMALGS, lpAlgorithm, lpDataLen, CRYPT_FIRST)) To liResult
+        If (liResult) Begin
+            //*** Get Name and Id
+            GetBuff_String From lsAlgorithm At PROV_ENUMALGS.szName To lsAlgName
+            GetBuff From lsAlgorithm At PROV_ENUMALGS.aiAlgId To liAlgId
+
+            //*** Add name and id to array
+            Get Item_Count Of oAlgorithmArray To liNumItems
+            Set Array_value Of oAlgorithmArray Item liNumItems       To liAlgId
+            Set Array_value Of oAlgorithmArray Item (liNumItems + 1) To lsAlgName
+        End
+
+        Repeat
+            Move (CryptGetProvParam(lhProv, PP_ENUMALGS, lpAlgorithm, lpDataLen, 0)) To liResult
+            If (liResult) Begin
+                //*** Get next Name and Id
+                GetBuff_String From lsAlgorithm At PROV_ENUMALGS.szName To lsAlgName
+                GetBuff From lsAlgorithm At PROV_ENUMALGS.aiAlgId To liAlgId
+
+                //*** Add name and id to array
+                Get Item_Count Of oAlgorithmArray To liNumItems
+                Set Array_value Of oAlgorithmArray Item liNumItems       To liAlgId
+                Set Array_value Of oAlgorithmArray Item (liNumItems + 1) To lsAlgName
+            End
+        Until (Not(liResult))
+    End_Procedure // EnumAlgorithms
+
+    //***
+    //*** Function: NumberOfAlgorithms
+    //*** Purpose : Returns the number of algorithms. Must be called after
+    //***           EnumAlgorithms.
+    //***
+    Function NumberOfAlgorithms Returns Integer
+        Integer liAlgNum
+
+        Move 0 To liAlgNum
+        If (oAlgorithmArray(Self)) Begin
+            Get Item_Count Of oAlgorithmArray To liAlgNum
+            Move (liAlgNum / 2) To liAlgNum
+        End
+
+        Function_Return liAlgNum
+    End_Function  // NumberOfAlgorithms
+
+    //***
+    //*** Function: AlgorithmId
+    //*** Purpose : The identification number of an enumerated algorithm. Must
+    //***           be called after EnumAlgorithms.
+    //***
+    Function AlgorithmId Integer liAlgIndex Returns Integer
+        Integer liAlgId
+        Integer liNumAlg
+
+        Move 0 To liAlgId
+        If (oAlgorithmArray(Self)) Begin
+            Get NumberOfAlgorithms To liNumAlg
+            If (liAlgIndex <= liNumAlg) Get Array_Value Of oAlgorithmArray Item (liAlgIndex * 2) To liAlgId
+        End
+
+        Function_Return liAlgId
+    End_Function  // AlgorithmId
+
+    //***
+    //*** Function: AlgorithmName
+    //*** Purpose : The name of an enumerated algorithm. Must be called after
+    //***           EnumAlgorithms.
+    //***
+    Function AlgorithmName Integer liAlgIndex Returns String
+        String  lsAlgName
+        Integer liNumAlg
+
+        Move "" To lsAlgName
+        If (oAlgorithmArray(Self)) Begin
+            Get NumberOfAlgorithms To liNumAlg
+            If (liAlgIndex <= liNumAlg) Begin
+                Get Array_Value Of oAlgorithmArray Item ((liAlgIndex * 2) + 1) To lsAlgName
+            End
+        End
+
+        Function_Return lsAlgName
+    End_Function  // AlgorithmName
+
+    //***
+    //*** Function: CreateHash
+    //*** Purpose : Create a hash stream
+    //****
+    Function CreateHash Handle lhProv Integer liAlgId Returns Handle
+        String  lsHashHandle
+        Pointer lpHashHandle
+        Integer liResult
+
+        //*** If no algorithm specified use property
+        If (liAlgId = 0) Get piHashAlgorithm To liAlgId
+
+        //*** Allocate the provider handle
+        ZeroType HashHandle To lsHashHandle
+        GetAddress Of lsHashHandle To lpHashHandle
+
+        //*** Acquire the context
+        Move (CryptCreateHash(lhProv, liAlgId, 0, 0, lpHashHandle)) To liResult
+
+        //**** If successfull get the handle
+        If (liResult) GetBuff From lsHashHandle At HashHandle.hCryptHash To liResult
+            Else Move 0 To liResult
+
+        Function_Return liResult
+    End_Function  // CreateHash
+
+    //***
+    //*** Function: HashData
+    //*** Purpose : Hash given data
+    //***
+    Function HashData Handle lhHash String lsData Returns Integer
+        Pointer lpData
+        Integer liResult
+
+        GetAddress Of lsData To lpData
+        Move (CryptHashData(lhHash, lpData, (Length(lsData)), 0)) To liResult
+        Function_Return liResult
+    End_Function  // HashData
+
+    //***
+    //*** Function: DeriveKey
+    //*** Purpose : Derive a key
+    //***
+    Function DeriveKey Handle lhProv Integer liAlgId Handle lhHash Returns Handle
+        String  lsKeyHandle
+        Pointer lpKeyHandle
+        Integer liResult
+
+        //*** If no algorithm specified use property
+        If (liAlgId = 0) Get piCipherAlgorithm To liAlgId
+
+        //*** Allocate the provider handle
+        ZeroType KeyHandle To lsKeyHandle
+        GetAddress Of lsKeyHandle To lpKeyHandle
+
+        //*** Acquire the context
+        Move (CryptDeriveKey(lhProv, liAlgId, lhHash, 1, lpKeyHandle)) To liResult
+
+        //**** If successfull get the handle
+        If (liResult) GetBuff From lsKeyHandle At KeyHandle.hCryptkey To liResult
+            Else Move 0 To liResult
+
+        Function_Return liResult
+    End_Function  // DeriveKey
+
+    //***
+    //*** Function: GetUserKey
+    //*** Purpose : Get a handle to a user key
+    //***
+    Function GetUserKey Handle lhProv Returns Integer
+        Pointer lpKey
+        String  lsKey
+        Integer liResult
+
+        Move (Repeat(Character(0),4)) To lsKey
+        GetAddress Of lsKey To lpKey
+
+        Move (CryptGetUserKey(lhProv,AT_SIGNATURE,lpKey)) To liResult
+        Function_Return (BytesTodWord(lsKey,1))
+    End_Function  // GetUserKey
+
+    //***
+    //*** Function: ExportKey
+    //*** Purpose : Export hash data
+    //***
+    Function ExportKey Handle lhKey Returns String
+        Pointer lpSize
+        Pointer lpBlob
+        String  lsSize
+        String  lsBlob
+        Integer liResult
+
+        Move (Repeat(Character(0),4)) To lsSize
+        GetAddress Of lsSize To lpSize
+
+        Move (CryptExportKey(lhKey,0,PUBLICKEYBLOB,0,0,lpSize)) To liResult
+        If (liResult = 0) Function_Return ""
+
+        Move (Repeat(Character(0),BytesTodWord(lsSize,1))) To lsBlob
+        GetAddress Of lsBlob To lpBlob
+
+        Move (CryptExportKey(lhKey,0,PUBLICKEYBLOB,0,lpBlob,lpSize)) To liResult
+        If (liResult = 0) Function_Return ""
+
+        Function_Return lsBlob
+    End_Function  // ExportKey
+
+    //***
+    //*** Function: SignHash
+    //*** Purpose : Signs hash signature
+    //***
+    Function SignHash Handle lhHash Returns String
+        Pointer lpSize
+        Pointer lpSignature
+        Pointer lpText
+        String  lsSize
+        String  lsSignature
+        String  lsText
+        Integer liResult
+
+        Move "Very secret signature" To lsText
+        GetAddress Of lsText To lpText
+
+        Move (Repeat(Character(0),4)) To lsSize
+        GetAddress Of lsSize To lpSize
+        Move (CryptSignHash(lhHash,AT_SIGNATURE,lpText,0,0,lpSize)) To liResult
+        If (liResult = 0) Function_Return ""
+
+        Move (Repeat(Character(0),BytesTodWord(lsSize,1))) To lsSignature
+        GetAddress Of lsSignature To lpSignature
+
+        Move (CryptSignHash(lhHash,AT_SIGNATURE,lpText,0,lpSignature,lpSize)) To liResult
+        If (liResult = 0) Function_Return ""
+
+        Function_Return lsSignature
+    End_Function  // SignHash
+
+    //***
+    //*** Function: ImportKey
+    //*** Purpose : Import hash data
+    //***
+    Function ImportKey Handle lhProv String lsBlob Returns Handle
+        Pointer lpSize
+        Pointer lpBlob
+        Pointer lpKey
+        String  lsSize
+        String  lsKey
+        Integer liResult
+
+        GetAddress Of lsBlob To lpBlob
+
+        Move (dWordToBytes(Length(lsBlob))) To lsSize
+        GetAddress Of lsSize To lpSize
+
+        Move (Repeat(Character(0),4)) To lsKey
+        GetAddress Of lsKey To lpKey
+
+        Move (CryptImportKey(lhProv,lpBlob,lpSize,0,0,lpKey)) To liResult
+        If (liResult = 0) Function_Return 0
+
+        Function_Return (BytesTodWord(lsKey,1))
+    End_Function  // ImportKey
+
+    //***
+    //*** Function: VerifySignature
+    //*** Purpose : Verifies hash signature
+    //***
+    Function VerifySignature Handle lhHash String lsBlob Handle lhKey Returns Integer
+        Pointer lpBlob
+        Pointer lpSize
+        String  lsSize
+        Integer liResult
+
+        GetAddress Of lsBlob To lpBlob
+
+        Move (dWordToBytes(Length(lsBlob))) To lsSize
+        GetAddress Of lsSize To lpSize
+
+        Move (CryptVerifySignature(lhHash,lpBlob,lpSize,lhKey,0,0)) To liResult
+        Function_Return liResult
+    End_Function  // VerifySignature
+
+    //***
+    //*** Function: HashValue
+    //*** Purpose : Retrieves a hash value
+    //***
+    Function HashValue Handle lhHash Returns String
+        Pointer lpSize
+        Pointer lpHash
+        String  lsSize
+        String  lsHash
+        Integer liResult
+
+        Move (Repeat(Character(0),4)) To lsSize
+        GetAddress Of lsSize To lpSize
+
+        Move (CryptGetHashParam(lhHash,HP_HASHVAL,0,lpSize,0)) To liResult
+        If (liResult = 0) Function_Return ""
+
+        Move (Repeat(Character(0),BytesTodWord(lsSize,1))) To lsHash
+        GetAddress Of lsHash To lpHash
+
+        Move (CryptGetHashParam(lhHash,HP_HASHVAL,lpHash,lpSize,0)) To liResult
+        If (liResult = 0) Function_Return ""
+
+        Function_Return lsHash
+    End_Function  // HashValue
+
+    //***
+    //*** Function: DestroyHash
+    //*** Purpose : Destory a hash
+    //***
+    Function DestroyHash Handle lhHash Returns Integer
+        Integer liResult
+
+        Move (CryptDestroyHash(lhHash)) To liResult
+        Function_Return liResult
+    End_Function  // DestroyHash
+
+    //***
+    //*** Function; Encrypt
+    //*** Purpose : Encrypt passed data
+    //***
+    Function LowLevelEncrypt Handle hoKey dWord dwBlockSize String sData Returns String
+        String  sEncryptedData
+        String  sEncryptedChunk
+        String  sBuffer
+        String  sDataLen
+        Pointer pDataLen
+        Pointer pBuffer
+        Pointer pEncryptedChunk
+        Boolean bReady
+        Integer iResult
+        Integer iEncryptSize
+        Integer iVoid
+
+        //*** Initialize
+        Move "" To sEncryptedData
+
+        //*** If this is a stream cipher, use whole stream
+        If (dwBlockSize = 0) Move (Length(sData)) To dwBlockSize
+
+        //*** In a loop get buffer chunks from the data and encrypt those
+        //*** chunks
+        Move False To bReady
+        Repeat
+            //*** Get a chunk
+            If ((Length(sData)) <= dwBlockSize) Begin
+                Move sData To sBuffer
+                Move True  To bReady
+            End
+            Else Begin
+                Move (Left(sData,dwBlockSize)) To sBuffer
+                Move (Right(sData,(Length(sData) - dwBlockSize))) To sData
+            End
+
+            //*** Alocate the data length
+            Move (dWordToBytes(Length(sBuffer))) To sDataLen
+            GetAddress Of sDataLen To pDataLen
+
+            //*** Detemine buffer size
+            Move (CryptEncrypt(hoKey,0,bReady,0,0,pDataLen,0)) To iResult
+            Move (BytesTodWord(sDataLen,1)) To iEncryptSize
+
+            //*** Pad the buffer
+            Move (Append(sBuffer,(Repeat(Character(0),iEncryptSize-(Length(sBuffer)))))) To sBuffer
+            GetAddress Of sBuffer To pBuffer
+
+            //*** Encrypt
+            Move (CryptEncrypt(hoKey,0,bReady,0,pBuffer,pDataLen,iEncryptSize)) To iResult
+            If (iResult = 0) Get ShowLastError To iVoid
+
+            //*** Append encrypted chunk to data
+            If (iResult) Begin
+                Move (BytesTodWord(sDataLen,1)) To iEncryptSize
+                Move (Repeat(Character(0),iEncryptSize)) To sEncryptedChunk
+                GetAddress Of sEncryptedChunk To pEncryptedChunk
+                Move (CopyMemory(pEncryptedChunk,pBuffer,iEncryptSize)) To iVoid
+                Move (Append(sEncryptedData,sEncryptedChunk)) To sEncryptedData
+            End
+        Until (bReady)
+
+        Function_Return sEncryptedData
+    End_Function  // LowLevelEncrypt
+
+    //***
+    //*** Function; Decrypt
+    //*** Purpose : Decrypt passed data
+    //***
+    Function LowLevelDecrypt Handle hoKey dWord dwBlockSize String sData Returns String
+        String  sDecryptedData
+        String  sDecryptedChunk
+        String  sBuffer
+        String  sDataLen
+        Pointer pDataLen
+        Pointer pBuffer
+        Pointer pDecryptedChunk
+        Boolean bReady
+        Integer iResult
+        Integer iDecryptSize
+        Integer iVoid
+
+        //*** Initialize
+        Move "" To sDecryptedData
+
+        //*** If this is a stream cipher, use whole stream
+        If (dwBlockSize = 0) Move (Length(sData)) To dwBlockSize
+
+        //*** In a loop get buffer chunks from the data and decrypt those
+        //*** chunks
+        Move False To bReady
+        Repeat
+            //*** Get a chunk
+            If ((Length(sData)) <= dwBlockSize) Begin
+                Move sData To sBuffer
+                Move True  To bReady
+            End
+            Else Begin
+                Move (Left(sData,dwBlockSize)) To sBuffer
+                Move (Right(sData,(Length(sData) - dwBlockSize))) To sData
+            End
+
+            If (Length(sBuffer)) Begin
+                //*** Alocate the data length
+                ZeroType CryptDword To sDataLen
+                Put (Length(sBuffer)) To sDataLen At CryptDword.dwValue
+                GetAddress Of sDataLen To pDataLen
+
+                //*** Pad the buffer
+                GetAddress Of sBuffer To pBuffer
+
+                //*** Decrypt
+                Move (CryptDecrypt(hoKey,0,bReady,0,pBuffer,pDataLen)) To iResult
+                If (iResult = 0) Get ShowLastError To iVoid
+
+                //*** Append decrypted chunk to data
+                If (iResult) Begin
+                    GetBuff From sDataLen At CryptDword.dwValue To iDecryptSize
+                    Move (Repeat(Character(0),iDecryptSize)) To sDecryptedChunk
+                    GetAddress Of sDecryptedChunk To pDecryptedChunk
+                    Move (CopyMemory(pDecryptedChunk,pBuffer,iDecryptSize)) To iVoid
+                    Move (Append(sDecryptedData,sDecryptedChunk)) To sDecryptedData
+                End
+            End
+        Until (bReady)
+
+        Function_Return sDecryptedData
+    End_Function  // LowLevelDecrypt
+
+    //***
+    //*** Function: DestroyKey
+    //*** Purpose : Destroy a key
+    //***
+    Function DestroyKey Handle lhKey Returns Integer
+        Integer liResult
+
+        Move (CryptDestroyKey(lhKey)) To liResult
+        Function_Return liResult
+    End_Function  // DestroyKey
+
+    //***
+    //*** Function: Crypto
+    //*** Purpose : Perform the passed function on the data using the password
+    //***
+    Function Crypto Integer liMsgId String lsPassword String lsData Returns String
+        Handle  lhProv
+        Handle  lhHash
+        Handle  lhKey
+        String  lsResultText
+        Integer liProvider
+        Integer liHashAlgorithm
+        Integer liCipherAlgorithm
+        Integer liBlockLength
+        Integer liResult
+
+        //*** Initialize
+        Move "" To lsResultText
+
+        //*** Acquire a handle to a provider
+        Get piProvider To liProvider
+        Get AcquireContext liProvider To lhProv
+
+        If (lhProv) Begin
+            //*** Create a key
+            Get piHashAlgorithm To liHashAlgorithm
+            Get CreateHash lhProv liHashAlgorithm To lhHash
+            If (lhHash) Begin
+                Get HashData lhHash lsPassword To liResult
+
+                If (liResult) Begin
+                    Get piCipherAlgorithm To liCipherAlgorithm
+                    Get DeriveKey lhProv liCipherAlgorithm lhHash To lhKey
+                End
+                Get DestroyHash lhHash To liResult
+            End
+
+            //*** Do the actual encryption
+            If (lhKey) Begin
+                Get BlockLength lhKey To liBlockLength
+                Get liMsgId lhKey liBlockLength lsData To lsResultText
+                Get DestroyKey lhKey To liResult
+            End
+
+            //*** Destroy the context
+            Get ReleaseContext lhProv To liResult
+        End
+
+        Function_Return lsResultText
+    End_Function  // Crypto
+
+    //***
+    //*** Function: EncryptCipher
+    //*** Purpose : Encrypt the given data using the given password
+    //***
+    Function EncryptCipher String lsPassword String lsPlaintext Returns String
+        String lsCipherText
+
+        Get Crypto Get_LowLevelEncrypt lsPassword lsPlaintext To lsCipherText
+        Function_Return lsCipherText
+    End_Function  // Encrypt
+
+    //***
+    //*** Function: DecryptCipher
+    //*** Purpose : Decrypt the given data using the given password
+    //***
+    Function DecryptCipher String lsPassword String lsCipherText Returns String
+        String lsPlainText
+
+        Get Crypto Get_LowLevelDecrypt lsPassword lsCipherText To lsPlainText
+        Function_Return lsPlainText
+    End_Function  // Encrypt
+
+    Function HashCode String lsPassword String lsData Returns String
+        Handle  lhProvider
+        Handle  lhHash
+        Handle  lhKey
+        Integer liResult
+        String  lsHash
+
+        Get AcquireContext (piProvider(Self)) To lhProvider
+        If (lhProvider) Begin
+            Get GetUserKey lhProvider To lhKey
+            Get CreateHash lhProvider (piHashAlgorithm(Self)) To lhHash
+            If (lhHash) Begin
+                Get DeriveKey lhProvider (piCipherAlgorithm(Self)) lhHash To lhKey
+                Get HashData lhHash lsData To liResult
+
+                Get HashValue lhHash To lsHash
+                Get DestroyHash lhHash To liResult
+            End
+            If (lhKey) Get DestroyKey lhKey To liResult
+            Get ReleaseContext lhProvider To liResult
+        End
+        Function_Return lhHash
+    End_Function  // HashCode
+End_Class  // cCryptographer

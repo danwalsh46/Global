@@ -1,0 +1,1145 @@
+//************************************************************************
+//*** AKE FileSystem - Binary file operations for VDF5.
+//************************************************************************
+//*** akefs.pkg
+//*** Version: 2.0
+//*** Copyright (c) 2001 NordTeam Gruppen
+//***
+//*** Author......: Allan Kim Eriksen
+//*** Created.....: 23/08 2001
+//*** Last updated: 25/07 2005
+//************************************************************************
+// Functions and procedures to access binary files. Since Direct_input
+// is not able to handle binary files under Windows NT I felt forced to
+// write my own routines using WinAPI. These functions will work under
+// Windows 95/98/Me and Windows 2000/NT/XP.
+// Filenumbers are not limited to 10 but only to system resources! So
+// opening file "test.txt" with filenumber 100 i perfectly legal.
+// These functions are limited to 2 Gb files!
+// Added is also windows API calls for file copy, file move ect.
+// It happens to be that when the dataflex command Erasefile has been
+// called many times (+200 times) in a row it could kill the users network
+// connection on a NOVELL network! By using windows API deletefile
+// it never disconnected. So I now only uses windows API for file
+// handling.
+
+//************************************************************************
+// Increase argument size. Be aware that argument_size has to be larger
+// than the requested amount of bytes read in the buffer for
+// BytesFromBinaryFile
+//************************************************************************
+//set_argument_size 64000
+
+//************************************************************************
+// Constants used for the external functions.
+//************************************************************************
+//fsCreatefile
+#IFDEF GENERIC_READ
+#ELSE
+#Replace GENERIC_READ             |CI$80000000
+#Replace GENERIC_WRITE            |CI$40000000
+#Replace GENERIC_RANDOM           (GENERIC_READ + GENERIC_WRITE)
+#Replace CREATE_NEW               |CI$00000001
+#Replace CREATE_ALWAYS            |CI$00000002
+#Replace OPEN_EXISTING            |CI$00000003
+#Replace OPEN_ALWAYS              |CI$00000004
+#Replace TRUNCATE_EXISTING        |CI$00000005
+#ENDIF
+#IFDEF FILE_ATTRIBUTE_NORMAL
+#ELSE
+#Replace FILE_ATTRIBUTE_NORMAL    |CI$00000080
+#ENDIF
+#IFDEF FILE_SHARE_READ
+#ELSE
+#Replace FILE_SHARE_READ          |CI$1
+#Replace FILE_SHARE_WRITE         |CI$2
+#Replace FILE_SHARE_RANDOM        (FILE_SHARE_READ + FILE_SHARE_WRITE)
+#ENDIF
+//Generel
+#Replace FNULL                    |CI$0
+//FormatString
+#IFDEF FORMAT_MESSAGE_ALLOCATE_BUFFER
+#ELSE
+#Replace FORMAT_MESSAGE_ALLOCATE_BUFFER     |CI$0100
+#Replace FORMAT_MESSAGE_IGNORE_INSERTS      |CI$0200
+#Replace FORMAT_MESSAGE_FROM_STRING         |CI$0400
+#Replace FORMAT_MESSAGE_FROM_HMODULE        |CI$0800
+#Replace FORMAT_MESSAGE_FROM_SYSTEM         |CI$1000
+#Replace FORMAT_MESSAGE_ARGUMENT_ARRAY      |CI$2000
+#Replace FORMAT_MESSAGE_MAX_WIDTH_MASK      |CI$00FF
+#ENDIF
+
+//SetFilePosition
+#Replace FILE_BEGIN     0
+#Replace FILE_CURRENT   1
+#Replace FILE_END       2
+
+// FindFile
+Define INVALID_HANDLE_VALUE   For |CI-1
+Define INVALID_FILE_SIZE      For |CI$FFFFFFFF
+Define ERROR_NO_MORE_FILES    For |CI18
+
+Define FILE_ATTRIBUTE_READONLY   For |CI$01
+Define FILE_ATTRIBUTE_HIDDEN     For |CI$02
+Define FILE_ATTRIBUTE_SYSTEM     For |CI$04
+Define FILE_ATTRIBUTE_DIRECORY   For |CI$10
+Define FILE_ATTRIBUTE_ARCHIVE    For |CI$20
+Define FILE_ATTRIBUTE_NORMAL     For |CI$80
+Define FILE_ATTRIBUTE_TEMPORARY  For |CI$100
+Define FILE_ATTRIBUTE_COMPRESSED For |CI$800
+
+// SearchSingleDirectory
+Enum_List
+    Define DIRMODE_FILES_ONLY For 1
+    Define DIRMODE_DIRECTORIES_ONLY
+    Define DIRMODE_FILES_AND_DIRECTORIES
+End_Enum_List
+
+// InformationParam for search result
+Enum_List
+    Define LIST_FILEATTRIBUTES
+    Define LIST_FILENAME
+    Define LIST_CREATIONDATE
+    Define LIST_CREATIONTIME
+    Define LIST_LASTACCESSDATE
+    Define LIST_LASTACCESSTIME
+    Define LIST_LASTWRITEDATE
+    Define LIST_LASTWRITETIME
+    Define LIST_FILESIZE
+    Define LIST_ALTERNATEFILENAME
+End_Enum_List
+
+//************************************************************************
+// Declarations of external functions.
+// Functions that needs variables for output are made global stings or
+// integers, and can be found on top of the declaration.
+//************************************************************************
+External_Function fsCreatefile "CreateFileA" kernel32.dll ;
+    Pointer lpFile ;      //filename
+    DWord dwDesAccess ;   // access mode
+    DWord dwShare ;       // share mode
+    Pointer lpSecAtt ;    // SD
+    DWord dwCrDisp ;      // how to create
+    DWord dwFlags ;       // file attributes
+    Handle hTempFile ;   // handle to template fil
+    Returns Integer      //Returns handle that can be used to access the object
+
+Integer fsgiErrorNumber
+External_Function fsGetLastError "GetLastError" kernel32.dll Returns Integer
+
+String fsgsOutputMsg   255     //Messagetext
+External_Function fsFormatMessage "FormatMessageA" kernel32.dll ;
+    DWord dwFlags ;         // source and processing options
+    Pointer lpSrc ;         // message source
+    DWord dwMsgId ;         // message identifier
+    DWord dwLngId ;         // language identifier
+    Pointer lpBuf ;         // message buffer
+    DWord nSize ;           // maximum size of message buffer
+    Pointer Arg ;           // array of message inserts
+    Returns Integer
+
+External_Function fsCloseHandle "CloseHandle" kernel32.dll ;
+    Handle hObject ;        // handle to object
+    Returns Integer
+
+Integer fsgiBytesRead         //Readable value of structure value
+External_Function fsReadFile "ReadFile" kernel32.dll ;
+    Handle hFile ;          // handle to file
+    Pointer lpBuffer ;      // data buffer
+    DWord nBytesToRead ;    // number of bytes to read
+    Pointer lpBytesRead ;   // number of bytes read
+    Pointer lpOverlapped ;  // overlapped buffer
+    Returns Integer
+
+Integer fsgiBytesWritten    //Readable value of strucure value
+External_Function fsWriteFile "WriteFile" kernel32.dll ;
+    Handle hFile ;              // handle to file
+    Pointer lpBuf ;             // data buffer
+    DWord nNumBytesWrt ;        // number of bytes to write
+    Pointer lpNumBytesWritten ; // number of bytes written
+    Pointer lpOverlapped ;      // overlapped buffer
+    Returns Integer
+
+External_Function fsGetFileSize "GetFileSize" kernel32.dll ;
+    Handle hFile ;           // handle to file
+    Pointer lpFileSizeHigh ; // high-order word of file size
+    Returns Integer         // low-order word of file size
+
+External_Function fsSetFilePointer "SetFilePointer" kernel32.dll ;
+    Handle hFile ;              // handle to file
+    Integer lDistToMove ;       // bytes to move pointer
+    Pointer lpDistToMoveHigh ;  // bytes to move pointer
+    DWord dwMoveMethod ;        // starting point
+    Returns Integer     // New position for filepointer
+
+External_Function fsSetEndOfFile "SetEndOfFile" kernel32.dll ;
+    Handle hFile ;              // handle to the file to have its EOF position moved.
+    Returns Integer             // nonzero if success
+
+External_Function fsDeleteFile "DeleteFileA" Kernel32.Dll ;
+   Pointer lpFileName ;         // Pointer to a null-terminated string that specifies the file to be deleted.
+   Returns Integer
+
+External_Function fsMoveFile "MoveFileA" Kernel32.Dll ;
+    Pointer lpExistingFileName ;    // Pointer to a null-terminated string that names an existing file or directory.
+    Pointer lpNewFileName ;         // Pointer to a null-terminated string that specifies the new name of a file or directory.
+    Returns Integer                 // The new name must Not already exist. A new File may be on A different File system Or drive. A new directory must be on the same drive.
+
+External_Function fsCopyFile "CopyFileA" Kernel32.Dll ;
+    Pointer lpExistingFileName ;    // Pointer to a null-terminated string that specifies the name of an existing file.
+    Pointer lpNewFileName ;         // Pointer to a null-terminated string that specifies the name of the new file.
+    Boolean bFailIfExists ;         // If bFailIfExists is TRUE and the new file specified by lpNewFileName already exists, the function fails.
+    Returns Integer                 // If bFailIfExists is FALSE and the new file already exists, the function overwrites the existing file and succeeds.
+
+External_Function fsFindFirstFile "FindFirstFileA" Kernel32.Dll ;
+    Pointer lpFileName ;            // Pointer to a null-terminated string that specifies a valid directory or path and file name, which can contain wildcard characters (* and ?).
+    Pointer lpWin32_Find_Data ;     // Pointer to the WIN32_FIND_DATA structure that receives information about the found file or subdirectory.
+    Returns Integer
+
+External_Function fsFindNextFile "FindNextFileA" Kernel32.Dll ;
+    Handle hFindFile ;              // handle returned by a previous call to the FindFirstFile function.
+    Pointer lpWin32_Find_Data ;     // Pointer to the WIN32_FIND_DATA structure that receives information about the found file or subdirectory.
+    Returns Integer
+
+External_Function fsFindClose "FindClose" Kernel32.dll ;
+    Handle hFindFile ;              // File search handle. This handle must have been previously opened by the FindFirstFile function.
+    Returns Integer
+
+External_Function fsFileTimeToSystemTime "FileTimeToSystemTime" Kernel32.dll ;
+    Pointer lpFiletime ;            // Pointer to a FILETIME structure containing the file time to convert to system date and time format.
+    Pointer lpSystemtime ;          // Pointer to a SYSTEMTIME structure to receive the converted file time.
+    Returns Integer
+
+External_Function fsFileTimeToLocalFileTime "FileTimeToLocalFileTime" Kernel32.dll ;
+    Pointer lpFileTime ;            // Pointer to a FILETIME structure containing the UTC-based file time to be converted into a local file time.
+    Pointer lpLocalFileTime ;       // Pointer to a FILETIME structure to receive the converted local file time. This parameter cannot be the same as the lpFileTime parameter.
+    Returns Integer
+
+External_Function fsGetDateFormat "GetDateFormatA" Kernel32.dll ;
+    Integer iLocale ;               // Specifies the locale for which the date string is to be formatted.
+    DWord dwFlags ;                 // Specifies various function options.
+    Pointer lpDate ;                // Pointer to a SYSTEMTIME structure that contains the date information to be formatted.
+    Pointer lpFormat ;              // Pointer to a format picture string that is used to form the date string. The format picture string must be zero terminated.
+    Pointer lpDateStr ;             // Pointer to a buffer that receives the formatted date string.
+    Integer icchDate ;              // Specifies the size, in TCHARs, of the lpDateStr buffer.
+    Returns Integer
+
+External_Function fsGetTimeFormat "GetTimeFormatA" Kernel32.dll ;
+    Integer iLocale ;               // Specifies the locale for which the time string is to be formatted.
+    DWord dwFlags ;                 // Specifies various function options.
+    Pointer lpTime ;                // Pointer to a SYSTEMTIME structure that contains the time information to be formatted.
+    Pointer lpFormat ;              // Pointer to a format picture to use to form the time string.
+    Pointer lpTimeStr ;             // Pointer to a buffer that receives the formatted time string.
+    Integer icchTime ;              // Specifies the size, in TCHARs, of the lpTimeStr buffer.
+    Returns Integer
+
+External_Function fsGetTempFileName "GetTempFileNameA" kernel32.dll ;
+    Pointer sPathname ;
+    Pointer sPrefixString ;
+    Integer iUnique ;
+    Pointer sTempFileName ;
+    Returns Integer
+
+External_Function fsGetTempPath "GetTempPathA" Kernel32.Dll ;
+    Integer nBufferLength ;
+    Pointer lpBuffer ;
+    Returns Integer
+
+External_Function fsCreateDirectory "CreateDirectoryA" Kernel32.dll ;
+    Pointer lpDirName ;             // Pointer to a null-terminated string that specifies the path of the directory to be created.
+    Pointer lpSecAttributes ;       // Pointer to a SECURITY_ATTRIBUTES structure.
+    Returns Integer
+
+External_Function fsRemoveDirectory "RemoveDirectoryA" Kernel32.dll ;
+    Pointer lpDirName ;             // Pointer to a null-terminated string that specifies the path of the directory to be removed.
+    Returns Integer
+
+//************************************************************************
+// Structures
+//************************************************************************
+Type structBytesReadType    //Used by ReadFile
+    Field structBytesReadType.integer0 as DWord
+End_Type
+
+Type structBytesWrittenType    //Used by WriteFile
+    Field structBytesWrittenType.integer0 as DWord
+End_Type
+
+Type structWFD  // Used by FindFirstFile
+    Field structWFD.dwFileAttributes as DWord
+    Field structWFD.ftCreationLowDateTime as DWord
+    Field structWFD.ftCreationHighDateTime as DWord
+    Field structWFD.ftLastAccessLowDateTime as DWord
+    Field structWFD.ftLastAccessHighDateTime as DWord
+    Field structWFD.ftLastWriteLowDateTime as DWord
+    Field structWFD.ftLastWriteHighDateTime as DWord
+    Field structWFD.nFileSizeHigh as DWord
+    Field structWFD.nFileSizeLow as DWord
+    Field structWFD.dares as DWord
+    Field structWFD.dbres as DWord
+    Field structWFD.cFileName as Char 260
+    Field structWFD.cAlternateFileName as Char 14
+End_Type
+
+Type structFileTime
+    Field structFileTime.dwLowDateTime as DWord
+    Field structFileTime.dwHighDateTime as DWord
+End_Type
+
+Type structSystemTime
+    Field structSystemTime.wYear as word
+    Field structSystemTime.wMonth as word
+    Field structSystemTime.wDayOfWeek as word
+    Field structSystemTime.wDay as word
+    Field structSystemTime.wHour as word
+    Field structSystemTime.Minute as word
+    Field structSystemTime.wSecond as word
+    Field structSystemTime.wMillieseconds as word
+End_Type
+
+//************************************************************************
+// Other global variables.
+//************************************************************************
+Integer fsgiFileEOF   // True then the end of the binary file had been read - not when $1A (EOF) is met.
+Integer fsgiError     // True if any error has occured during fileoprerations.
+Boolean fsgbErrorAsVDFError // True if errormessages should be called with dataflex error command.
+
+//************************************************************************
+// Arrays
+//************************************************************************
+Object aFileHandle Is An Array  //Keeps assigned handles for each filenumber.
+End_Object
+
+Object aFileName Is An Array    //Keeps assigned filename for each filenumber (in OEM format).
+End_Object
+
+//************************************************************************
+// Fetch the error message from the system message table using the
+// default language.
+// PRIVATE
+//************************************************************************
+Procedure DoShowError String sAppendErrorText
+    Pointer lpOut
+    Integer iRetChars iRetVal iMaxFiles
+    String sMsg sFilename
+    ZeroString 255 To fsgsOutputMsg
+    GetAddress Of fsgsOutputMsg To lpOut
+    Move (fsFormatMessage((FORMAT_MESSAGE_FROM_SYSTEM+FORMAT_MESSAGE_IGNORE_INSERTS), FNULL, fsgiErrorNumber, FNULL, lpOut, 255, FNULL)) To iRetChars
+    Left fsgsOutputMsg To sMsg iRetChars
+    Move (ToOEM(sMsg)) To sMsg
+    If (num_arguments > 0) Begin
+        Move (Trim(sAppendErrorText)) To sAppendErrorText
+        If (sAppendErrorText <> "") Begin
+            Append sMsg "\n\n" sAppendErrorText
+        End
+    End
+    Send warning_box sMsg
+End_Procedure
+
+//************************************************************************
+// Fetch the filename from the list of filenames associated with a filenumber.
+// PRIVATE
+//************************************************************************
+Function FilenameFromArray Integer iFilenumber Returns String
+    Integer iMaxFiles
+    String sFilename
+    Move "" To sFilename
+    Get item_count Of aFilename To iMaxFiles
+    If (iFilenumber < iMaxFiles) Begin
+        Get string_value Of aFilename Item iFilenumber To sFilename
+    End
+    Function_Return sFilename
+End_Function
+
+//************************************************************************
+// Fetch the filename from the list of filenames associated with a filenumber.
+// This function is used for reporting filenames during an error.
+// PRIVATE
+//************************************************************************
+Function FileErrorText Integer iFilenumber Returns String
+    String sErrorText
+    Get FilenameFromArray iFilenumber To sErrorText
+    If (sErrorText <> "") Begin
+        Move ("File: "+sErrorText) To sErrorText
+    End
+    Function_Return sErrorText
+End_Function
+
+//************************************************************************
+// Shows a warning message to user with OK button and a exclamation icon.
+//************************************************************************
+Procedure warning_box String sWngMsg
+    Integer iVoid
+    Move 1 To fsgiError
+    If (fsgbErrorAsVDFError= False) Get Message_Box sWngMsg "AKE FileSystem Error" MB_OK MB_ICONEXCLAMATION To iVoid
+    Else Error Dferr_Program sWngMsg
+End_Procedure
+
+//************************************************************************
+// Opens a binary file.
+// Both read and write.
+// If bShared is false or not pharsed the file is opened in exclusive.
+// If bShared is True the file is opened with both read and write shared mode
+// If bCreate is True the file is created if it does not exist already.
+// If bReadOnly is True the file is opened with only read access (and only read shared mode if bShared is also true).
+//************************************************************************
+Procedure DoOpenBinaryFile Integer iFilenumber String sFilename Boolean bShared Boolean bCreate Boolean bReadOnly
+    Pointer lpFilenamePointer
+    Integer iReturnValue
+    String sSharedMode sCreateMode sAccessMode
+    Set array_value Of aFileName Item iFilenumber To sFilename
+    Move (ToAnsi(sFilename)) To sFilename
+    Move 0 To fsgiError
+    Move GENERIC_RANDOM To sAccessMode
+    Move FNULL To sSharedMode
+    If (num_arguments > 2) Begin
+        If (bShared = True) Move FILE_SHARE_RANDOM To sSharedMode
+    End
+    Move OPEN_EXISTING To sCreateMode
+    If (num_arguments > 3) Begin
+        If (bCreate = True) Move OPEN_ALWAYS To sCreateMode
+    End
+    If (num_arguments > 4) Begin
+        If (bReadOnly = True) Begin
+            Move GENERIC_READ To sAccessMode
+            If (bShared = True) Move FILE_SHARE_READ To sSharedMode
+        End
+    End
+    //Fill the structure with data
+    Append sFilename (Character(0)) (Character(0))
+    GetAddress Of sFilename To lpFilenamePointer
+    //Windows 95/98/Me: The hTemplateFile parameter must be NULL.
+    //Call function
+    Move (fsCreatefile(lpFilenamePointer, sAccessMode, sSharedMode, FNULL, sCreateMode, FILE_ATTRIBUTE_NORMAL, FNULL)) To iReturnValue
+    If (iReturnValue = INVALID_HANDLE_VALUE) Begin
+        Move (fsGetLastError()) To fsgiErrorNumber
+        If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+        Procedure_Return
+    End
+    Set array_value Of (aFileHandle(Self)) Item iFilenumber To iReturnValue
+    Move 0 To fsgiFileEOF
+End_Procedure
+
+//************************************************************************
+// Closing a binary file
+//************************************************************************
+Procedure DoCloseBinaryFile Integer iFilenumber
+    Integer iHandle iRetVal
+    Move 0 To fsgiError
+    Get integer_value Of (aFileHandle(Self)) Item iFilenumber To iHandle
+    If iHandle Begin
+        Move (fsCloseHandle(iHandle)) To iRetVal
+        If (iRetVal = 0) Begin           //Could not close
+            Move (fsGetLastError()) To fsgiErrorNumber
+            If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+        End
+        Else Set array_value Of (aFileHandle(Self)) Item iFilenumber To 0
+    End
+End_Procedure
+
+//************************************************************************
+// Reading from a binary file.
+// Then the function returns an empty string the end of file has been
+// reached or an error has occured. fsgiFileEOF will then be 1.
+// the reading process. No errors occures if you try to read past end
+// of file.
+// To speed up reading process use a high number of bytes to read in
+// iNumberOfBytes! No errors occures if you try to read past end
+// of file. Note that iNumberOfBytes must not exceed the argument size!
+//************************************************************************
+Function BytesFromBinaryFile Global Integer iFilenumber Integer iNumberOfBytes Returns String
+    String sOut
+    Integer iBufPnt iBytesReadPnt iNewBytes iHandle iReturnValue
+    Integer iMaxBuffer
+    String sOutBuffer      //Data output from file - Max buffer size
+    String structBytesRead      //Actual bytes read - Should be integer but getAddress cannot find memoryadress for integers!
+                                    //Therefore a structure is used and converted to fsgiBytesRead
+    Move 0 To fsgiError
+    Move "" To sOut
+//    If (fsgiFileEOF = True) Begin
+//        //send warning_box "Readning past end of file is not possible."
+//        Function_Return ""
+//    End
+    Get_Argument_Size To iMaxBuffer
+    If (iNumberOfBytes > iMaxBuffer) Begin
+        Send warning_box "Blocksize to read exceeds argument size!"
+        Function_Return ""
+    End
+    Get integer_value Of (aFileHandle(Self)) Item iFilenumber To iHandle
+    If iHandle Begin
+        ZeroString iNumberOfBytes To sOutBuffer
+        ZeroType structBytesReadType To structBytesRead
+        GetAddress Of sOutBuffer To iBufPnt
+        Move 0 To fsgiBytesRead
+        GetAddress Of structBytesRead To iBytesReadPnt
+        Move (fsReadFile(iHandle, iBufPnt, iNumberOfBytes, iBytesReadPnt, FNULL)) To iReturnValue
+        GetBuff From structBytesRead At structBytesReadType.integer0 To fsgiBytesRead
+        Left sOutBuffer To sOut fsgiBytesRead
+        If (iReturnValue = 0) Begin
+            Move (fsGetLastError()) To fsgiErrorNumber
+            If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+        End
+        Else Begin
+            If ((fsgiBytesRead = 0) Or (fsgiBytesRead <> iNumberOfBytes)) Begin
+                Move 1 To fsgiFileEOF
+                //send warning_box "Readning past end of file is not possible."
+            End
+        End
+    End
+    Else Send warning_box "File not open."
+    Function_Return sOut
+End_Procedure
+
+//************************************************************************
+// Writing to a binary file.
+//************************************************************************
+Procedure DoWriteToBinaryFile Integer iFilenumber String sWriteData
+    Integer iBufPnt iBytesWrittenPnt iHandle iReturnValue iNumberOfBytes
+    String structBytesWritten //Actual bytes written - Should be integer but getAddress cannot find memoryadress for integers!
+                                    //Therefore a structure is used and converted to fsgiBytesWritten
+    Move 0 To fsgiError
+    Get integer_value Of (aFileHandle(Self)) Item iFilenumber To iHandle
+    If iHandle Begin
+        ZeroType structBytesWrittenType To structBytesWritten
+        Length sWriteData To iNumberOfBytes
+        GetAddress Of sWriteData To iBufPnt
+        Move 0 To fsgiBytesWritten
+        GetAddress Of structBytesWritten To iBytesWrittenPnt
+        Move (fsWriteFile(iHandle, iBufPnt, iNumberOfBytes, iBytesWrittenPnt, FNULL)) To iReturnValue
+        GetBuff From structBytesWritten At structBytesWrittenType.integer0 To fsgiBytesWritten
+        If (iReturnValue = 0) Begin
+            Move (fsGetLastError()) To fsgiErrorNumber
+            If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+        End
+        If (fsgiBytesWritten <> iNumberOfBytes) Begin
+            Send Warning_box "Not all data could be written!"
+        End
+    End
+    Else Send warning_box "File not open."
+End_Procedure
+
+//************************************************************************
+// Retrives the file size from a binary file.
+//************************************************************************
+Function BinaryFileSize Global Integer iFilenumber Returns Number
+    Integer iFilesize iHandle
+    Move 0 To fsgiError
+    Move 0 To iFilesize
+    Get integer_value Of (aFileHandle(Self)) Item iFilenumber To iHandle
+    If iHandle Begin
+        Move (fsGetFileSize(iHandle, FNULL)) To iFileSize
+        If (iFileSize = -1) Begin
+            Move (fsGetLastError()) To fsgiErrorNumber
+            If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+        End
+    End
+    Else Send warning_box "File not open."
+    Function_Return iFileSize
+End_Function
+
+//************************************************************************
+// Retrives the file position from a binary file.
+//************************************************************************
+Function BinaryFilePosition Global Integer iFilenumber Returns Integer
+    Integer iNewPos iHandle
+    Move 0 To fsgiError
+    Move -1 To iNewPos
+    Get integer_value Of (aFileHandle(Self)) Item iFilenumber To iHandle
+    If iHandle Begin
+        Move (fsSetFilePointer(iHandle, 0, FNULL, FILE_CURRENT)) To iNewPos
+        If (iNewPos = -1) Begin
+            Move (fsGetLastError()) To fsgiErrorNumber
+            If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+        End
+    End
+    Else Send warning_box "File not open."
+    Function_Return iNewPos
+End_Function
+
+//************************************************************************
+// Sets the file position from a binary file to a new position.
+// Access: "Set BinaryFilePosition filenumber fileposition"
+//************************************************************************
+Procedure Set BinaryFilePosition Integer iFilenumber Integer iPosition Returns Integer
+    Integer iNewPos iHandle
+    Move 0 To fsgiError
+    Move -1 To iNewPos
+    Get integer_value Of (aFileHandle(Self)) Item iFilenumber To iHandle
+    If iHandle Begin
+        Move (fsSetFilePointer(iHandle, iPosition, FNULL, FILE_BEGIN)) To iNewPos
+        If (iNewPos = -1) Begin
+            Move (fsGetLastError()) To fsgiErrorNumber
+            If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+        End
+        Else Move 0 To fsgiFileEOF
+    End
+    Else Send warning_box "File not open."
+    Procedure_Return iNewPos
+End_Procedure
+
+//************************************************************************
+// Truncate og extend a binary file to the specified file position
+// by setting the binary file End Of File position.
+// If iPosition is -1 the current file position is used as EOF position.
+//************************************************************************
+Procedure Set BinaryEndOfFile Integer iFilenumber Integer iPosition Returns Integer
+    Integer iHandle iReturnVal
+    Move 0 To fsgiError
+    Get integer_value Of (aFileHandle(Self)) Item iFilenumber To iHandle
+    If iHandle Begin
+        If (iPosition > -1) Set BinaryFilePosition iFilenumber To iPosition
+        If (fsgiError = 0) Begin
+            Move (fsSetEndOfFile(iHandle)) To iReturnVal
+            If (iReturnVal = 0) Begin
+                Move (fsGetLastError()) To fsgiErrorNumber
+                If fsgiErrorNumber Send DoShowError (FileErrorText(Self, iFilenumber))
+            End
+            Else Move 1 To fsgiFileEOF
+        End
+    End
+    Else Send warning_box "File not open."
+End_Procedure
+
+//************************************************************************
+// Deletes a file.
+// Returns True if succeeds.
+//************************************************************************
+Function FileDelete Global String sFilename Returns Boolean
+    Integer iRetVal
+    String sFile
+    Pointer lpFilename
+    Boolean bFound
+    Get FileExists sFilename To bFound
+    If (Not(bFound)) Function_Return False
+    Move (ToAnsi(sFilename)) To sFilename
+    Move (sFilename+(Character(0))) To sFile
+    GetAddress Of sFile To lpFilename
+    Move (fsDeleteFile(lpFilename)) To iRetVal
+    If (iRetVal = 0) Begin           // Could not delete
+        Move (fsGetLastError()) To fsgiErrorNumber
+        If fsgiErrorNumber Send DoShowError ("Tried to delete file: "+sFilename)
+    End
+    Function_Return (iRetVal > 0)
+End_Function
+
+//************************************************************************
+// Moves a file or directory.
+// Returns True if succeeds.
+//************************************************************************
+Function FileMove Global String sExistingFileName String sNewFileName Returns Boolean
+    Integer iRetVal
+    String sFrom sTo
+    Pointer lpFrom lpTo
+    Move (ToAnsi(sExistingFileName)) To sExistingFileName
+    Move (ToAnsi(sNewFileName)) To sNewFileName
+    Move (sExistingFileName+(Character(0))) To sFrom
+    Move (sNewFileName+(Character(0))) To sTo
+    GetAddress Of sFrom To lpFrom
+    GetAddress Of sTo To lpTo
+    Move (fsMoveFile(lpFrom, lpTo)) To iRetVal
+    If (iRetVal = 0) Begin           // Could not move
+        Move (fsGetLastError()) To fsgiErrorNumber
+        If fsgiErrorNumber Send DoShowError ("Tried to move/rename file: "+sExistingFileName+" to "+sNewFileName)
+    End
+    Function_Return (iRetVal > 0)
+End_Function
+
+//************************************************************************
+// Copies a file. Overwriting an existing file by default.
+// Returns True if succeeds.
+//************************************************************************
+Function FileCopy Global String sExistingFileName String sNewFileName Boolean bFailIfExists Returns Boolean
+    Integer iRetVal
+    String sFrom sTo
+    Boolean bDoNotOverwrite
+    Pointer lpFrom lpTo
+    Move (ToAnsi(sExistingFileName)) To sExistingFileName
+    Move (ToAnsi(sNewFileName)) To sNewFileName
+    Move (sExistingFileName+(Character(0))) To sFrom
+    Move (sNewFileName+(Character(0))) To sTo
+    If (Num_Arguments > 2) Move bFailIfExists To bDoNotOverwrite
+    Else Move False To bDoNotOverwrite
+    GetAddress Of sFrom To lpFrom
+    GetAddress Of sTo To lpTo
+    Move (fsCopyFile(lpFrom, lpTo, bDoNotOverwrite)) To iRetVal
+    If (iRetVal = 0) Begin           // Could not move
+        Move (fsGetLastError()) To fsgiErrorNumber
+        If fsgiErrorNumber Send DoShowError ("Tried to copy file: "+sExistingFileName+" to "+sNewFileName)
+    End
+    Function_Return (iRetVal > 0)
+End_Function
+
+//************************************************************************
+// Renames a file or directory.
+// Returns True if succeeds.
+//************************************************************************
+Function FileRename Global String sExistingFileName String sNewFileName Returns Boolean
+    Boolean bRetVal
+    Get FileMove sExistingFileName sNewFileName To bRetVal
+    Function_Return bRetVal
+End_Function
+
+//************************************************************************
+// Searches for a file
+// iMode = DIRMODE_FILES_ONLY (default)
+// iMode = DIRMODE_DIRECTORIES_ONLY
+// iMode = DIRMODE_FILES_AND_DIRECTORIES
+// Returns True if found
+//************************************************************************
+Function FileExists Global String sFilePathMask Integer iFileDirMode Returns Boolean
+    String sFindData sFileFound sData
+    Pointer lpFilePathMask lpFindData
+    Handle hFindFile hResult
+    Integer iCount iError iMode iFileAttributes iValLo iValHi
+    Boolean bOk bStop bFound
+    Date dDate
+    Move False To bFound
+    If (num_arguments < 2) Move DIRMODE_FILES_ONLY To iMode
+    Else Move iFileDirMode To iMode
+    Move (ToAnsi(sFilePathMask)) To sFilePathMask
+    ZeroType structWFD To sFindData
+    GetAddress Of sFilePathMask To lpFilePathMask
+    GetAddress Of sFindData To lpFindData
+    Move (fsFindFirstFile(lpFilePathMask, lpFindData)) To hFindFile
+    If (hFindFile <> INVALID_HANDLE_VALUE) Begin
+        Move (fsFindClose(hFindFile)) To bOk
+        Move False To bFound
+        GetBuff From sFindData At structWFD.dwFileAttributes To iFileAttributes
+        Case Begin
+            Case (iMode = DIRMODE_FILES_ONLY)
+                If (iFileAttributes Iand FILE_ATTRIBUTE_DIRECORY = 0) Move True To bFound
+                Case Break
+            Case (iMode = DIRMODE_DIRECTORIES_ONLY)
+                If (iFileAttributes Iand FILE_ATTRIBUTE_DIRECORY = FILE_ATTRIBUTE_DIRECORY) Move True To bFound
+                Case Break
+             Case Else
+                Move True To bFound
+                Case Break
+        Case End
+    End
+    Function_Return bFound
+End_Function
+
+//************************************************************************
+// Basic directory/file search class.
+//************************************************************************
+Class cDirectory Is An Array
+
+    Procedure Construct_object
+        Forward Send Construct_object
+        // Properties
+        Property Date pdFileDate public 0   // private
+        Property String psFileTime public "" // private
+    End_Procedure
+
+    // Search a directory for the files with normal windows mask-signs
+    // Returns the number of matching files and directories
+    // iMode = DIRMODE_FILES_ONLY
+    // iMode = DIRMODE_DIRECTORIES_ONLY
+    // iMode = DIRMODE_FILES_AND_DIRECTORIES (default)
+    Function SearchSingleDirectory String sFilePathMask Integer iFileDirMode Returns Integer
+        String sFindData sFileFound sData
+        Pointer lpFilePathMask lpFindData
+        Handle hFindFile hResult
+        Integer iCount iError iMode iFileAttributes iValLo iValHi
+        Boolean bOk bStop
+        Date dDate
+        Send Delete_Data
+        If (num_arguments < 2) Move DIRMODE_FILES_AND_DIRECTORIES To iMode
+        Else Move iFileDirMode To iMode
+        Move (ToAnsi(sFilePathMask)) To sFilePathMask
+        ZeroType structWFD To sFindData
+        GetAddress Of sFilePathMask To lpFilePathMask
+        GetAddress Of sFindData To lpFindData
+        Move (fsFindFirstFile(lpFilePathMask, lpFindData)) To hFindFile
+        If (hFindFile = INVALID_HANDLE_VALUE) Begin
+            // Deactivated errormessage when there are no files found at all.
+            // If needed uncomment these lines.
+            // Move (fsGetLastError()) To fsgiErrorNumber
+            // If fsgiErrorNumber Send DoShowError
+            Function_Return 0
+        End
+        Move 0 To fsgiError
+        Move False To bStop
+        While (fsgiError = 0 And bStop = False)
+            Move False To bOk
+            GetBuff From sFindData At structWFD.dwFileAttributes To iFileAttributes
+            Case Begin
+                Case (iMode = DIRMODE_FILES_ONLY)
+                    If (iFileAttributes Iand FILE_ATTRIBUTE_DIRECORY = 0) Move True To bOk
+                    Case Break
+                Case (iMode = DIRMODE_DIRECTORIES_ONLY)
+                    If (iFileAttributes Iand FILE_ATTRIBUTE_DIRECORY = FILE_ATTRIBUTE_DIRECORY) Move True To bOk
+                    Case Break
+                 Case Else
+                    Move True To bOk
+                    Case Break
+            Case End
+            If (bOk = True) Begin
+                GetBuff_String From sFindData At structWFD.cFileName To sFileFound
+                Move (ToOem(sFileFound)) To sFileFound
+                Move (Replaces(Character(0), sFileFound, "")) To sFileFound
+                Get item_count To iCount
+                Get create U_array To hResult
+                Set array_value Item iCount To hResult
+                Set array_value Of hResult Item LIST_FILENAME To sFileFound
+                GetBuff From sFindData At structWFD.dwFileAttributes To iValLo
+                Set array_value Of hResult Item LIST_FILEATTRIBUTES To iValLo
+                GetBuff From sFindData At structWFD.ftCreationLowDateTime To iValLo
+                GetBuff From sFindData At structWFD.ftCreationHighDateTime To iValHi
+                Get ConvFileTimeToProp iValLo iValHi To bOk
+                If (bOk = True) Begin
+                    Get pdFileDate To dDate
+                    Set array_value Of hResult Item LIST_CREATIONDATE To dDate
+                    Get psFileTime To sData
+                    Set array_value Of hResult Item LIST_CREATIONTIME To sData
+                End
+                GetBuff From sFindData At structWFD.ftLastAccessLowDateTime To iValLo
+                GetBuff From sFindData At structWFD.ftLastAccessHighDateTime To iValHi
+                Get ConvFileTimeToProp iValLo iValHi To bOk
+                If (bOk = True) Begin
+                    Get pdFileDate To dDate
+                    Set array_value Of hResult Item LIST_LASTACCESSDATE To dDate
+                    Get psFileTime To sData
+                    Set array_value Of hResult Item LIST_LASTACCESSTIME To sData
+                End
+                GetBuff From sFindData At structWFD.ftLastWriteLowDateTime To iValLo
+                GetBuff From sFindData At structWFD.ftLastWriteHighDateTime To iValHi
+                Get ConvFileTimeToProp iValLo iValHi To bOk
+                If (bOk = True) Begin
+                    Get pdFileDate To dDate
+                    Set array_value Of hResult Item LIST_LASTWRITEDATE To dDate
+                    Get psFileTime To sData
+                    Set array_value Of hResult Item LIST_LASTWRITETIME To sData
+                End
+                GetBuff From sFindData At structWFD.nFileSizeLow To iValLo
+                Set array_value Of hResult Item LIST_FILESIZE To iValLo
+                GetBuff_String From sFindData At structWFD.cAlternateFileName To sData
+                Move (ToOem(sData)) To sData
+                Move (Replaces(Character(0), sData, "")) To sData
+                Set array_value Of hResult Item LIST_ALTERNATEFILENAME To sData
+            End
+            ZeroType structWFD To sFindData
+            GetAddress Of sFindData To lpFindData
+            Move (fsFindNextFile(hFindFile, lpFindData)) To bOk
+            If (bOk = False) Begin
+                Move (fsGetLastError()) To fsgiErrorNumber
+                If (fsgiErrorNumber <> ERROR_NO_MORE_FILES) Send DoShowError ("Search path:"+sFilePathMask)
+                Move True To bStop
+            End
+        Loop
+        Move (fsFindClose(hFindFile)) To bOk
+        Get item_count To iCount
+        Function_Return iCount
+    End_Function
+
+    // Private
+    Function ConvFileTimeToProp Integer iLow Integer iHigh Returns Boolean
+        String sFileTime sLocalFileTime sSystemTime sBuff sTime
+        Integer lpFiletime lpLocalFileTime iRet
+        Integer lpSystemTime lpBuff iChars iNoOfChars
+        Date dDate
+        Set pdFileDate To 0
+        Set psFileTime To ""
+        ZeroType structFileTime To sFileTime
+        ZeroType structFileTime To sLocalFileTime
+        Put iLow To sFileTime At structFileTime.dwLowDateTime
+        Put iHigh To sFileTime At structFileTime.dwHighDateTime
+        GetAddress Of sFileTime To lpFileTime
+        GetAddress Of sLocalFileTime To lpLocalFileTime
+        Move (fsFileTimeToLocalFileTime(lpFileTime, lpLocalFileTime)) To iRet
+        ZeroType structSystemTime To sSystemTime
+        GetAddress Of sLocalFileTime To lpLocalFileTime
+        GetAddress Of sSystemTime To lpSystemTime
+        Move (fsFileTimeToSystemTime(lpLocalFileTime, lpSystemTime)) To iRet
+        Move 64 To iChars
+        ZeroString iChars To sBuff
+        GetAddress Of sBuff To lpBuff
+        GetAddress Of sSystemTime To lpSystemTime
+        Move (fsGetDateFormat(FNULL, 0, lpSystemTime, FNULL, lpBuff, iChars)) To iNoOfchars
+        Move (Left(sBuff, iNoOfchars)) To dDate
+        Set pdFileDate To dDate
+        Move 64 To iChars
+        ZeroString iChars To sBuff
+        GetAddress Of sBuff To lpBuff
+        GetAddress Of sSystemTime To lpSystemTime
+        Move (fsGetTimeFormat(FNULL, 0, lpSystemTime, FNULL, lpBuff, iChars)) To iNoOfchars
+        Move (Left(sBuff, iNoOfchars)) To sTime
+        Set psFileTime To sTime
+        Function_Return True
+    End_Function
+
+    // Returns the result of a search at an item position and requested paramter.
+    // iInformationParam can be:
+    // LIST_FILEATTRIBUTES
+    // LIST_FILENAME
+    // LIST_CREATIONDATE
+    // LIST_CREATIONTIME
+    // LIST_LASTACCESSDATE
+    // LIST_LASTACCESSTIME
+    // LIST_LASTWRITEDATE
+    // LIST_LASTWRITETIME
+    // LIST_FILESIZE
+    // LIST_ALTERNATEFILENAME
+    Function SearchResult Integer iItem Integer iInformationParam Returns String
+        Integer iCount
+        Handle hObj
+        String sRetVal
+        Move "" To sRetVal
+        Get item_count To iCount
+        If (iItem < iCount) Begin
+            Get integer_value Item iItem To hObj
+            If (hObj > 0) Get string_value Of hObj Item iInformationParam To sRetVal
+        End
+        Function_Return sRetVal
+    End_Function
+
+    // Argumentet for destroying child object.
+    Procedure Delete_Data
+        Integer iCount iItem iChildren
+        Handle hObj
+        Get child_count To iChildren
+        If (iChildren) Begin
+            Get item_count To iCount
+                For iItem From 0 To (iCount - 1)
+                        Get value Item iItem To hObj
+                        If (hObj > 0) Send Destroy Of hObj
+                Loop
+        End
+        Forward Send Delete_Data
+    End_Procedure
+
+End_Class
+
+//************************************************************************
+// Returns the file size of a file.
+// Returns -1 if an error occured.
+//************************************************************************
+Function GetFileSize Global String sFile Returns Integer
+    Integer iSize iNumber
+    Handle hDir
+    Move -1 To iSize
+    Get Create U_cDirectory To hDir
+    If (hDir = 0) Function_Return iSize
+    Get SearchSingleDirectory Of hDir sFile DIRMODE_FILES_ONLY To iNumber
+    If (iNumber = 1) Begin
+        Get SearchResult Of hDir 0 LIST_FILESIZE To iSize
+    End
+    Send Destroy Of hDir
+    Function_Return iSize
+End_Function
+
+//************************************************************************
+// Returns the last write date of a file.
+// Returns 0 if an error occured.
+//************************************************************************
+Function GetFileDate Global String sFile Returns Date
+    Integer iNumber
+    Handle hDir
+    Date dLastDate
+    Move 0 To dLastDate
+    Get Create U_cDirectory To hDir
+    If (hDir = 0) Function_Return dLastDate
+    Get SearchSingleDirectory Of hDir sFile DIRMODE_FILES_ONLY To iNumber
+    If (iNumber = 1) Begin
+        Get SearchResult Of hDir 0 LIST_LASTWRITEDATE To dLastDate
+    End
+    Send Destroy Of hDir
+    Function_Return dLastDate
+End_Function
+
+//************************************************************************
+// Get Windows Temp path
+//************************************************************************
+Function GetWinTempPath Global Returns String
+    String sTempPath
+    Integer iRetVal
+    ZeroString 260 To sTempPath
+    Move (fsGetTempPath(260, AddressOf(sTempPath))) To iRetVal
+    If (iRetVal > 260) Begin
+        ZeroString iRetval To sTempPath
+        Move (fsGetTempPath(iRetVal, AddressOf(sTempPath))) To iRetVal
+    End
+    Function_Return (ToOem(Cstring(sTempPath)))
+End_Function
+
+//************************************************************************
+// Generates a temporary file.
+// Returns full path and filename or blank if no file could be created.
+// sPathName is the place where the temporary file is generated. If it is
+// not argumented the TEMP enviroment variable is used. If that is also
+// available the current directory is used.
+// You can prefix the first 3 letters of the filename with sPrefix.
+//************************************************************************
+Function GetTempFileName String sPathName String sPrefix Returns String
+    String spPathName spPrefix spTempFileName sRetVal
+    Pointer lpPathName lpPrefix lpTempFilename
+    Integer iOk iSize
+    Move (Trim(sPathName)) To sPathName
+    If (sPathName = "") Begin
+        Get GetWinTempPath To sPathName
+        If (sPathName = "") Move "." To sPathName
+    End
+    ZeroString 128 To spPathName
+    ZeroString 10 To spPrefix
+    ZeroString 128 To spTempFilename
+    Move (ToANSI(sPathName)) To spPathName
+    Move (ToANSI(sPrefix)) To spPrefix
+    GetAddress Of spPathName To lpPathname
+    GetAddress Of spPrefix To lpPrefix
+    GetAddress Of spTempFilename To lpTempFilename
+    Move (fsGetTempFileName(lpPathname, lpPrefix, 0, lpTempFilename)) To iOk
+    If (iOK <> 0) Begin
+        Move (Replaces(Character(0), spTempFilename, "")) To sRetVal
+        Move (ToOEM(sRetVal)) To sRetVal
+    End
+    Function_Return sRetVal
+End_Function
+
+//************************************************************************
+// As GetTempFileName but returns the filename without the path.
+//************************************************************************
+Function GetTempFileNameNoPath String sPathName String sPrefix Returns String
+    String sFile
+    Get GetTempFileName sPathName sPrefix To sFile
+    If (sFile = "") Function_Return ""
+    Get ExtractFileName sFile To sFile
+    Function_Return sFile
+End_Function
+
+//************************************************************************
+// Creates a new directory.
+// Returns True if succeeds.
+//************************************************************************
+Function CreateDirectory Global String sDirname Returns Boolean
+    Integer iRetVal
+    String sFile
+    Pointer lpFilename
+    Boolean bFound
+    Get FileExists sDirname DIRMODE_DIRECTORIES_ONLY To bFound
+    If (bFound) Function_Return False
+    Move (toAnsi(sDirname)) To sDirname
+    Move (sDirname+(Character(0))) To sFile
+    GetAddress Of sFile To lpFilename
+    Move (fsCreateDirectory(lpFilename, FNULL)) To iRetVal
+    If (iRetVal = 0) Begin           // Could not create
+        Move (fsGetLastError()) To fsgiErrorNumber
+        If fsgiErrorNumber Send DoShowError ("Tried to create directory: "+sDirname)
+    End
+    Function_Return (iRetVal > 0)
+End_Function
+
+//************************************************************************
+// Deletes an existing empty directory.
+// Returns True if succeeds.
+//************************************************************************
+Function RemoveDirectory Global String sDirname Returns Boolean
+    Integer iRetVal
+    String sFile
+    Pointer lpFilename
+    Boolean bFound
+    Get FileExists sDirname DIRMODE_DIRECTORIES_ONLY To bFound
+    If (Not(bFound)) Function_Return False
+    Move (toAnsi(sDirname)) To sDirname
+    Move (sDirname+(Character(0))) To sFile
+    GetAddress Of sFile To lpFilename
+    Move (fsRemoveDirectory(lpFilename)) To iRetVal
+    If (iRetVal = 0) Begin           // Could not delete
+        Move (fsGetLastError()) To fsgiErrorNumber
+        If fsgiErrorNumber Send DoShowError ("Tried to remove directory: "+sDirname)
+    End
+    Function_Return (iRetVal > 0)
+End_Function
+
+//************************************************************************
+// Deletes an existing directory with all its children.
+// Returns True if succeeds.
+//************************************************************************
+Function RecursiveRemoveDirectory Global String sDirname Returns Boolean
+    Boolean bOk bStop
+    Integer iCnt iMax iTmp
+    String sFile sLine
+    Handle hoDir
+    Move 0 To iCnt
+    Move True To bStop
+    Get Create U_cDirectory To hoDir
+    Move (sDirname+"\*.*") To sFile
+    Get SearchSingleDirectory Of hoDir sFile DIRMODE_DIRECTORIES_ONLY To iMax
+    Decrement iMax
+    For iCnt From 0 To iMax
+        Get Searchresult Of hoDir Item iCnt LIST_FILENAME To sLine
+        If (sLine <> "." And sLine <> "..") Begin
+            Move False To bStop
+            Get RecursiveRemoveDirectory (sDirname + "\" + sLine) To bOk
+            If (Not(bOk)) Begin
+                Send destroy Of hoDir
+                Function_Return False
+            End
+        End
+    Loop
+    Get SearchSingleDirectory Of hoDir sFile DIRMODE_FILES_ONLY To iMax
+    Decrement iMax
+    For iCnt From 0 To iMax
+        Get Searchresult Of hoDir Item iCnt LIST_FILENAME To sLine
+        Get FileDelete (sDirname + "\" + sLine) To bOk
+        If (Not(bOk)) Begin
+            Send destroy Of hoDir
+            Function_Return
+        End
+    Loop
+    Send destroy Of hoDir
+    Get RemoveDirectory sDirname To bOk
+    Function_Return bOk
+End_Function
+
+//************************************************************************
+// Copies an existing directory with all its children.
+// Overwriting exising files by default.
+// Returns True if succeeds.
+//************************************************************************
+Function RecursiveCopyDirectory Global String sSourceDirname String sDestinationDirname Boolean bFailIfExists Returns Boolean
+    Boolean bOk bStop bDoNotOverwrite bFound
+    Integer iCnt iMax iTmp
+    String sFile sLine
+    Handle hoDir
+    Move 0 To iCnt
+    Move True To bStop
+    If (Num_Arguments > 2) Move bFailIfExists To bDoNotOverwrite
+    Else Move False To bDoNotOverwrite
+    Get FileExists sDestinationDirname DIRMODE_DIRECTORIES_ONLY To bFound
+    If (Not(bFound)) Begin
+        Get CreateDirectory sDestinationDirname To bOk
+        If (Not(bOk)) Begin
+            Send destroy Of hoDir
+            Function_Return False
+        End
+    End
+    Get Create U_cDirectory To hoDir
+    Move (sSourceDirname+"\*.*") To sFile
+    Get SearchSingleDirectory Of hoDir sFile DIRMODE_DIRECTORIES_ONLY To iMax
+    Decrement iMax
+    For iCnt From 0 To iMax
+        Get Searchresult Of hoDir Item iCnt LIST_FILENAME To sLine
+        If (sLine <> "." And sLine <> "..") Begin
+            Move False To bStop
+            Get RecursiveCopyDirectory (sSourceDirname + "\" + sLine) (sDestinationDirname + "\" + sLine) bDoNotOverwrite To bOk
+            If (Not(bOk)) Begin
+                Send destroy Of hoDir
+                Function_Return False
+            End
+        End
+    Loop
+    Get SearchSingleDirectory Of hoDir sFile DIRMODE_FILES_ONLY To iMax
+    Decrement iMax
+    For iCnt From 0 To iMax
+        Get Searchresult Of hoDir Item iCnt LIST_FILENAME To sLine
+        Get FileCopy (sSourceDirname + "\" + sLine) (sDestinationDirname + "\" + sLine) bDoNotOverwrite To bOk
+        If (Not(bOk)) Begin
+            Send destroy Of hoDir
+            Function_Return
+        End
+    Loop
+    Send destroy Of hoDir
+    Move True To bOk
+    Function_Return bOk
+End_Function

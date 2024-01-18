@@ -1,0 +1,624 @@
+// Formatted Output Generator
+//
+// By Sergey V. Natarov (senatc@postman.ru)
+// Date: 12/10-2003
+//
+// This package is a part of cWindowsEx Framework for Visual Dataflex
+//
+//
+
+Class cOutputColorTbl Is an Array
+    Procedure Add_Color Integer iRed Integer iGreen Integer iBlue
+        Set Value Item (Item_Count(Self)+1) To ("\red"+String(iRed)+"\green"+String(iGreen)+"\blue"+String(iBlue)+";")
+    End_Procedure
+    Procedure Generate
+        Integer iItem iCount
+        Get Item_Count To iCount
+        Write "{\colortbl;"
+        For iItem From 1 To iCount
+            Write (Value(Self,iItem))
+        Loop
+        Writeln "}"
+    End_Procedure
+End_Class // oColorTbl (Array) 
+
+Class cOutputFontTbl Is an Array
+    Procedure Add_Font String sFont
+        Set Value Item (Item_Count(Self)) To (Trim(sFont))
+    End_Procedure
+    Procedure Generate
+        Integer iItem iCount
+        Get Item_Count To iCount
+        Write "{\fonttbl"
+        For iItem From 0 To (iCount-1)
+            Write "{\f" iItem " " (Value(Self,iItem)) ";}"
+        Loop
+        Writeln "}"
+    End_Procedure
+End_Class // oColorTbl (Array) 
+
+Class cFormattedOuptut Is an message
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property String  psGenerator        Public "cWindowsEx Formatted Output"
+        Property String  psAuthor           Public "cWindowsEx Formatted Output"
+        Property String  psProduct          Public "cWindowsEx(TM)"
+        Property String  psVersion          Public "1.0.1"
+        Property String  psCompany          Public "Sergey V. Natarov (senatc@postman.ru)"
+        Property String  psDocumentName     Public "System Information"
+        // General
+        //DOC//PUBLIC//
+        // If this property set to True, then output into the RTF format,
+        // otherwise HTML format (default).
+        Property Boolean pbOutput           Public 0 
+        Property String  psNoteString       Public "Note."
+        Property String  psTipString        Public "Tip."
+        //
+        // Special Characters conversion
+        Property String  psCopyRightChar    Public "(C)"
+        Property String  psRegisteredChar   Public "(R)"
+        Property String  psTradeMarkChar    Public "(TM)"
+        Property Integer pbCopyRightChar    Public True
+        Property Integer pbRegisteredChar   Public True
+        Property Integer pbTradeMarkChar    Public True
+        //
+        // Html Related
+        Property String  psHtmlIndexFile    Public "SysInfo.htm"
+        Property String  psDefaultHtmlFile  Public "noname.htm"
+        Property String  psCharSet          Public "iso-8859-1"
+        Property String  psStyleSheet       Public "SysInfo.css"
+        Property String  psCSSNoteClass     Public "Note"
+        Property String  psCSSTipClass      Public "Tip"
+        // Rtf related 
+        Property String  psRtfDocumentName  Public "SysInfo.rtf"
+        Property String  psRtfPaperWidth    Public "11906"
+        Property String  psRtfPaperHeight   Public "16838"
+        Property String  psRtfMarginLeft    Public "1300"
+        Property String  psRtfMarginRight   Public "700"
+        Property String  psRtfMarginTop     Public "800"
+        Property String  psRtfMarginBottom  Public "850"
+        Property Integer pbPageNumbers      Public True
+        //
+        // Index
+        Property Integer piIndex            Public True
+        // Formats Index to N columns
+        Property Integer piIndexCol         Public 3
+        // Index section title
+        Property String  psIndex            Public "Index"
+        // Index Header output mask
+        Property String  psIndexHdr         Public "\line - A -"
+        //
+        // TOC
+        Property Integer piToc              Public True
+        Property String  psToc              Public "Table of contents"
+        //
+        // RTF formatting
+        Property Number  pnFontSize         Public 11
+        //
+        Object oColorTbl Is a cOutputColorTbl
+            Send Add_Color 0    0   0   // 1
+            Send Add_Color 0    0   255 // 2
+            Send Add_Color 0    255 255 // 3
+            Send Add_Color 0    255 0   // 4
+            Send Add_Color 255  0   255 // 5
+            Send Add_Color 255  0   0   // 6
+            Send Add_Color 255  255 0   // 7
+            Send Add_Color 255  255 255 // 8
+            Send Add_Color 0    0   128 // 9
+            Send Add_Color 0    128 128 // 10
+            Send Add_Color 0    128 0   // 11
+            Send Add_Color 128  0   128 // 12
+            Send Add_Color 128  0   0   // 13
+            Send Add_Color 128  128 0   // 14
+            Send Add_Color 128  128 128 // 15
+            Send Add_Color 192  192 192 // 16
+            Send Add_Color 51   51  153 // 17
+            Send Add_Color 220  220 220 // 18
+            Send Add_Color 255  102 0   // 19
+            Send Add_Color 176  7   32  // 20
+            Send Add_Color 85   85  85  // 21
+        End_Object
+        //
+        Object oFontTbl Is a cOutputFontTbl
+            Send Add_Font "Verdana" // Default
+            Send Add_Font "Times New Roman"
+            Send Add_Font "Tahoma"
+            Send Add_Font "Verdana"
+            Send Add_Font "\froman\fcharset2\fprq2 Symbol"
+            Send Add_Font "Courier New"
+        End_Object
+        //
+    End_Procedure // Construct_Object
+    Function mHelpPath For BaseClass Returns String
+        Local String sPath
+        get_Profile_string ("WorkSpaces\" + CURRENT$WORKSPACE) "HelpPath" To  sPath
+        Move (Uppercase(Trim(sPath))) To sPath
+        Function_Return sPath
+    End_Function
+    Function FormatOutput String sType String sText Returns String
+        String sChar sTmp sKW sStr
+        If (pbCopyRightChar(Self)) Begin
+            Get psCopyRightChar To sChar
+            If (sType="RTF") Move (Replaces(sChar, sText, "{\'a9}")) To sText
+            Else Move (Replaces(sChar, sText, "&copy;")) To sText
+        End
+        If (pbRegisteredChar(Self)) Begin
+            Get psRegisteredChar To sChar
+            If (sType="RTF") Move (Replaces(sChar, sText, "{\super \'ae}")) To sText
+            Else Move (Replaces(sChar, sText, "<sup>&reg;</sup>")) To sText
+        End
+        If (pbTradeMarkChar(Self)) Begin
+            Get psTradeMarkChar To sChar
+            If (sType="RTF") Move (Replaces(sChar, sText, "{\super \'99}")) To sText
+            Else Move (Replaces(sChar, sText, "<sup>&#8482;</sup>")) To sText
+        End
+        
+        If ((sText Contains "<KW>")And(sText Contains "</KW>")) Begin
+            If (sType="HTML") Begin
+                Move (Replace("<KW>", sText, "")) To sText
+                Move (Replace("</KW>", sText, "")) To sText
+            End
+            Else Begin
+                Move "" To sStr
+                While (sText Contains "</KW>")
+                    Move (Left(sText, Pos("<KW>", sText)-1)) To sTmp
+                    Move (sStr+sTmp) To sStr
+                    Move (Replace(sTmp, sText, "")) To sText
+                    Move (Left(sText, Pos("</KW>", sText)+4)) To sTmp
+                    Move (Replace(sTmp, sText, "")) To sText
+                    Move (Replace("<KW>", sTmp, "")) To sTmp
+                    Move (Replace("</KW>", sTmp, "")) To sTmp
+                    If (piIndex(Self)) Move (sStr+sTmp+"{\v\xe "+(Trim(sTmp))+"}") To sStr
+                    Else Move (sStr+sTmp) To sStr
+                Loop
+                If (sText<>"") Move (sStr+sText) To sText
+            End
+        End
+        If (sType="HTML") Function_Return sText
+        If "<BR>" In sText Move (Replaces("<BR>", sText, "\line ")) To sText
+        If ((sText Contains "<B>")And(sText Contains "</B>")) Begin
+            Move (Replaces("<B>", sText, "{\b ")) To sText
+            Move (Replaces("</B>", sText, "}")) To sText
+        End
+        If ((sText Contains "<I>")And(sText Contains "</I>")) Begin
+            Move (Replaces("<I>", sText, "{\i ")) To sText
+            Move (Replaces("</I>", sText, "}")) To sText
+        End
+        If ((sText Contains "<U>")And(sText Contains "</U>")) Begin
+            Move (Replaces("<U>", sText, "{\ul ")) To sText
+            Move (Replaces("</U>", sText, "}")) To sText
+        End
+        Function_Return sText
+    End_Function
+    //
+    // ****************************************************************
+    // ****************************************************************
+    // RTF Output
+    // ****************************************************************
+    // ****************************************************************
+    //
+    Procedure mRTFOutputHeader String sFile
+        Direct_Output sFile
+        // Header
+        Writeln "{\rtf1\ansi\deff0"
+        // Font Table
+        Send Generate To (oFontTbl(Self))
+        // Color Table
+        Send Generate To (oColorTbl(Self))
+        // Styles
+        Write   "{\stylesheet"
+        Write   "{\ql \li0\ri0\widctlpar\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0\fs" (String(pnFontSize(Self)*2)) "\cgrid \snext0 Normal;}"
+        Write   "{\s1\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel0\adjustright\rin0\lin0\itap0 \b\f0\fs40\cf17\kerning32\cgrid \sbasedon0 \snext0 heading 1;}"
+        Write   "{\s2\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel1\adjustright\rin0\lin0\itap0 \b\i\f0\fs32\cgrid \sbasedon0 \snext0 heading 2;}"
+        Write   "{\s3\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel2\adjustright\rin0\lin0\itap0 \b\f0\fs28\cgrid \sbasedon0 \snext0 heading 3;}"
+        Write   "{\s4\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel3\adjustright\rin0\lin0\itap0 \b\f0\fs26\kerning32\cgrid \sbasedon0 \snext0 heading 4;}"
+        Write   "{\s5\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel4\adjustright\rin0\lin0\itap0 \b\i\f0\fs24\cgrid \sbasedon0 \snext0 heading 5;}"
+        Write   "{\s6\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel5\adjustright\rin0\lin0\itap0 \b\f0\fs22\cgrid \sbasedon0 \snext0 heading 6;}"
+        Write   "{\*\cs10 \additive \ssemihidden Default Paragraph Font;}"
+        Write   "{\*\ts11\tsrowd\trftsWidthB3\trpaddl108\trpaddr108\trpaddfl3\trpaddft3\trpaddfb3\trpaddfr3\trcbpat1\trcfpat1\tscellwidthfts0\tsvertalt\tsbrdrt\tsbrdrl\tsbrdrb\tsbrdrr\tsbrdrdgl\tsbrdrdgr\tsbrdrh\tsbrdrv "
+        Write   "\ql \li0\ri0\widctlpar\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0}"
+        Write   "{\*\cs12 \additive \ul\cf2 \sbasedon10 Hyperlink;}"
+        Write   "{\s13\ql \li0\ri0\widctlpar\tqc\tx4677\tqr\tx9355\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\cgrid \sbasedon0 \snext13 footer;}"
+        Write   "{\*\cs14 \additive \sbasedon10 Page Number;}"
+        Write   "{\s15\ql \li0\ri0\widctlpar\tqc\tx4677\tqr\tx9355\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\cgrid \sbasedon0 \snext15 header;}"
+        Write   "{\s16\ql \fi-220\li220\ri0\widctlpar\aspalpha\aspnum\faauto\adjustright\rin0\lin220\itap0 \f0\fs16 \sbasedon0 \snext0 \sautoupd \ssemihidden Index 1;}"
+        Writeln "}"
+        // Info
+        Writeln "{\*\generator " (psGenerator(Self)) ";}{\info"
+        Write  "{\title " (psProduct(Self)) " v. " (psVersion(Self)) "}"
+        Write  "{\author " (psAuthor(Self)) "}"
+        Write  "{\operator " (psAuthor(Self)) "}"
+        Write  "{\version1}"
+        Write  "{\*\company " (psCompany(Self)) "}"
+        Writeln "}"
+        // Page properties
+        Write "\paperw" (psRtfPaperWidth(Self))
+        Write "\paperh" (psRtfPaperHeight(Self))
+        Write "\margl"  (psRtfMarginLeft(Self))
+        Write "\margr"  (psRtfMarginRight(Self))
+        Write "\margt"  (psRtfMarginTop(Self))
+        Writeln "\margb"  (psRtfMarginBottom(Self)) " "
+        Write "\widowctrl\noxlattoyen\expshrtn\dntblnsbdb\formshade\horzdoc\jexpand\viewkind1 "
+        Writeln "\htmautsp\nolnhtadjtbl\alntblind\lytcalctblwd\lyttblrtgr\lnbrkrule\nobrkwrptbl\snaptogridincell\allowfieldendsel\headery708\footery708\colsx708\sectlinegrid360\sectdefaultcl"
+        // Footer
+        If (pbPageNumbers(Self)) Begin
+            Write "{\footer \pard\plain \s13\ql \li0\ri-5\widctlpar\brdrt\brdrs\brdrw10\brsp20 \tqc\tx4677\tqr\tx9355\aspalpha\aspnum\faauto\adjustright\rin-5\lin0\itap0 "
+            Write "\fs20\cgrid "
+            Write "{\fs20 " (FormatOutput(Self,"RTF",psProduct(Self)*psVersion(Self)*psDocumentName(Self))) ", Page }"
+            Write "{\field{\*\fldinst {\cs14  PAGE }}"
+            Write "{\fldrslt {\cs14\noproof 1}}}"
+            Write "{\cs13  of  }"
+            Write "{\field{\*\fldinst {\cs14  NUMPAGES }}"
+            Write "{\fldrslt {\cs14\noproof 1}}}"
+            Writeln "{\par}}"
+        End
+        Writeln
+    End_Procedure
+    Procedure mRTFOutputFooter
+        If (piIndex(Self)) Begin
+            Send mRtfOutputTag "RtfTag" "" "" "{\page}"            
+            Send mRtfOutputTag "Title" "Header 1" (psIndex(Self)) ""
+            Writeln '{\pard\plain \par}{\pard\plain {\field{\*\fldinst { INDEX \\c "' (piIndexCol(Self)) '" \\z "1033" \\h "' (psIndexHdr(Self)) '"}}{\fldrslt ' (psIndex(Self)) ' field}}\par}'
+        End
+        If (piTOC(Self)) Begin
+            Send mRtfOutputTag "RtfTag" "" "" "{\page}"
+            Send mRtfOutputTag "Title" "Header 1" (psToc(Self)) ""
+            Writeln '{\pard\plain \par}{\pard\plain {\field{\*\fldinst { TOC \\o "1-6" \\h \\z \\u }}{\fldrslt ' (psToc(Self)) ' field}}\par}'
+        End
+        Writeln '}'
+        Close_Output
+    End_Procedure
+    Procedure mRtfTableOutput String sText
+        String sRow
+        Integer iRow
+        If (sText="") Procedure_Return
+        Move (Replace("<TABLE>", sText, "")) To sText
+        Move (Replace("</TABLE>", sText, "")) To sText
+        Move 0 To iRow
+        Write "{\pard\plain \par}"
+        While (sText Contains "</TR>")
+            Move (Left(sText, Pos("</TR>", sText)+4)) To sRow
+            Move (Replace(sRow, sText, "")) To sText
+            If (Trim(sRow<>"")) Begin
+                Increment iRow
+                Send mRtfTableRowOutput sRow iRow (Not(sText Contains "</TR>")) 1
+            End
+        Loop
+    End_Procedure
+    Function mRemoveHtmlTags String sCell Returns String
+        String sTag sStr sChr
+        Integer iChr iStart
+        Move sCell To sStr
+        Move "" To sCell
+        For iChr From 1 To (Length(sStr))
+            Move (Mid(sStr, 1, iChr)) To sChr
+            If (sChr="<") Move 1 To iStart
+            If (iStart) Move (sTag+sChr) To sTag
+            Else Move (sCell+sChr) To sCell
+            If (sChr=">") Begin
+                Move (sTag+sChr) To sTag
+                Move 0 To iStart
+            End
+        Loop
+        Function_Return sCell
+    End_Function
+    Procedure mRtfTableRowOutput String sRow Integer iRow Integer iLast Integer iBorder
+        String sCell sTag sCellTag
+        Integer iCnt iCol nStart nWidth nPad nBrd 
+        If (Left(sRow,4)="<TR>") Move (Replace("<TR>", sRow, "")) To sRow
+        Else If (Left(sRow,4)="<TR ") Begin
+            Move (Replace("<TR ", sRow, "")) To sRow
+            Move (Left(sRow, Pos(">", sRow))) To sTag
+            Move (Replace(sTag, sRow, "")) To sRow
+            Move (Uppercase(Trim(Replace(">", sTag, "")))) To sTag
+        End
+        Move (Replace("</TR>", sRow, "")) To sRow
+        Move 0 To iCnt
+        While (sRow Contains "</TD>")
+            Move (Left(sRow, Pos("</TD>", sRow)+4)) To sCell
+            Move (Replace(sCell, sRow, "")) To sRow
+            If (Trim(sCell<>"")) Begin
+                Move "" To sCellTag
+                If (Left(sCell,4)="<TD>") Move (Replace("<TD>", sCell, "")) To sCell
+                Else If (Left(sCell,4)="<TD ") Begin
+                    Move (Replace("<TD ", sCell, "")) To sCell
+                    Move (Left(sCell, Pos(">", sCell))) To sCellTag
+                    Move (Replace(sCellTag, sCell, "")) To sCell
+                    Move (Uppercase(Trim(Replace(">", sCellTag, "")))) To sCellTag
+                End
+                If (sCellTag="") Move sTag To sCellTag
+                Move (Replace("</TD>", sCell, "")) To sCell
+                Get mRemoveHtmlTags sCell To sCell
+                If (sCellTag Contains "ALIGN=RIGHT") Write "{\qr {\fs22 " sCell "\cell}}"
+                Else If (sCellTag Contains "ALIGN=CENTER") Write "{\qc {\fs22 " sCell "\cell}}"
+                Else Write "{\ql {\fs22 " sCell "\cell}}"
+                Increment iCnt
+            End
+        Loop
+        Writeln "\pard "
+        // row format (align to whole document)
+        Move 108 To nPad
+        Move ((iBorder*10)+((iBorder-1)*10)) To nBrd
+        Write "{\trowd "
+        If (iLast) Write "\irow" iRow "\lastrow\trgaph" nPad "\trleft-" nPad 
+        Else Write "\irow" iRow "\trgaph" nPad "\trleft-" nPad 
+        If (iBorder) Writeln "\trbrdrt\brdrs\brdrw" nBrd " \trbrdrl\brdrs\brdrw" nBrd " \trbrdrb\brdrs\brdrw" nBrd " \trbrdrr\brdrs\brdrw" nBrd " \trbrdrh\brdrs\brdrw" nBrd " \trbrdrv\brdrs\brdrw" nBrd " "
+        Writeln "\trftsWidth1\trautofit1\trpaddl" nPad "\trpaddr" nPad "\trpaddfl3\trpaddft3\trpaddfb3\trpaddfr3"
+        Move (psRtfPaperWidth(Self)-psRtfMarginLeft(Self)-psRtfMarginRight(Self)-nPad-nPad-6) To nStart
+        Move (nStart+nPad) To nWidth
+        For iCol From 1 To iCnt
+            If (iBorder) Write "\clvertalt\clbrdrt\brdrs\brdrw" nBrd " \clbrdrl\brdrs\brdrw" nBrd " \clbrdrb\brdrs\brdrw" nBrd " \clbrdrr\brdrs\brdrw" nBrd " "
+            Writeln "\clftsWidth3\clwWidth" nWidth " \clpadb28\clpadfb3"
+            Writeln "\cellx" nStart
+            Move (nStart+nWidth) To nStart
+        Loop
+        Writeln "\row}\pard "
+    End_Procedure
+    Procedure mRTFOutputTag String sType String sStyle String sTag String sText
+        String sStartTag sEndTag sLine
+        Move (Uppercase(Trim(sType))) To sType
+        Move (Uppercase(Trim(sStyle))) To sStyle
+        Move (Trim(sTag)) To sTag
+        Move (Trim(sText)) To sText
+        Get FormatOutput "RTF" sText To sText
+        Get FormatOutput "RTF" sTag  To sTag
+        // Style
+        If (sStyle="BITMAP") Begin
+            Move '{\pard \par}{\field{\*\fldinst {INCLUDEPICTURE "' To sStartTag
+            Move '" \\* MERGEFORMATINET }}{\fldrslt}}{\pard \par}' To sEndTag
+            //Move '" \\* MERGEFORMATINET \\d }}{\fldrslt}}{\pard \par}' To sEndTag
+        End
+        If (sStyle="HEADER 1") Begin
+            Move "{\pard\plain \s1\ql \li0\ri0\sb240\sa60\keepn\widctlpar\brdrb\brdrs\brdrw10\brsp20\aspalpha\aspnum\faauto\outlinelevel0\adjustright\rin0\lin0\itap0 \b\f0\fs40\cf17\kerning32\cgrid " To sStartTag
+            Move "\cf17\par}" To sEndTag
+        End
+        If (sStyle="HEADER 2") Begin
+            Move "{\pard\plain \s2\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel1\adjustright\rin0\lin0\itap0 \b\i\f0\cf20\fs32\cgrid " To sStartTag
+            Move "\par}" To sEndTag
+        End
+        If (sStyle="HEADER 3") Begin
+            Move "{\pard\plain \s3\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel2\adjustright\rin0\lin0\itap0 \b\f0\cf21\fs28\cgrid " To sStartTag
+            Move "\par}" To sEndTag
+        End
+        If (sStyle="HEADER 4") Begin
+            Move "{\pard\plain \s4\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel0\adjustright\rin0\lin0\itap0 \b\f0\fs26\kerning32\cgrid " To sStartTag
+            Move "\par}" To sEndTag
+        End
+        If (sStyle="HEADER 5") Begin
+            Move "{\pard\plain \s5\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel1\adjustright\rin0\lin0\itap0 \b\i\f0\fs24\cgrid " To sStartTag
+            Move "\par}" To sEndTag
+        End
+        If (sStyle="HEADER 6") Begin
+            Move "{\pard\plain \s6\ql \li0\ri0\sb240\sa60\keepn\widctlpar\aspalpha\aspnum\faauto\outlinelevel2\adjustright\rin0\lin0\itap0 \b\f0\fs22\cgrid " To sStartTag
+            Move "\par}" To sEndTag
+        End
+        If (sStyle="NOTE") Begin
+            Move "{\pard \par}{\pard\plain \ql \li0\ri0\widctlpar\brdrt\brdrs\brdrw10\brsp20\brdrcf19 \brdrl\brdrs\brdrw10\brsp80\brdrcf19 \brdrb\brdrs\brdrw10\brsp20\brdrcf19" To sStartTag
+            Move (sStartTag+" \brdrr\brdrs\brdrw10\brsp80\brdrcf19 \aspalpha\aspnum\faauto\adjustright\rin0\lin0\rtlgutter\itap0 \cbpat18 \fs"+(String(pnFontSize(Self)*2))+" {\cf19\b "+psNoteString(Self)+" }") To sStartTag
+            If (sTag<>"") Move (Replace("Note.", sStartTag, sTag)) To sStartTag
+            Move "\par}{\pard \par}" To sEndTag
+        End
+        If (sStyle="PARAGRAPH") Begin
+            Move ('{\pard\fs'+(String(pnFontSize(Self)*2))+' \par}{\pard\fs'+(String(pnFontSize(Self)*2))+' ') To sStartTag
+            Move '\par}' To sEndTag
+        End
+        If (sStyle="TIP") Begin
+            Move "{\pard \par}{\pard\plain \ql \li0\ri0\widctlpar\brdrt\brdrs\brdrw10\brsp20\brdrcf17 \brdrl\brdrs\brdrw10\brsp80\brdrcf17 \brdrb\brdrs\brdrw10\brsp20\brdrcf17" To sStartTag
+            Move (sStartTag+" \brdrr\brdrs\brdrw10\brsp80\brdrcf17 \aspalpha\aspnum\faauto\adjustright\rin0\lin0\rtlgutter\itap0 \cbpat18 \fs"+(String(pnFontSize(Self)*2))+" {\cf17\b "+psTipString(Self)+" }") To sStartTag
+            Move "\par}{\pard \par}" To sEndTag
+        End
+        //
+        // Type
+        If (sType="TABLE") Send mRtfTableOutput sText
+        Get mRemoveHtmlTags sText To sText
+        Get mRemoveHtmlTags sTag To sTag
+        If (sType="IMAGE") Begin
+            If (sTag="") Move sText To sTag
+            Move (Replaces("\", sTag, "/")) To sTag
+            Write sStartTag
+            Write sTag
+            Writeln sEndTag
+        End
+        // Output RTF statement 'AS IS'
+        If (sType="RTFTAG") Begin
+            If ((sText="")And(sTag<>"")) Move sTag To sText
+            Writeln sText
+        End
+        If (sType="TEXT") Begin
+            If (sText="") Move sTag To sText
+            Move (Replaces(Character(13)+Character(10)+Character(13)+Character(10), sText, "\par}"+Character(13)+Character(10)+"{\pard\fs"+(String(pnFontSize(Self)*2))+" \par}{\pard\fs"+(String(pnFontSize(Self)*2))+" ")) To sText
+            Write   sStartTag
+            Write   sText
+            Writeln sEndTag
+        End
+        // Indexing titles "{\v\xe Index}"
+        If (sType="TITLE") Begin
+            If (sTag="") Move sText To sTag
+            Write   sStartTag
+            Write   sTag
+            If ((sStyle Contains "HEADER")And(piIndex(Self))) Write "{\v\xe " (Trim(sTag)) "}"
+            Writeln sEndTag
+        End
+        If (sType="LINK") Begin
+            Write   sStartTag
+            Write '{\pard\fs' (String(pnFontSize(Self)*2)) ' ' sTag ': '
+            Write '{\f' 'ield{\*\fldinst {HYPERLINK "' sText '" }}'
+            Write '{\fldrslt {\cs12\ul\cf2 ' sText '}}}\par}'
+            Writeln sEndTag
+        End
+        If ((sType="LIST")And(sText<>"")) Begin
+            Write "{\pard \par}"
+            Writeln "{\uc1\pard {\pntext\f4\'B7\tab}{\*\pn\pnlvlblt\pnf4\pnindent100{\pntxtb\'B7}}\fi-360\li720\f0\fs" (String(pnFontSize(Self)*2)) " "
+            Move (Replaces(Character(13)+Character(10), sText, "\par {\pntext\f4\'B7\tab}")) To sText
+            Write   sText
+            Write "\par}{\pard \par}"
+        End
+        If ((sType="FILE")And(sTag<>"")And(sTag Contains "\")And(sTag Contains ":")And(sTag Contains ".")) Begin
+            If (Right(Uppercase(sTag),4)=".TXT") Begin
+                Write "{\pard \par}{\pard\plain \f5\fs18 "
+                Direct_Input Channel 9 sTag
+                While (Not(seqeof))
+                    Readln sLine
+                    Get FormatOutput "RTF" sLine To sLine
+                    Writeln sLine "\line "
+                Loop
+                Write "\par}{\pard \par}"
+                Close_Input Channel 9
+            End
+            If (Right(Uppercase(sTag),4)=".RTF") Begin
+                Direct_Input Channel 9 sTag
+                While (Not(seqeof))
+                    Readln sLine
+                    Writeln sLine 
+                Loop
+                Close_Input Channel 9
+            End
+        End
+    End_Procedure
+    //
+    // ****************************************************************
+    // ****************************************************************
+    // HTML Output
+    // ****************************************************************
+    // ****************************************************************
+    //
+    Procedure mHTMLOutputHeader String sFile String sDesc 
+        Direct_Output sFile
+        Writeln '<HTML><HEAD><TITLE>' sDesc '</TITLE>'
+        Writeln '  <META http-equiv=Content-Type content="text/html; charset=' (psCharSet(Self)) '">'
+        Writeln '  <meta name="GENERATOR" content="' (psGenerator(Self)) '">'
+        Writeln '  <meta name="PRODUCT" content="'   (psProduct(Self)) '">'
+        Writeln '  <meta name="VERSION" content="'   (psVersion(Self)) '">'
+        Writeln '  <meta name="COMPANY" content="'   (psCompany(Self)) '">'
+        Writeln '  <link rel="stylesheet" href="'    (psStyleSheet(Self)) '">'
+        Writeln '</HEAD><BODY>'
+    End_Procedure
+    Procedure mHTMLOutputFooter
+        Writeln '</BODY></HTML>'
+        Close_Output
+    End_Procedure
+    Procedure mHTMLOutputTag String sType String sStyle String sTag String sText
+        String sStartTag sEndTag sLine
+        Move (Uppercase(Trim(sType))) To sType
+        Move (Uppercase(Trim(sStyle))) To sStyle
+        Move (Trim(sTag)) To sTag
+        Move (Trim(sText)) To sText
+        Get FormatOutput "HTML" sText To sText
+        Get FormatOutput "HTML" sTag  To sTag
+        // Style
+        If (sStyle="BITMAP") Begin
+            Move '<img src="' To sStartTag
+            Move '">' To sEndTag
+        End
+        If (sStyle="HEADER 1") Begin
+            Move '<H1>' To sStartTag
+            Move '</H1>' To sEndTag
+        End
+        If (sStyle="HEADER 2") Begin
+            Move '<H2>' To sStartTag
+            Move '</H2>' To sEndTag
+        End
+        If (sStyle="HEADER 3") Begin
+            Move '<H3>' To sStartTag
+            Move '</H3>' To sEndTag
+        End
+        If (sStyle="HEADER 4") Begin
+            Move '<H4>' To sStartTag
+            Move '</H4>' To sEndTag
+        End
+        If (sStyle="HEADER 5") Begin
+            Move '<H5>' To sStartTag
+            Move '</H5>' To sEndTag
+        End
+        If (sStyle="HEADER 6") Begin
+            Move '<H6>' To sStartTag
+            Move '</H6>' To sEndTag
+        End
+        If (sStyle="NOTE") Begin
+            Move ('<P class="'+psCSSNoteClass(Self)+'"><B class="'+psCSSNoteClass(Self)+'"> '+(psNoteString(Self))+' </B> ') To sStartTag
+            Move '</P>' To sEndTag
+        End
+        If (sStyle="PARAGRAPH") Begin
+            Move '<P>' To sStartTag
+            Move '</P>' To sEndTag
+        End
+        If (sStyle="TIP") Begin
+            Move ('<P class="'+psCSSTipClass(Self)+'"><B class="'+psCSSTipClass(Self)+'"> '+(psTipString(Self))+' </B> ') To sStartTag
+            Move '</P>' To sEndTag
+        End
+        //
+        // Type
+        If ((sType="FILE")And(sTag<>"")And(sTag Contains "\")And(sTag Contains ":")And(sTag Contains ".")) Begin
+            If (Right(Uppercase(sTag),4)<>".RTF") Begin
+                Direct_Input Channel 9 sTag
+                If (Right(Uppercase(sTag),4)=".TXT") Writeln "<PRE>"
+                While (Not(seqeof))
+                    Readln sLine
+                    Writeln sLine
+                Loop
+                If (Right(Uppercase(sTag),4)=".TXT") Writeln "</PRE>"
+                Close_Input Channel 9
+            End
+        End
+        If (sType="IMAGE") Begin
+            If (sTag="") Move sText To sTag
+            Write   sStartTag
+            Write   sTag
+            Writeln sEndTag
+        End
+        If (sType="HTMLTAG") Begin
+            If ((sTag="")Or(Not(sTag Contains '<'))) Move sText To sTag
+            If ((sTag<>"")And(sText<>"")) Move (sTag+sText) To sTag
+            Writeln sTag
+        End
+        If (sType="TEXT") Begin
+            If (sText="") Move sTag To sText
+            Move (Replaces(Character(13)+Character(10)+Character(13)+Character(10), sText, "</P>"+Character(13)+Character(10)+"<P>")) To sText
+            Write   sStartTag
+            Write   sText
+            Writeln sEndTag
+        End
+        If (sType="TITLE") Begin
+            If (sTag="") Move sText To sTag
+            Write   sStartTag
+            Write   sTag
+            Writeln sEndTag
+        End
+        If (sType="LINK") Begin
+            Write   sStartTag
+            Write   '<A HREF="' sText '">' sTag '</A>'
+            Writeln sEndTag
+        End
+        If (sType="LIST") Begin
+            Writeln "<UL>"
+            Write   "<LI>"
+            Move (Replaces(Character(13)+Character(10), sText, "</LI>"+Character(13)+Character(10)+"<LI>")) To sText
+            Write   sText
+            If (Uppercase(Right(sText,4))<>"</LI>") Write "</LI>"
+            Writeln
+            Writeln "</UL>"
+        End
+        If (sType="TABLE") Writeln sText
+    End_Procedure
+    //
+    //DOC//PUBLIC//
+    // This procedure outputs document header and opens output
+    Procedure mOutputHeader String sFile String sDesc
+        If (pbOutput(Self)) Send mRTFOutputHeader   sFile
+        Else                Send mHtmlOutputHeader  sFile sDesc
+    End_Procedure
+    //DOC//PUBLIC//
+    // This procedure outputs document footer and closes output
+    Procedure mOutputFooter
+        If (pbOutput(Self)) Send mRtfOutputFooter
+        Else                Send mHTMLOutputFooter
+    End_Procedure
+    //DOC//PUBLIC//
+    // This procedure outputs document tag depending on type and style
+    // supplied.
+    Procedure mOutputTag String sType String sStyle String sTag String sText
+        If (pbOutput(Self)) Send mRTFOutputTag  sType sStyle sTag sText
+        Else                Send mHTMLOutputTag sType sStyle sTag sText
+    End_Procedure
+    //
+End_Class // cHelpGen (message) 

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblForm is a Form
+    Set ClassPackage To "cGlblForm.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,438 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDataDictionary
+//* Package Name: cGlblDataDictionary.pkg
+//*
+//***************************************************************************
+
+//Use DFAllEnt.pkg
+
+// the use of this class assumes the following objects
+// & methods to exist within the programs in which
+// they are used
+register_function piUser returns integer
+// the following objects are created when using system logs
+register_object   oWatchedFieldsArray
+register_object   oRecordValuesArray
+register_object   oSystemLogArray
+
+Class cGlblDataDictionary is a DataDictionary
+
+    // Construct_Object: Object constructor.
+    procedure Construct_Object
+        forward send Construct_Object
+        // the Syslog file number
+        // usage: set pilogfile to Syslog.File_number
+        // this allows different applications and/or
+        // files to have different file names & numbers
+        property integer piLogfile         0
+        // required log fields
+        // log file
+        property integer piLogfield1       1
+        // log date
+        property integer piLogfield2       2
+        // log time
+        property integer piLogfield3       3
+        // record key1
+        property integer piLogfield4       4
+        // record key2
+        property integer piLogfield5       5
+        // record key3
+        property integer piLogfield6       6
+        // user
+        property integer piLogfield7       7
+        // log type
+        property integer piLogfield8       8
+        // description
+        property integer piLogfield9       9
+        // when TRUE this property initiates
+        // System Log functionality
+        property integer pbUsesSystemLog   FALSE
+        // when TRUE logging is only active if
+        // changes are made locally
+        property integer pbLocalOriginOnly FALSE
+        // when TRUE logging does not occur
+        // on the creation of the record
+        property integer pbNoLogOnCreate   FALSE
+        // these hold the field numbers of key fields
+        // stored as part of the Syslog record
+        property integer piKey1 0
+        property integer piKey2 0
+        property integer piKey3 0
+        // the values for the key fields
+        property string  psKey1 ""
+        property string  psKey2 ""
+        property string  psKey3 ""
+        // Syslog records initiated from the DD must
+        // be one of these three types
+        property string  psLogType "U"
+        // B = Business Process error
+        // C = Create
+        // D = Delete
+        // E = Event
+        // F = Failure
+        // U = Update
+        // V = Validate
+        //
+        // the following property is to store the name of
+        // a currently running BPO to refine error reporting
+        property string  psProcess ""
+        //
+    end_procedure // Construct_Object
+
+    // Create and augment procedure and functions
+
+    procedure Creating
+        forward send Creating
+        if (pbUsesSystemLog(self)) send DoResetSystemLogArray
+    end_procedure // Creating
+
+    procedure Backout
+        forward send Backout
+        if (pbUsesSystemLog(self)) send DoResetSystemLogArray
+    end_procedure // Backout
+
+    procedure Update
+        integer bCancel
+        //
+        forward send Update
+        if (pbUsesSystemLog(self)) begin
+            move ((Current_Record(self) = 0 AND pbNoLogOnCreate(self)) OR ;
+                (Operation_Origin <> self AND pbLocalOriginOnly(self))) to bCancel
+            if (bCancel) break
+            if (NOT(Current_Record(self))) set psLogType to "C"
+            else                           set psLogType to "U"
+            send DoLoadSystemLogArray
+        end
+    end_procedure // Update
+
+    procedure Save_Main_File
+        forward send Save_Main_File
+        if (ERR) procedure_return
+        if (pbUsesSystemLog(self)) send DoProcessSystemLogArray
+    end_procedure // Save_Main_File
+
+    procedure Delete_Main_File
+        forward send Delete_Main_File
+        if (pbUsesSystemLog(self)) begin
+            if (ERR) begin
+                send DoResetSystemLogArray
+                procedure_return
+            end
+            set psLogType to "D"
+            send DoLoadSystemLogArray
+            send DoProcessSystemLogArray
+        end
+    end_procedure // Delete_Main_File
+
+    procedure DoCreateSystemLogArrays
+        //
+        object oWatchedFieldsArray is an Array
+            // items are the field numbers
+        end_object // oWatchedFieldsArray
+        //
+        object oRecordValuesArray is an Array
+            // the "backout" values of the watched fields
+        end_object // oRecordValuesArray
+        //
+        object oSystemLogArray is an Array
+            // items in this array are fields that are watched for changes
+            // and have changed, each item is a string with the field name
+            // original value and new value
+        end_object // oSystemLogArray
+        //
+    end_procedure   // DoCreateSystemLogArrays
+    //
+    procedure DoAddArrayValue integer hArray string sValue
+        integer iItem
+        get Item_Count of hArray            to iItem
+        set Value      of hArray item iItem to sValue
+    end_procedure // DoAddArrayValue
+
+    procedure DoInitializeWatchedFields
+        // this procedure is intended for augmentation
+        // at the File subclass level in the following manner
+        //integer hArray
+        //send DoCreateSystemLogArrays
+        //move oWatchedFieldsArray to hArray
+        //// Load the watched fields array where iField is
+        //// the field number from FILE.DEF
+        //send DoAddArrayValue hArray iField0
+        //send DoAddArrayValue hArray iField1
+        //send DoAddArrayValue hArray iFieldEtc
+    end_procedure // DoInitializeWatchedFields
+
+    // DoLoadSystemLogArray:
+    procedure DoLoadSystemLogArray
+        integer hWatchedArray hValueArray hLogArray
+        integer iMainFile iKey1 iKey2 iKey3
+        integer iCount iItem iFile iField iValue
+        string  sLogType sWasValue sIsValue sFieldName
+        //
+        get Main_File                   to iMainFile
+        get piKey1                      to iKey1
+        get piKey2                      to iKey2
+        get piKey3                      to iKey3
+        get psLogType                   to sLogType
+        move oRecordValuesArray         to hValueArray
+        move oWatchedFieldsArray        to hWatchedArray
+        move oSystemLogArray            to hLogArray
+        get Item_Count of hWatchedArray to iCount
+        //
+        if (sLogType <> "D") begin
+            if (iKey1) begin
+                // check for a related file
+                get_attribute DF_FIELD_RELATED_FILE      of iMainFile iKey1 to iFile
+                // if related, use the related file value
+                if (iFile) ;
+                    get_attribute DF_FIELD_RELATED_FIELD of iMainFile iKey1 to iField
+                // otherwise use the local value
+                else begin
+                    move iMainFile to iFile
+                    move iKey1     to iField
+                end // else
+                // get the value and set the string property
+                get_field_value iFile iField to sIsValue
+                set psKey1 to sIsValue
+            end
+            if (iKey2) begin
+                // check for a related file
+                get_attribute DF_FIELD_RELATED_FILE      of iMainFile iKey2 to iFile
+                // if related, use the related file value
+                if (iFile) ;
+                    get_attribute DF_FIELD_RELATED_FIELD of iMainFile iKey2 to iField
+                // otherwise use the local value
+                else begin
+                    move iMainFile to iFile
+                    move iKey2     to iField
+                end // else
+                // get the value and set the string property
+                get_field_value iFile iField to sIsValue
+                set psKey2 to sIsValue
+            end
+            if (iKey3) begin
+                // check for a related file
+                get_attribute DF_FIELD_RELATED_FILE      of iMainFile iKey3 to iFile
+                // if related, use the related file value
+                if (iFile) ;
+                    get_attribute DF_FIELD_RELATED_FIELD of iMainFile iKey3 to iField
+                // otherwise use the local value
+                else begin
+                    move iMainFile to iFile
+                    move iKey3     to iField
+                end // else
+                // get the value and set the string property
+                get_field_value iFile iField to sIsValue
+                set psKey3 to sIsValue
+            end
+        end // if (sLogType <> "D")
+        //
+        for iItem from 0 to (iCount - 1)
+            get Value of hWatchedArray item iItem to iValue
+            // if we are creating there are no old values
+            // against which to compare
+            if (sLogType <> "C") ;
+                get Value of hValueArray item iItem to sWasValue
+            // if we are deleting there are no new values
+            if (sLogType <> "D") begin
+                // check for a related file
+                get_attribute DF_FIELD_RELATED_FILE      of iMainFile iValue to iFile
+                // if related, use the related file value
+                if (iFile) ;
+                    get_attribute DF_FIELD_RELATED_FIELD of iMainFile iValue to iField
+                // otherwise use the local value
+                else begin
+                    move iMainFile to iFile
+                    move iValue    to iField
+                end // else
+                // get the value and set the string property
+                get_field_value iFile iField to sIsValue
+            end // if (sLogType <> "D")
+            // either way, this happens
+            if (sIsValue <> sWasValue) begin
+                get_attribute DF_FIELD_NAME of iMainFile iValue to sFieldName
+                send DoAddArrayValue hLogArray ;
+                    (trim(sFieldName) * "FROM" * trim(sWasValue) * "TO" * trim(sIsValue))
+            end
+        loop
+    end_procedure // DoLoadSystemLogArray
+
+    // DoResetSystemLogArray:
+    procedure DoResetSystemLogArray
+        integer hWatchedArray hValueArray iCount iItem iFile iField
+        string  sValue
+        //
+        get Main_File to iFile
+        // start fresh
+        send Delete_Data of oSystemLogArray
+        //
+        if (piKey1(self)) begin
+            get_field_value iFile (piKey1(self)) to sValue
+            set psKey1                           to sValue
+        end
+        if (piKey2(self)) begin
+            get_field_value iFile (piKey2(self)) to sValue
+            set psKey2                           to sValue
+        end
+        if (piKey3(self)) begin
+            get_field_value iFile (piKey3(self)) to sValue
+            set psKey3                           to sValue
+        end
+        //
+        move oWatchedFieldsArray        to hWatchedArray
+        get Item_Count of hWatchedArray to iCount
+        if (iCount <= 0) procedure_return
+        // store the record buffer values
+        // of the watched fields
+        move oRecordValuesArray to hValueArray
+        send Delete_Data of hValueArray
+        // watched fields
+        for iItem from 0 to (iCount - 1)
+            get Value of hWatchedArray item iItem to iField
+            get_field_value iFile iField          to sValue
+            send DoAddArrayValue hValueArray sValue
+        loop
+    end_procedure // DoResetSystemLogArray
+
+    function IsTimeString ;
+        integer iHr integer iMin integer iSec returns string
+        //
+        string sHr sMin sSec
+        //
+        if (iHr  < 10) move ("0" + string(iHr )) to sHr
+        else           move               iHr    to sHr
+        if (iMin < 10) move ("0" + string(iMin)) to sMin
+        else           move               iMin   to sMin
+        if (iSec < 10) move ("0" + string(iSec)) to sSec
+        else           move               iSec   to sSec
+        function_return (sHr + ":" + sMin + ":" + sSec)
+    end_function // IsTimeString
+
+    function IsLogDescription integer hArray integer iCount returns string
+        integer iItem
+        string  sArrayValue sCRLF sDescription
+        //
+        move (character(13) + character(10)) to sCRLF
+        //
+        for iItem from 0 to (iCount - 1)
+            get String_Value of hArray item iItem           to sArrayValue
+            move (sDescription + trim(sArrayValue) + sCRLF) to sDescription
+        loop
+        function_return sDescription
+    end_function // IsLogDescription
+
+    // DoProcessSystemLogArray:
+    procedure DoProcessSystemLogArray
+        integer hArray iFileNumber iCount iUser iHr iMin iSec iLogFile
+        string  sUser sLogType sDescription sTime sKey1 sKey2 sKey3
+        date    dToday
+        //
+        get piLogFile to iLogFile
+        //
+        move oSystemLogArray     to hArray
+        get Item_Count of hArray to iCount
+        if (iCount <= 0) procedure_return
+        //
+        get Main_File to iFileNumber
+        //
+        get psUser of ghoApplication to sUser
+        move (trim(sUser))           to sUser
+        get psLogType                to sLogType
+        //
+        if (sLogType = "D") ;
+            move "RECORD DELETED"              to sDescription
+        else                ;
+            get IsLogDescription hArray iCount to sDescription
+        //
+        sysdate dToday iHr iMin iSec
+        get IsTimeString iHr iMin iSec to sTime
+        //
+        get psKey1 to sKey1
+        get psKey2 to sKey2
+        get psKey3 to sKey3
+        //
+        clear iLogFile
+        set_field_value iLogFile (piLogField1(self)) to iFileNumber
+        set_field_value iLogFile (piLogField2(self)) to dToday
+        set_field_value iLogFile (piLogField3(self)) to sTime
+        set_field_value iLogFile (piLogField4(self)) to sKey1
+        set_field_value iLogFile (piLogField5(self)) to sKey2
+        set_field_value iLogFile (piLogField6(self)) to sKey3
+        set_field_value iLogFile (piLogField7(self)) to sUser
+        set_field_value iLogFile (piLogField8(self)) to sLogType
+        set_field_value iLogFile (piLogField9(self)) to sDescription
+        saverecord iLogFile
+        //
+        send Delete_Data of oSystemLogArray
+        //
+    end_procedure   // DoProcessSystemLogArray
+
+    // this procedure is sent by the error handling process within
+    // the DAW Business Processing Object
+    // this procedure name cannot be changed
+    procedure Log_Status string sDescription
+        integer iLogFile iFileNumber iHr iMin iSec iUser
+        string  sTime sUpId sUser sModuleName sProcess
+        date    dToday
+        //
+        // UP_ID is PPMS specific
+        get_environment "UP_ID"                              to sUpId
+        get piUser of ghoApplication                         to iUser
+        get psUser of ghoApplication                         to sUser
+        if (sUpId <> "") ;
+            move (trim(sUpId) * string(iUser) * trim(sUser)) to sUser
+        else ;
+            move (string(iUser) * trim(sUser))               to sUser
+        //
+        get psProgram of ghoApplication to sModuleName
+        get psProcess                   to sProcess
+        //
+        get piLogFile to iLogFile
+        get Main_File to iFileNumber
+        //
+        sysdate dToday iHr iMin iSec
+        get IsTimeString iHr iMin iSec to sTime
+        //
+        clear iLogFile
+        reread
+        set_field_value iLogFile (piLogField1(self)) to iFileNumber
+        set_field_value iLogFile (piLogField2(self)) to dToday
+        set_field_value iLogFile (piLogField3(self)) to sTime
+        set_field_value iLogFile (piLogField4(self)) to sModuleName
+        set_field_value iLogFile (piLogField5(self)) to sProcess
+        set_field_value iLogFile (piLogField7(self)) to sUser
+        set_field_value iLogFile (piLogField8(self)) to "B"
+        set_field_value iLogFile (piLogField9(self)) to sDescription
+        saverecord iLogFile
+        unlock
+    end_procedure // Log_Status
+
+    // DoDDRefresh is sent in DoRefreshView of HCSS_dbView, which is sent during Entering_Scope.
+    // This procedure either redisplays the current record, or clears if the current record
+    // has been deleted by another view.
+    procedure DoDDRefresh
+        integer iCurrentRecord iFile
+        string  sCode
+        //
+        get Current_Record to iCurrentRecord
+        if (iCurrentRecord) begin
+            get Main_File to iFile
+            clear iFile
+            set_field_value iFile 0 to iCurrentRecord
+            vfind iFile 0 EQ
+            if (NOT(FOUND)) begin
+                send Clear
+            end
+            else begin
+                relate iFile
+                send Request_Assign
+            end
+        end
+    end_procedure
+
+    function Request_Validate_And_Save returns integer
+        if (Should_Save(self) AND Request_Validate(self) = 0) send Request_Save
+        function_return (Should_Save(self))
+    End_Function
+
+End_Class // cGlblDataDictionary

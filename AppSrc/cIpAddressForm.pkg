@@ -1,0 +1,14 @@
+// Class cIpAddressForm
+Use cWinControls.pkg
+
+Class cIPAddressForm Is a cBaseWinControls
+    Procedure Construct_object
+        Forward Send Construct_Object
+        Send InitCommonControlsEx ICC_INTERNET_CLASSES
+        Set External_Class_Name "cIPAddressForm" To "SysIPAddress32"
+        Set Value       To ""
+        Set Size        To 18 100
+        Set FontWeight  To 400
+    End_Procedure
+End_Class
+

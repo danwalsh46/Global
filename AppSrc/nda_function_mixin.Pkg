@@ -1,0 +1,93 @@
+//========================================================================================
+//*
+//* Class:        NDA_Function_Mixin
+//* Package Name: NDA_Function_Mixin.Pkg
+//*
+//* January 2004 - Sonata Software (Peter Donovan)
+//*
+//* Rev 1.1  
+//  Added IsInDataAwareContainer Function January 2004
+//========================================================================================
+// Non-Data-Aware Controls: Adds Some Data-Aware Abilities
+// 			    Adds Save/Clear/Delete Functionality
+// Benefit:
+// Allows user to use Flex Keys while on a button in a data_aware container (View, dbmodalpanel, DataAwareWizard, etc.).
+//
+//========================================================================================
+
+// Courtesy Of Wil van Antwerpen // Thank You Wil. Thanks Also To Vincent Oorsprong.
+//Function IsInDataAwareContainer Returns Integer
+    //Integer iDelMode
+    //Integer hServer // handle = object_id of server
+    //Get Delegation_Mode to iDelMode
+    //Set Delegation_Mode to No_Delegate_Or_Error
+    //Delegate Get Server to hServer
+    //Set Delegation_Mode to iDelMode
+    //Function_Return (hServer <> 0)
+//End_Function // IsInDataAwareContainer
+
+Use VdfBase.pkg
+
+Class NDA_Function_Mixin is a Mixin
+
+    // This Procedure Is Run During Construct_Object
+    Procedure DoControlDataAwareFKeys
+        Property Boolean pbAddDataAwareFKeys True
+    End_Procedure
+
+    // This Procedure May Be Run (Depending On Above Switch)
+    // During End_Construct_Object	
+    Procedure Add_DataAwareKeys
+        // Run during end_construct_object
+        On_Key kSave_Record         Send Request_Save
+        On_key kClear               Send Request_Clear      
+        On_key kClear_All           Send Request_Clear_All  
+        On_key kDelete_Record       Send Request_Delete    
+        // Help Key:
+    End_Procedure
+End_Class
+
+//========================================================================================
+// Intended Usage: (\Usr\Global\Appsrc\<MyButton>.Pkg)
+//Class <MyButton> Is A Button // i.e. cSonataButton
+//
+//    Procedure Construct_Object
+//        Forward Send Construct_Object 
+//        Send DoControlDataAwareFKeys
+//    End_Procedure    
+//  
+//    IMPORT_CLASS_PROTOCOL NDA_Function_Mixin
+//
+//    ***SYNTAX #1 (Use either 1 or 2)
+//    Procedure End_Construct_Object
+//        // Programmer can turn this behavior off in the object: 
+//        If (pbAddDataAwareFKeys(Self)) Begin
+//            If (IsInDataAwareContainer(Self)) Send Add_DataAwareKeys
+//        End
+//        Forward Send End_Construct_Object
+//    End_Procedure
+//
+//    ***SYNTAX #2 (Use either 1 or 2)
+//    Procedure End_Construct_Object
+//        // Programmer can turn this behavior off in the object: 
+//        If (pbAddDataAwareFKeys(Self)) Begin
+//            Boolean bIsInDataAwareContainer
+//            Send Ignore_Error To Error_Info_Object 98
+//            Move (Server(Self) <> 0) To bIsInDataAwareContainer
+//            Send Trap_Error   To Error_Info_Object 98
+//            If (bIsInDataAwareContainer) Send Add_DataAwareKeys
+//        End
+//        Forward Send End_Construct_Object
+//    End_Procedure
+//End_Class
+//========================================================================================
+// Intended Usage:  (Usr\Global\IDESRC\<MyButton>.DFC)
+// Add:
+// Property No_Execute Boolean pbAddDataAwareFKeys True // Save/Clear/Delete flex-keys work while focus is on button.
+//========================================================================================
+// Intended Usage:  (Usr\Global\IDESRC\<MyButton>.DFO)
+// Add:
+// //AB_StoreTopStart
+//     //DOC: This control uses data-aware FlexKeys when appropriate: see controls pallette for pbAddDataAwareFKeys
+// //AB_StoreTopEnd
+//========================================================================================

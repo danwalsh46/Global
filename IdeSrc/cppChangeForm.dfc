@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class cppChangeForm Is a Form
+    Set ClassPackage to "cppChangeForm.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblPanel is a Panel
+    Set ClassPackage To "cGlblPanel.pkg"
+    Inherit
+End_Class

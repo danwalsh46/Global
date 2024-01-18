@@ -1,0 +1,20 @@
+//AB/ CLASSDEF
+Class cFtpTransfer is a AbstractNonVisualContainer
+    Set ClassCETV      To 55                      // use TreeView Image #55
+    Set ClassPackage   To "InetTransfer.pkg"
+    Set ObjectNameMask To "oFtpTransfer<count>"
+    Set peClassLibrary To clCommon                // this class belongs to all class libraries
+
+    Inherit
+    
+    Property No_Visible String Bitmap "cFtpTransfer.bmp"
+
+    Property No_Execute Boolean pbPassiveMode False                       // Specifies whether to connect to the FTP server RemoteHost using passive mode. Passive mode is sometimes needed if you are behind a firewall.
+    Property No_Execute Integer piBufferSize 8092                         // Specifies the size of the file transfer buffer. The class tries to transfer the file in chunks of BufferSize bytes.
+    Property No_Execute Integer piRemotePort rpFtp                        // Specifies the port to connect to on RemoteHost. It can be any valid port number. rpFtp is defined as port 21.
+    Property No_Execute Mode    peTransferType ttBinary ttAscii ttBinary  // Specifies whether the file should be transferred as ASCII or Binary. Can be set to either ttAscii or ttBinary.
+    Property No_Execute String  psPassword                                // Specifies the password to use to log on. If the value of this property is blank and Username is also blank, the user's e-mail name is used as the password for FTP connections.
+    Property No_Execute String  psProxy                                   // Specifies the name of the Proxy server used, if any. If the value of this property is blank, no proxy server is used.
+    Property No_Execute String  psRemoteHost                              // Specifies the hostname or the IP address of the remote server.
+    Property No_Execute String  psUsername "Anonymous"                    // Specifies the name of the user to log on. If the value of this property is blank, "anonymous" is used for FTP connections.
+End_Class

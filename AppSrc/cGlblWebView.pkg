@@ -1,0 +1,28 @@
+Use cWebView.pkg
+
+Class cGlblWebView is a cWebView
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        { WebProperty=Client }
+        Property Boolean pbWebClearAfterSave True
+    End_Procedure
+
+    Procedure RequestSaveExec
+        Boolean bDoClear bOldVal
+        
+        Get pbClearAfterSave to bOldVal
+        WebGet pbWebClearAfterSave to bDoClear
+        Set pbClearAfterSave to bDoClear
+            
+        Forward Send RequestSaveExec
+        Set pbClearAfterSave to bOldVal
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+End_Class

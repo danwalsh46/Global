@@ -1,0 +1,24 @@
+//AB/ CLASSDEF
+Class ColorDialog Is A BitmapContainer
+    Set ObjectNameMask To "oColorDialog<count>"
+    Set ClassHelpName  To "ColorDialog"
+    Set ClassCETV      To 34                 // use TreeView Image #34 (1-based offset)
+    Set Drop_Allowed   To False
+    Set Type_Of_Drag   To TD_DRAG_NONVISUAL
+    Set ClassPackage   To "Colr_Dlg.Pkg"
+    Set Control_Type   To ctBASE               // disable DataBase tab page in Properties
+    Set Size_Allowed   To False
+
+    Property No_Generate No_Visible Color Color clBtnFace
+    Property No_Generate No_Visible String Bitmap "ColorDialog.Bmp"
+    Property No_Generate No_Visible Integer Bitmap_Style Bitmap_Center
+    //don't show location
+    Property No_Visible Pseudo Complex Location 0 0
+    //don't show size
+    Property No_Visible Pseudo Complex Size 20 20
+    //show this bitmap on control
+    Property No_Execute Boolean FullOpen_State True // If True, display standard colors and custom colors. If False, only display standard colors.
+    Property No_Execute Boolean PreventFullOpen_State False // If true, users are prevented from displaying the custom-colors section of the dialog box.
+    Property No_Execute Boolean SelectedColor_State True  // If true, the dialog will initialize with the value of the SelectedColor property as its default color.
+    Property No_Execute Color SelectedColor clWhite // The color that will be used as the default when the dialog box is displayed (assuming SelectedColor_State is true).
+End_Class

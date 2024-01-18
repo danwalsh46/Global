@@ -1,0 +1,27 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDbTabDialog
+//* Package Name: cGlblDbTabDialog.pkg
+//*
+//***************************************************************************
+
+Use DFAllEnt.pkg
+
+Class cGlblDbTabDialog is a dbTabDialog
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+        Set Auto_Clear_DEO_state to FALSE
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+End_Class // cGlblDbTabDialog

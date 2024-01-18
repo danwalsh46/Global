@@ -1,0 +1,240 @@
+// This code is part of «VDF GUIdance+
+// Visit us @ http://www.vdf-guidance.com
+// e-Mail us @ info@vdf-guidance.com
+// VDF GUIdance is a mutual project of
+// Frank Vandervelpen - Vandervelpen Systems and
+// Wil van Antwerpen  - Antwise Solutions
+// All software source code should be used «AS IS+ without any warranty.
+
+
+
+//************************************************************************
+//
+// 12/15/97  WvA  created the dbReportView Class
+//
+// 03-sept-99 Released as part of the project VDF GUIdance of Vandervelpen Systems
+//            and Antwise Solutions
+//
+// Partial copyright (c) 1997 Data Access Corporation, Miami Florida,
+// All rights reserved.
+// DataFlex is a registered trademark of Data Access Corporation.
+//
+//************************************************************************
+
+Use Windows.pkg
+Use DfPanel.pkg
+Use EnClient.pkg
+//Use DFMdlPnl
+Use DFNav_mx.pkg      // Navigation changes for DF DEOs
+Use dfConfrm.pkg
+Use dfRptVw.pkg
+
+
+//Use DFGSINI // access to profile strings
+
+//
+// dbReportView Support (views are mdi dialogs)
+//
+// Class inheritance structure:
+//
+//  ReportView
+//   dbReportAppClient_
+//     dbReportAppView_
+//       dbReportView
+//
+Class dbReportAppClient_ is a ReportView STARTMAC ECstart
+    Import_Class_Protocol Entry_Client_Mixin
+    //  Defeat the activating augmentation for auto-locate
+    Procedure Activating Returns Integer
+      Integer RVal
+      forward get MSG_activating to rVal
+      Procedure_Return rVal
+    End_Procedure
+End_Class // dbReportAppClient_
+
+Class dbReportAppView_ is a dbReportAppClient_
+  import_Class_protocol Entry_View_Client_Mixin
+End_Class // dbReportAppView_
+
+
+Class dbReportView is a dbReportAppView_
+
+     Procedure Construct_Object
+      Forward Send Construct_Object No_Image
+      Send Define_DFNavigation  // GUI navigate changes
+      // dialog views get activated as popup objects.
+      set Dso_Detach_Mode to Detach_Always
+
+      Set Verify_Data_Loss_Msg TO GET_No_Confirmation
+      Set Verify_Delete_Msg    TO GET_No_Confirmation
+      Set Verify_Save_Msg      TO GET_No_Confirmation
+      Set Verify_Exit_Msg      TO GET_No_confirmation
+      //
+      // This reportview-client will almost always be a modalpanel, therefore minimizing
+      // is out of the question...
+      Set Minimize_Icon To False
+      Set Maximize_Icon To False
+      set Icon to "WinPrint.ico"
+   End_Procedure // Construct_Object
+
+   Procedure Request_Delete
+   End_Procedure // request_delete
+
+   Procedure Request_Save
+   End_Procedure // request_save
+
+   Function Exit_Application_Check Returns Integer
+     Function_return 0
+   End_Function
+
+   Import_Class_Protocol DFNavigate_Mixin
+
+  //  Returns TRUE to indicate that this is a DEO. This is used by
+  //  delegation to figure out if you are within a DEO and should therefore
+  //  send a DEO message. DEO clients set this true
+  Function DEO_Object Returns integer
+    Function_Return 1
+  End_Function // DEO_Object
+
+  //
+  //  Activate message for views that:
+  //  1. restores the view if it is minimized
+  //  2. Maintains the current scope's focus.
+  //
+  Procedure Activate_current_scope
+    If ( View_mode(Current_Object)=VIEWMODE_ICONIZE ) ;
+       Set view_mode to viewmode_normal
+    Set Current_Scope to Current_Object
+  End_Procedure // Activate_current_scope
+
+  //  Pass full object name - return the relative name
+  //  e.g.,  Main.View.Obj1 --> Obj1
+  Function Local_Object_name string nm returns string
+     Integer ps
+     Repeat
+//       pos "." in nm to ps
+       Move (pos(".",nm)) to ps
+       If (ps = 0) ;
+         Function_Return nm
+       increment ps
+       Move (Mid(Nm,255,ps)) to Nm
+     Loop
+  end_function
+
+  //  Take string "#1,#2" and return integer hi #1 + #2
+  Function Parse_Complex string sVal returns integer
+     Integer ps
+//     Pos "," in sVal to ps
+     Move (Pos(",",sVal)) to ps
+     If ps ;
+        Function_Return ( integer(left(sVal,ps-1))*65536 + ;
+                          integer(mid(sVal,255,ps+1)) )
+  End_Function // Parse_Complex
+
+  // Convert a complex integer to a string "hi,Low"
+  //
+  Function Complex_to_String integer i1 returns string
+     function_return ( string(hi(i1)) - "," - String(low(i1)) )
+  End_function
+
+
+  // *WvA: I don't want to save locations of a reportview noted in the registry.
+  // These printing dialogs are centered on the panel anyway, so it doesn't make any
+  // sense to clutter up the registry with this kind of nonsense.
+  ////
+  ////  Save View information to dfwin.ini file. Save as:
+  ////  View_ObjectName=LOC:Row,Col  e.g., Cust_Ent=LOC:10,20
+  ////     Leaving room for growth here.
+  ////
+  Procedure Save_Environment
+  //   Local String nm Vn st
+  //   Local Integer H
+  //
+  //   Get System_Profile_String "SaveEnvironment" to St
+  //   Move (Uppercase(trim(st))) to st
+  //   If (st="YES" or st="ON" or st="TRUE") Begin
+  //     // Note with the 3.05 version we will have problems if the view has
+  //     // been maximized and then iconized. We still don't know what the normal
+  //     // size/loc is when maximized. We will take a chance and assume that an
+  //     // iconized view is always non-zoomed (since views don't support the zoom
+  //     // button).
+  //     If (View_mode(Current_Object)<>VIEWMODE_ZOOM) Begin
+  //
+  //       Get Name to Vn // full name of object
+  //       Get Local_Object_Name Vn to Vn   // just get the local name
+  //       Get GUILocation to H             // complex location
+  //       Get Complex_to_String h to nm    // convert complex to "hi,low"
+  //       Set System_Profile_String VN to ("LOC:"+Nm)
+  //     End
+  //   End
+  //
+  End_Procedure
+  //
+  //// Augment to check for view string in .INI. Currently, if found
+  //// set the location
+  ////
+  Procedure Load_Environment
+  //   Local String nm Vn Lc
+  //   Local Integer H ps
+  //   // see above for reasoning on this
+  //   If (View_mode(Current_Object)=VIEWMODE_NORMAL) Begin
+  //     Get Name to Vn
+  //     Get Local_Object_Name Vn to Vn
+  //     Get System_Profile_String Vn to Nm
+  //     IF Nm ne '' Begin
+  //        Pos "LOC:" in Nm to Ps   // look for LOC:row,col
+  //        If Ps Begin
+  //           Mid Nm to Lc 255 (Ps+4)
+  //           Pos " " in Lc to ps
+  //           if Ps left lc to lc (ps-1)
+  //           Get Parse_Complex lc to H
+  //           Set GUILocation to (Hi(H)) (Low(H))
+  //           Send Adjust_Logicals
+  //        End
+  //     End
+  //   End
+  End_Procedure
+
+  Function View_Changed returns Integer
+     Integer Changed
+     Broadcast Get Data_Set_Should_Save to Changed // Ask for changes in Data-sets
+     Function_Return Changed
+  End_Function
+
+  Procedure Notify_Exit_Application
+    Send Save_Environment
+  End_procedure
+
+  Procedure End_Construct_Object
+     Send Load_Environment
+     //Send Define_SysMenu
+     Forward Send End_Construct_Object
+  End_Procedure // End_Construct_Object
+
+  Procedure Close_Client
+     Send Exit_Function
+  End_Procedure
+
+  Procedure Entering_Scope returns Integer
+     Integer rVal
+     Forward Get MSG_Entering_Scope to rVal
+     If not rVal send Show_View_Name (Label(Current_Object))
+  End_Procedure
+
+  Procedure Exiting_Scope integer whereto returns Integer
+     Integer rVal
+     Forward Get MSG_Exiting_Scope whereto to rVal
+     If not rVal Send Show_View_Name ''
+  End_Procedure
+
+  Procedure Show_view_Name string sHelp
+     Integer rVal Id
+     Get Statusbar_id to id
+     If Id Send Show_View_Name to Id sHelp
+  End_Procedure
+
+  Function Should_Save_Recursive returns integer
+    Function_return (View_Changed(Current_Object))
+  End_Function
+
+End_Class

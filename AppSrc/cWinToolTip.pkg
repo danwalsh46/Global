@@ -1,0 +1,401 @@
+//****************************************************************************
+// $Module type: Mixin Class
+// $Module name: cWinToolTip
+// $Author     : Bernhard Ponemayr
+//               Sergey V. Natarov
+//               Nils G. Svedmyr
+// Created     : 2004-05-16 @ 12:40
+//
+// Description : A mixin class to implement Windows ToolTips.
+//
+// Usage       :
+//              Use cWinToolTip.pkg
+//                (Example)
+//                Class cWinExForm Is A Form
+//                  Import_Class_Protocol cWinToolTip_mx
+//                  Procedure Construct_Object
+//                    Forward Send Construct_Object
+//                    Send Define_cWinToolTip
+//                  End_Procedure // Construct_Object
+//                End_Class // cWinExForm
+//
+// Properties  :
+//   psToolTip
+//     This is the tooltip text. See also pbAutoStatusHelpAsToolTip.
+//     If you would like to have a new line you can insert a "\n" into the text string.
+//     Ampersands (&) are automatically stripped out.
+//   psToolTipTitle
+//     The title for a tooltip. See also pbAutoLabelAsToolTipTitle.
+//     Ampersands (&) are automatically stripped out.
+//   psShadowText
+//     This text will be appended to the ToolTip text when the object is unavailable.
+//   piToolTipIcon - Default = TTI_INFO
+//     Must be one of TTI_INFO, TTI_NONE, TTI_WARNING or TTI_ERROR
+//   piToolTipWidth
+//     The maximum width for the ToolTip text in pixels. After this width the text will
+//     be wrapped to the next line.
+//   pbAutoStatusHelpAsToolTip - Default = True
+//     When no psToolTip text has been specified, automatically use the status_help for the object
+//     This is very useful when used with db aware objects where status_help has been defined in the DD class.
+//     Note: Only single item objects are supported (Until we can come up with a good scheme on how to support it)
+//     If you would like to have a new line you can insert a "\n" into the text string.
+//   pbAutoLabelAsToolTipTitle - Default = True
+//     When no psToolTipTitle has been specified, automatically use the objects label as the ToolTipTitle.
+//     Note: Some clasees, like e.g. Grids and dbLists doesn't use a label.
+//     In situations where no ToolTipTitle or Label is available the text from the Private.psTipTitle
+//     ":" and "&" characters in labels will automatically be stripped out.
+//     property will be used - Default = "Help"
+//   pbToolTips - Default = True
+//     Displays the tooltip if True
+//   pbToolTipBalloon - Default = True
+//     Change the ToolTip style. Default is to display a carton type tooltip with a stem pointing towards the
+//     object. If set to False, the tooltip is diaplayed in a square.
+//
+// Class Construct Properties:
+//
+//   You should never need to set these in an object. They should only be used in
+//   procedure Construct_Object when subclassing.
+//   They are used internally by the cWinToolTip class to determin if a Window_Handle or
+//   a Form_Window_Handle should be used when creating the tooltip.
+//   In DAW VDF classes it depends on the control type what type of handle should be used, and
+//   if Entry_State is True/False. Thera are no guide lines to give when to use what.
+//   However, all VDF standard classes have already been subclassed for the cWindowsEx workspace.
+//   So, if in doubt; check those subclasses. They all have the prefix "cWin".
+//   If you create your own class and the ToolTip doesn't display you probably want to start with
+//   setting the pbClassEnabledHandleType To False and see if that works better.
+//   pbClassEnabledHandleType    - Default True
+//   pbClassDisabledHandleType   - Default True
+//   pbClassEntryStateHandleType - Default True
+
+// Procedures  :
+//   Send RefreshToolTip
+//     If there is a need to dynamically change the ToolTip and/or ToolTipTitle for an object
+//     while the program is running, send RefreshToolTip after the psToolTip and/or psToolTipTitle
+//     properties have been changed.
+//
+// Note        :
+//  The cWinButton, cWinLink and cWinText classes does _not_ use this mizin class.
+//  Instead the same type of functionality has been build right into the cBaseWinControl class.
+//
+// $Rev History:
+//    2004-05-16  Module header created
+//****************************************************************************
+// WinApi ToolTips (cWinToolTip.pkg)
+
+Use cWinToolTip.h
+Use cWinUserEx.h
+
+Class cWinToolTip_mx Is A Mixin
+
+    Procedure Define_cWinToolTip
+        // ToolTip//Public
+        Property Handle  phToolTip                   Public 0
+        Property String  psToolTip                   Public ""
+        Property String  psToolTipTitle              Public ""
+        Property String  psShadowText                Public "(Unavailable)"
+        Property Integer piToolTipIcon               Public TTI_INFO
+        Property Integer piToolTipWidth              Public 350
+        Property Boolean pbAutoStatusHelpAsToolTip   Public True
+        Property Boolean pbAutoLabelAsToolTipTitle   Public True
+
+        Property Boolean pbClassEnabledHandleType    Public True
+        Property Boolean pbClassDisabledHandleType   Public True
+        Property Boolean pbClassEntryStateHandleType Public True
+
+        // TooTips//Private
+        Property Boolean Private.pbToolTipBalloon    Public True
+        Property Boolean Private.pbToolTipEnable     Public True
+        Property String  Private.psTipTitle               "Help"
+        Property Boolean Private.pbShadowState       Public False
+
+    End_Procedure // Define_cWinToolTip
+
+    Procedure Set Label String sLabel
+        Local String sToolTipTitle
+        Forward Set Label                            To sLabel
+        Move (Trim(sLabel))                          To sLabel
+        If (pbAutoLabelAsToolTipTitle(Self)) Begin
+          Get psToolTipTitle                         To sToolTipTitle
+          Move (Trim(sToolTipTitle))                 To sToolTipTitle
+          If (Length(sToolTipTitle) > 0) Procedure_Return
+          Move (Replaces(":", sLabel, ""))           To sLabel
+          Move (Replaces("&", sLabel, ""))           To sLabel
+          If (Length(Trim(sLabel)) = 0) ;
+            Get Private.psTipTitle                   To sLabel
+          Set psToolTipTitle                         To sLabel
+          If (Window_Handle(Self)) Send RefreshToolTip  // Do not refresh ToolTip if object is being constructed.
+        End // If (pbAutoLabelAsToolTipTitle(Self)) Begin
+    End_Procedure // Set Label
+
+    Procedure Set Status_Help String sItem String sText
+        Local String sToolTip sVal
+        Local Integer iItem
+        If (Num_Arguments = 1) Begin
+          Move sItem                                           To sVal
+          Send Ignore_Error Of Error_Info_Object 98
+          Move (Item_Count(Self) - 1)                          To iItem
+          Send Trap_Error   Of Error_Info_Object 98
+        End // If (Num_Arguments = 1) Begin
+        Else Begin
+          Move sText                                           To sVal
+          MOve sItem                                           To iItem
+        End // Else Begin
+        Move (Trim(sVal))                                      To sVal
+        Move (Replaces("\n",sVal,Character(13)+Character(10))) To sVal
+        If (Num_Arguments = 1) Forward Set Status_Help         To sVal
+        Else Forward Set Status_Help iItem                     To sVal
+        If (pbAutoStatusHelpAsToolTip(Self)) Begin
+          Get psToolTip                                        To sToolTip
+          Move (Trim(sToolTip))                                To sToolTip
+          If (Length(sToolTip) > 0) Procedure_Return
+          Move (Replaces("&", sVal, ""))                       To sVal
+          Set psToolTip                                        To sVal
+          If (Window_Handle(Self)) Send RefreshToolTip  // Do not refresh ToolTip if object is being constructed.
+        End // If (pbAutoStatusHelpAsToolTip(Self)) Begin
+    End_Procedure // Set Status_Help String sText
+
+    Function Status_Help Returns String
+      String sRetval
+      Forward Get Status_Help 0 To sRetval
+      Function_Return sRetval
+    End_Function // Status_Help Integer iItem Returns String
+
+    Procedure CreateToolTipWindow
+        Local Handle hWnd
+        Local String sClass
+        Local Pointer pClass
+        Move ("Tooltips_Class32" + (Character(0))) To sClass
+        GetAddress Of sClass To pClass
+        If (Private.pbToolTipBalloon(Self) = (True)) Move (CreateWindowExEf(0,pClass,0,TTS_ALWAYSTIP Ior TTS_BALLOON,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,0,0,(Window_Handle(Desktop)),0)) To hWnd
+        Else Move (CreateWindowExEf(0,pClass,0,TTS_ALWAYSTIP,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,0,0,(Window_Handle(Desktop)),0)) To hWnd
+        Set phToolTip To hWnd
+    End_Procedure // CreateToolTipWindow
+
+    // This is the message that some VDF (read toolbar and tabpage) classes
+    // use for enabling/disabling tooltips. These two messages have been
+    // added here to have one common message that could be broadcasted
+    // from e.g. a program's property box.
+    Procedure Set pbToolTips Boolean bState
+      Local Integer iRet
+      Set Private.pbToolTipEnable To bState
+      If (phToolTip(Self) = 0) Procedure_Return
+      Move (SendMessage(phToolTip(Self),TTM_ACTIVATE,bState,0)) To iRet
+    End_Procedure // Set pbToolTips
+
+    Function pbToolTips Returns Boolean
+      Function_Return (Private.pbToolTipEnable(Self))
+    End_Function // pbToolTips
+
+    // 2004-05-26 ------------------------------------ Start Nils G. Svedmyr
+    // To be able to change the tooltip style on the fly:
+    Procedure Set pbToolTipBalloon Boolean bState
+      Local Boolean bOldState
+      Get Private.pbToolTipBalloon To bOldState
+      If (bOldState = bState)      Procedure_Return
+      Set Private.pbToolTipBalloon To bState
+      If (Window_Handle(Self) = 0) Procedure_Return
+      Send RecreateToolTip
+    End_Procedure // Set pbToolTipBalloon
+    // 2004-05-26 ------------------------------------ Stop Nils G. Svedmyr
+
+    Procedure RecreateToolTip
+        If (Window_Handle(Self) = 0) Procedure_Return
+        Send DestroyToolTip    // Destroy
+        Send Page_Object True  // Recreate
+    End_Procedure // RecreateToolTip
+
+    Procedure AddWindowToToolTip Handle hToolWnd
+        Local Integer iRet
+        Local String sToolInfo
+        Local Pointer pToolInfo pToolTip
+        Local Handle hToolTip
+        Local String sTipText sTipTitle sLabel
+        Local Pointer pTipText pTipTitle
+        Local Integer iTipIcon
+
+        Get psToolTip                             To sTipText
+        Move (Trim(sTipText))                     To sTipText
+        If (Length(sTipText) = 0 And pbAutoStatusHelpAsToolTip(Self) = (True)) Begin
+          Get Status_Help Item 0                  To sTipText
+          Move (Trim(sTipText))                   To sTipText
+          Move (Replaces("\n",sTipText,Character(13)+Character(10)))           To sTipText
+          Set psToolTip                           To sTipText
+        End // If (Length(sTipText) = 0 And pbAutoStatusHelpAsToolTip(Self) = (True)) Begin
+
+        If (Private.pbShadowState(Self) And Length(Trim(sTipText)) > 0) ;
+          Move (sTipText * psShadowText(Self))                                 To sTipText
+        Move (Replaces("\n",sTipText,Character(13)+Character(10)))             To sTipText
+        Move (ToAnsi(sTipText))                                                To sTipText
+
+        Get phToolTip                             To hToolTip
+        ZeroType tTOOLINFO                        To sToolInfo
+        GetAddress Of sToolInfo                   To pToolInfo
+
+        Put tTOOLINFO_SIZE                        To sToolInfo At tTOOLINFO.cbSize
+        Put (TTF_SUBCLASS Ior TTF_IDISHWND)       To sToolInfo At tTOOLINFO.uFlags
+        Put hToolTip                              To sToolInfo At tTOOLINFO.hwnd
+        Put hToolWnd                              To sToolInfo At tTOOLINFO.uID
+        Put (AddressOf(sTipText))                 To sToolInfo At tTOOLINFO.lpszText
+        Put (Self)                                To sToolInfo At tTOOLINFO.lParam
+
+        Move (SendMessage(hToolTip,TTM_ADDTOOL,0,pToolInfo))                   To iRet
+        Move (SendMessage(hToolTip,TTM_SETMAXTIPWIDTH,0,piToolTipWidth(Self))) To iRet
+
+        Get psToolTipTitle                        To sTipTitle
+        Move (Trim(sTipTitle))                    To sTipTitle
+        If (Length(sTipTitle) = 0 And pbAutoLabelAsToolTipTitle(Self)) Begin
+            Get Label                             To sLabel
+            Move (Trim(sLabel))                   To sLabel
+            Move (Replaces(":", sLabel, ""))      To sLabel
+            Move (Replaces("&", sLabel, ""))      To sLabel
+            Move (Replaces("\n",sLabel,Character(13)+Character(10)))           To sLabel
+            If (Length(sLabel) = 0) ;
+              Get Private.psTipTitle              To sLabel
+            Set psToolTipTitle                    To sLabel
+            Move sLabel                           To sTipTitle
+        End // If (Length(sTipTitle) = 0 And pbAutoLabelAsToolTipTitle(Self)) Begin
+
+        If (Length(sTipTitle) > 0) Begin
+            Get piToolTipIcon                     To iTipIcon
+            // Removes ampersands (&) from the title tip.
+            Move (Replaces("&", sTipTitle,""))    To sTipTitle
+            Move (Replaces("\n",sTipTitle,Character(13)+Character(10)))        To sTipTitle
+            Move (sTipTitle + (Character(0)))     To sTipTitle
+            Move (ToAnsi(sTipTitle))              To sTipTitle
+            GetAddress Of sTipTitle               To pTipTitle
+            Move (SendMessage(hToolTip,TTM_SETTITLEA,iTipIcon,pTipTitle))      To iRet
+        End // If (Length(sTipTitle) > 0) Begin
+
+        // This methods working, but not implemented yet.
+        // I'm just unsure is it required or no. Rather no.
+        // Sets background/foreground tooltip window colors.
+        // If you need, just uncomment it and add properties into the control.
+        //Move (SendMessage(hToolTip,TTM_SETTIPBKCOLOR,clNavy,0)) To iRet
+        //Move (SendMessage(hToolTip,TTM_SETTIPTEXTCOLOR,clYellow,0)) To iRet
+    End_Procedure // AddWindowToToolTip
+
+    // If there is a need to dynamically change the ToolTip and/or ToolTipTitle for an object,
+    // while the program is running, send RefreshToolTip after the psToolTip
+    // property has been changed.
+    Procedure RefreshToolTip
+        Local Handle hToolTip pToolInfo hToolWnd pTipText pTipTitle
+        Local String sToolInfo sTipText sTipTitle
+        Local Integer iRet iTipIcon
+
+        Get phToolTip                             To hToolTip
+        Get psToolTip                             To sTipText
+        Move (Trim(sTipText))                     To sTipText
+        If (Length(sTipText) = 0 Or hToolTip = 0) Procedure_Return
+
+        If (Private.pbShadowState(Self)) ;
+          Move (sTipText * psShadowText(Self))    To sTipText
+        Move (Replaces("\n",sTipText,Character(13)+Character(10)))        To sTipText
+        Move (ToAnsi(sTipText))                   To sTipText
+
+        GetAddress Of sTipText                    To pTipText
+        Get Window_Handle                         To hToolWnd
+        ZeroType tTOOLINFO                        To sToolInfo
+        GetAddress Of sToolInfo                   To pToolInfo
+
+        Put tTOOLINFO_SIZE                        To sToolInfo At tTOOLINFO.cbSize
+        Put (TTF_SUBCLASS Ior TTF_IDISHWND)       To sToolInfo At tTOOLINFO.uFlags
+        Put hToolTip                              To sToolInfo At tTOOLINFO.hwnd
+        Put hToolWnd                              To sToolInfo At tTOOLINFO.uID
+        Put pTipText                              To sToolInfo At tTOOLINFO.lpszText
+        Put (Self)                                To sToolInfo At tTOOLINFO.lParam
+        Move (Sendmessage(hToolTip,TTM_UPDATETIPTEXT,0,pToolInfo))        To iRet
+
+        Get psToolTipTitle                        To sTipTitle
+        Move (Trim(sTipTitle))                    To sTipTitle
+        If (Length(sTipTitle) > 0) Begin
+            Get piToolTipIcon                     To iTipIcon
+            // Remove ampersands (&) from the title tip.
+            Move (Replaces("&", sTipTitle,""))    To sTipTitle
+            Move (Replaces("\n",sTipTitle,Character(13)+Character(10)))   To sTipTitle
+            Move (sTipTitle + (Character(0)))     To sTipTitle
+            Move (ToAnsi(sTipTitle))              To sTipTitle
+            GetAddress Of sTipTitle               To pTipTitle
+            Move (SendMessage(hToolTip,TTM_SETTITLEA,iTipIcon,pTipTitle)) To iRet
+        End // If (Length(sTipTitle) > 0) Begin
+    End_Procedure // RefreshToolTip
+
+    Procedure DestroyToolTip
+        Local String sToolInfo
+        Local Handle hToolWnd hToolTip pToolInfo
+        Local Integer iRet
+
+        Get phToolTip To hToolTip
+        If (hToolTip = 0) Procedure_Return
+
+        Get Window_Handle Of (Parent(Self)) To hToolWnd
+        ZeroType tTOOLINFO        To sToolInfo
+        GetAddress Of sToolInfo   To pToolInfo
+
+        Put tTOOLINFO_Size        To sToolInfo At tTOOLINFO.cbSize
+        Put hToolTip              To sToolInfo At tTOOLINFO.hwnd
+        Put hToolWnd              To sToolInfo At tTOOLINFO.uID
+        Move (SendMessage(hToolTip,TTM_DELTOOL,0,pToolInfo)) To iRet // Remove the tool from the ToolTip control.
+        Move (DestroyWindowEf(hToolTip))                     To iRet // Destroy object.
+        Set phToolTip To 0
+    End_Procedure // DestroyToolTip
+
+    Procedure DeActivating
+        Forward Send DeActivating
+        Send DestroyToolTip
+    End_Procedure // DeActivating
+
+    Procedure Shadow_Display
+        Forward Send Shadow_Display
+        Send Ignore_Error Of Error_Info_Object 4150
+        Set Private.pbShadowState To (Shadow_State(Self) = (True) Or Enabled_State(Self) = (False))
+        Send Trap_Error Of Error_Info_Object 4150
+        If Not (Active_State(Self)) Procedure_Return
+        Send RecreateToolTip
+    End_Procedure // Shadow_Display
+
+    // We _must_ use Page_Object and not Page here, else it won't work
+    // for some classes (e.g. checkboxes)
+    Procedure Page_Object Integer iFlag
+        Local Handle  hWnd hWndFormButton
+        Local Integer iRet iStyle
+        Local Boolean bToolTipEnable
+        Forward Send Page_Object iFlag
+        If (iFlag <> 0) Begin
+            If (phToolTip(Self) = 0) Begin
+                Send CreateToolTipWindow
+                Get Private.pbToolTipEnable To bToolTipEnable
+                Move (SendMessage(phToolTip(Self),TTM_ACTIVATE,bToolTipEnable,0)) To iRet
+                // Some classes doesn't have the Form_Window_Handle and Entry_State properties defined:
+                Send Ignore_Error Of Error_Info_Object 98
+                Send Ignore_Error Of Error_Info_Object 4150
+
+                // Should we create tooltips for form buttons as well?
+                Get Form_Button_Window_Handle To hWndFormButton
+                If (hWndFormButton <> 0 And (Shadow_State(Self) = (False) Or Enabled_State(Self) = (True))) ;
+                  Send AddWindowToToolTip hWndFormButton
+
+                // Note: It seems like it is _never_ possible to display a tooltip for
+                // a comboform when Enabled_State = False. Also ToolTips will never show when
+                // the object is implicitly shadowed i.e. within a disabled container object (Go figure...)
+                If (Shadow_State(Self) = (True) Or Enabled_State(Self) = (False)) Begin
+                  If (pbClassDisabledHandleType(Self) = (True)) Get Window_Handle             To hWnd
+                  Else                                          Get Form_Window_Handle Item 0 To hWnd
+                End // If (Shadow_State(Self) = (True) Or Enabled_State(Self) = (False)) Begin
+                Else Begin
+                  If (pbClassEnabledHandleType(Self)  = (True)) Get Form_Window_Handle Item 0 To hWnd
+                  Else                                          Get Window_Handle             To hWnd
+                End // Else Begin
+                If (pbClassEntryStateHandleType(Self) = (False)) Begin
+                  If (Entry_State(Self,0) = (False))            Get Window_Handle             To hWnd
+                  Else                                          Get Form_Window_Handle Item 0 To hWnd
+                End // If (pbClassEntryStateHandleType(Self) = (False)) Begin
+
+                Send Trap_Error Of Error_Info_Object 98
+                Send Trap_Error Of Error_Info_Object 4150
+                If (hWnd <> 0) Send AddWindowToToolTip hWnd
+            End // If (phToolTip(Self) = 0) Begin
+        End // If (iFlag <> 0) Begin
+    End_Procedure // Page_Object
+
+End_Class // cWinToolTip_mx (Mixin)
+

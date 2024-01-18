@@ -1,0 +1,13 @@
+//AB/ CLASSDEF
+
+Class RadioGroup is a AbstractContainer Group GroupMixin DefineGroupMixin
+    Set Drop_Allowed   To TD_DRAG_CONTROL
+    Set ObjectNameMask To "oRadioGroup<count>"
+    Set ClassHelpName  To "RadioGroup"
+    Set ClassCETV      To 19                // use TreeView Image #19 (1-based offset)
+    Set ClassPackage   To "dfRadio.pkg"
+    Inherit
+    Property String Label  // Text label that appears for this group.
+    Property Always_Generate Complex Size 40 80
+    Property No_execute No_Generate No_Visible integer Current_radio
+End_Class

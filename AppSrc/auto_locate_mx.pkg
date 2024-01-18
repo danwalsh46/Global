@@ -1,0 +1,229 @@
+//************************************************************************
+//
+// auto_locate_mx.pkg
+// 
+// based on DAW's autolcmx.pkg, but better!
+//
+// version 0.1
+//
+//************************************************************************/
+Use VDFbase.pkg
+Use Modal_mx.pkg
+Use GlobalFunctionsProcedures.pkg
+Use autolcmx.pkg
+Use monitor.pkg
+
+#Replace SM_XVIRTUALSCREEN    76
+#Replace SM_YVIRTUALSCREEN    77
+
+Define CENTER_ON_PRIMARY for 6
+Define CENTER_ON_SECONDARY for 7
+Define CENTER_ON_MONITOR for 8
+
+Class cAutoLocateMixin is a Mixin
+    { Visibility=Private }
+    Procedure Define_cAutoLocateMixin
+        Property Handle phMonitor 0
+    End_Procedure
+
+    // Procedure Auto_Locate
+    //
+    { Visibility=Private }
+    Procedure Auto_Locate Integer Invoking_Obj#
+        // a frightening combination of legacy and Hungarian named variables
+        Integer loc gHt gWd gRow gCol sHt sWd pSize
+        Integer screensz
+        Integer iXTopLeft iYTopLeft iCol iWidth iColOffset i
+        Integer iSaveRowOffset iSaveColumnOffset
+        tMONITORINFO tMonitor
+        Handle hWnd
+        
+        If (Invoking_Obj#>desktop and name(invoking_obj#)<>"MAIN.MAIN_MENU") Begin
+            Get row_offset to iSaveRowOffset
+            Get column_offset to iSaveColumnOffset
+            Get Physical_fontSize to pSize // size of the font
+            
+            If (item_count(Invoking_Obj#)>1) Begin
+                Set row_offset to (current_row(invoking_obj#)+2)
+                Move (Mod(current_item(invoking_obj#),item_limit(invoking_obj#))) to iCol
+                For i from 0 to (iCol-1)
+                    Get form_guiwidth of invoking_obj# i to iWidth
+                    Add iWidth to iColOffset
+                Loop
+                Set column_offset to (iColOffset/(Low(pSize)+4))
+            End
+
+            Get Absolute_GUIOrigin Of Invoking_Obj# To Loc  // location of inv obj
+            Move (Hi(Loc)) to gRow                         // row
+            Move (Low(Loc)) to gCol                        // col
+            If (gCol>32767) Move (gCol-65536) to gCol
+            If (gRow>32767) Move (gRow-65536) to gRow
+            //
+            Get window_handle of Invoking_Obj# to hWnd
+            If (hWnd) Begin
+                Get MonitorInfo hWnd to tMonitor
+                Move tMonitor.rcWork.Right to sWd
+                Move tMonitor.rcWork.Bottom to sHt
+                Move tMonitor.rcWork.Left to ixTopLeft
+                Move tMonitor.rcWork.Top to iyTopLeft
+            End
+            Else Begin
+                Get GuiScreen_size 1 to ScreenSz
+                Move (Hi(ScreenSz))  to sHt
+                Move (Low(ScreenSz)) to sWd
+                Moveint (GetSystemMetrics (SM_XVIRTUALSCREEN)) to iXTopLeft
+                Moveint (GetSystemMetrics (SM_YVIRTUALSCREEN)) to iYTopLeft
+            End
+            //
+            Add (Row_offset(self) * (Hi(Psize)+4) ) to gRow
+            Add (Column_offset(self) * (Low(Psize)+4) ) to gCol
+            //
+            Set Row_offset to iSaveRowOffset
+            Set Column_offset to iSaveColumnOffset
+            //
+            Get GUISize to Loc
+            Move (Hi(Loc))  to gHt
+            Move (Low(Loc)) to gWd
+            // we use 2 a a pixel fudge factor...looks better
+            If (gRow+gHt>sHt) Move (sHt-gHt-2) to gRow
+            If (gCol+gWd>sWd) Move (sWd-gWd-2) to gCol
+
+            If (gCol<iXTopLeft) Move (iXTopLeft+2) to gCol
+            If (gRow<iYTopLeft) Move (iYTopLeft+2) to gRow
+            Set GuiLocation to gRow gCol
+            Send Adjust_Logicals
+        End
+    End_Procedure
+
+    //
+    //  Locate Panel on Screen/df desktop/current panel
+    //
+    { Visibility=Private }
+    { Visibility=Private }
+    Procedure Locate_Panel
+        Integer Siz Loc obj#
+        Integer sHt sWd sRow sCol
+        Integer ht Wd Row Col
+        Integer screensz
+        Integer LocMode Foc
+        Integer iXTopLeft iYTopLeft i iCnt
+        tMONITORINFO tMonInfo
+        Handle hWnd hMonitor
+        Boolean bRetval
+     
+        Get Locate_Mode to LocMode
+        Get Focus of desktop to Foc
+
+        If LocMode eq SMART_LOCATE Begin
+            If (Modal_State(Self) and Foc>Desktop and Foc<>Self) Move POPUP_LOCATE to LocMode
+            Else If (GUILocation(Self)<>0) Procedure_Return
+            Else Begin
+               Delegate Get Main_Panel_Id to Obj#
+               If Obj# GT Desktop Move CENTER_ON_PANEL to LocMode
+               Else Move CENTER_ON_SCREEN to LocMode
+            End
+        End
+
+        If LocMode eq POPUP_LOCATE Begin
+            If (Foc>Desktop and Foc<>Self) Send Auto_Locate Foc
+            Procedure_Return
+        End
+        // pass 1, returns Workspace size (screen - task bar area)
+        Get GuiScreen_Size 1 to screensz
+
+        If (LocMode=CENTER_ON_SCREEN) Begin
+            Delegate Get Main_Panel_ID to Obj#
+            If (obj#<>0) Get window_handle of obj# to hWnd
+            Else Move 0 to hWnd
+            // get the monitor info for the monitor that the main panel is on
+            //  the monitor info structure will contain the coordinates for the 
+            //  top/left/bottom/right, which we can use to determine the resolution
+            // if Main_Panel_ID is not set, use the old code instead (which will center
+            //  on the primary monitor)
+            If (hWnd<>0) Begin
+                Get MonitorInfo hWnd to tMonInfo
+                Move (tMonInfo.rcMonitor.right-tMonInfo.rcMonitor.left) to siz
+                Move (siz+((tMonInfo.rcMonitor.Bottom-tmoninfo.rcMonitor.Top)*65536)) to siz
+            End
+            Else Move ScreenSz to Siz
+        End
+        Else If (LocMode=CENTER_ON_PRIMARY) Begin
+            Get item_count of oMonitorHandles to iCnt
+            If (iCnt=0) Send EnumerateMonitors
+            Get value of oMonitorHandles item 0 to hMonitor
+            Move hMonitor to hWnd
+            Move (SizeofType(tMONITORINFO)) to tMonInfo.cbSize
+            Move (GetMonitorInfo(hMonitor, AddressOf(tMonInfo))) to bRetVal
+            Move (tMonInfo.rcMonitor.right-tMonInfo.rcMonitor.left) to siz
+            Move (siz+((tMonInfo.rcMonitor.Bottom-tmoninfo.rcMonitor.Top)*65536)) to siz
+            Move CENTER_ON_SCREEN to LocMode
+        End
+        Else If (LocMode=CENTER_ON_SECONDARY) Begin
+            Get item_count of oMonitorHandles to iCnt
+            If (iCnt=0) Send EnumerateMonitors
+            If (iCnt>=2) Get value of oMonitorHandles item 1 to hMonitor
+            Else Get value of oMonitorHandles item 0 to hMonitor
+            Move hMonitor to hWnd
+            Move (SizeofType(tMONITORINFO)) to tMonInfo.cbSize
+            Move (GetMonitorInfo(hMonitor, AddressOf(tMonInfo))) to bRetVal
+            Move (tMonInfo.rcMonitor.right-tMonInfo.rcMonitor.left) to siz
+            Move (siz+((tMonInfo.rcMonitor.Bottom-tmoninfo.rcMonitor.Top)*65536)) to siz
+            Move CENTER_ON_SCREEN to LocMode
+        End
+        Else If (LocMode=CENTER_ON_MONITOR) Begin
+            Get phMonitor to hMonitor
+            Move hMonitor to hWnd
+            Move (SizeofType(tMONITORINFO)) to tMonInfo.cbSize
+            Move (GetMonitorInfo(hMonitor, AddressOf(tMonInfo))) to bRetVal
+            Move (tMonInfo.rcMonitor.right-tMonInfo.rcMonitor.left) to siz
+            Move (siz+((tMonInfo.rcMonitor.Bottom-tmoninfo.rcMonitor.Top)*65536)) to siz
+            Move CENTER_ON_SCREEN to LocMode
+        End
+        Else If LocMode eq CENTER_ON_PANEL Begin
+            Delegate Get Main_Panel_ID to Obj#
+            Get Absolute_GUIOrigin of Obj# to Loc
+            Get Client_Size of Obj# to Siz
+        End
+        Else Begin // else delegate, ie. CENTER_ON_PARENT
+            Delegate Get Absolute_GUIOrigin to Loc
+            Delegate Get Client_Size to Siz
+        End
+        Move (hi(Loc)) to sRow
+        Move (Low(Loc)) to sCol
+        If (sCol>32767) Move (sCol-65536 ) to sCol
+        If (sRow>32767) Move (sRow-65536 ) to sRow
+        //
+        Move (hi(Siz))  to sHt
+        Move (low(Siz))  to sWd
+        //
+        Get GUISize to Siz
+        Move (hi(Siz))   to Ht
+        Move (low(Siz))  to Wd
+        Move ((sHt-Ht)/2+sRow) to Row
+        Move ((sWd-Wd)/2+sCol) to Col
+        // if we are doing a center on screen and the window handle was obtained, we
+        //  need to add the top left coordinates of that screen to the row/col 
+        If (LocMode=CENTER_ON_SCREEN and hWnd<>0) Begin
+            Add tMonInfo.rcMonitor.Top to Row
+            Add tMonInfo.rcMonitor.Left to Col
+            Move tMonInfo.rcMonitor.Top to iYTopLeft
+            Move tMonInfo.rcMonitor.Left to iXTopLeft
+        End
+        Else Begin
+            Moveint (GetSystemMetrics (SM_XVIRTUALSCREEN)) to iXTopLeft
+            Moveint (GetSystemMetrics (SM_YVIRTUALSCREEN)) to iYTopLeft
+        End
+        //
+        // we use 2 a a pixel fudge factor...looks better
+        Move ( Hi(ScreenSz)) to sHt
+        Move (Low(ScreenSz)) to sWd
+        //
+        If (Row+Ht>sHt) Move (sHt - Ht - 2 ) to Row
+        If (Col+Wd>sWd) Move (sWd - Wd - 2 ) to Col
+        If (Col<iXTopLeft) Move (iXTopLeft+2) to Col
+        If (Row<iYTopLeft) Move (iYTopLeft+2) to Row
+        Set GuiLocation to Row Col
+        Send Adjust_Logicals
+    End_Procedure
+
+End_Class

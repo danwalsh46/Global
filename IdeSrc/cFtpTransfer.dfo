@@ -1,0 +1,9 @@
+//AB/ OBJECTDEF
+Object oFtpTransfer is a cFtpTransfer
+    //AB-StoreStart
+    Procedure OnTransferStatus Integer iBytesTransferred Integer iFileSize
+        //Showln iBytesTransferred " of " iFileSize
+        // You can abort file transfer here with 'Send CancelTransfer'
+    End_Procedure // OnTransferStatus
+    //AB-StoreEnd
+End_Object

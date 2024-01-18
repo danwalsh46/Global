@@ -1,0 +1,191 @@
+Use AutoComplete_Mixin.pkg
+
+//************************************************************
+// [INTERNAL]
+Class Form_AutoComplete_Mixin is a Mixin
+  //************************************************************
+  // [INTERNAL]
+  Procedure Define_Form_AutoComplete_Mixin
+    Send Define_AutoComplete_Mixin
+  End_Procedure // Define_Form_AutoComplete_Mixin
+  
+  Import_Class_Protocol AutoComplete_Mixin
+  
+  // Turn AutoComplete option off
+  //   Send ToggleAutoComplete FALSE
+  //
+  // Turn AutoComplete option on
+  //   Send ToggleAutoComplete TRUE
+  //
+  //************************************************************ 
+  // This procedure will be used to toggle the autocomplete
+  // option on and off
+  Procedure ToggleAutoComplete Boolean bVal
+    Set pbAutoComplete_Status to bVal
+  End_Procedure // ToggleAutoComplete
+  
+  // Set PopupOffset to 2 -1 // 2 more vertical, -1 horizontal
+  //************************************************************
+  // This procedure will allow you to adjust where the popup occurs.
+  // It may be needed when object sizes are non-standard, or the
+  // object is several layers deep within containers/panels/tabdialogs.
+  Procedure Set PopupOffset Integer iHi Integer iLow
+    Set piHiPopupOffset  to iHi
+    Set piLowPopupOffset to iLow
+  End_Procedure // Set PopupOffset
+  
+  // Set FindMode item 0 to GE // for column 0 use GE
+  // Set FindMode item 1 to EQ // for column 1 use GE
+  //
+  //************************************************************
+  // This procedure will allow you to set the find mode for each
+  // column. The default is EQ but this can be changed to GE.
+  Procedure Set FindMode Integer iMode
+    Set piFind_Mode to iMode
+  End_Procedure // Set PopupOffset
+
+  // Set AutoComplete_Index to 1
+  //
+  //************************************************************
+  // Use this to set the autocomplete index.
+  Procedure Set AutoComplete_Index Integer iIndex
+    Set piList_Index to iIndex
+  End_Procedure // AutoComplete_Index
+
+  //   Example of data from one file
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Vendor.Name     80
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Vendor.Address1 100
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Vendor.Address2 100
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Vendor.City     75
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Vendor.State    20
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Vendor.Zip      40
+  //
+  //   Example of Data from two related files.
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Invoice.Num     80
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Invoice.Date    80
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Billto.Name     100
+  //   Send Add_Display_Column (Vendor_DD(Self)) FILE_FIELD Invoice.Amt     75
+  //************************************************************
+  // This will be used to add additional columns to the
+  // autocomplete list. You must also specify the column
+  // width for each item you add.
+  Procedure Add_Display_Column Handle hServer Integer iFile Integer iField Integer iCol_Width
+    Integer iCount iItem iTemp iWidth
+    If (hServer = 0) Error 999 "Attempt to add an additional column with an invalid server object"
+    Else If (iFile = 0) Error 999 "Attempt to add an additional column with an invalid file#"
+    Else If (iFile <> Main_File(hServer)) Error 999 "Attempt to add an additional column where file does not match server" 
+    Else Begin
+      // Add up all column widths
+      Get Item_Count of oCol_Server to iCount
+      For iItem from 0 to (iCount - 1)
+        Get Array_Value of oCol_Width item iItem to iTemp
+        Add iTemp to iWidth
+      Loop
+      //
+      Set Array_Value of oCol_Server  item iCount to hServer
+      Set Array_Value of oCol_File    item iCount to iFile
+      Set Array_Value of oCol_Field   item iCount to iField
+      Set Array_Value of oCol_Width   item iCount to iCol_Width
+      Set Array_Value of oCol_Pos     item iCount to iWidth
+    End
+  End_Procedure // Add_Display_Col
+
+  //************************************************************
+  // This function creates the list and returns the handle of the
+  // list object created.
+  // [INTERNAL]
+  Function CreateList Handle hObj Returns Handle  
+    Handle hPanel hTemp hList hParent hServer hFile hField
+    Integer iLoc iItem iRet iMaskType iMaskValState iFieldType
+    String sMask
+    // Create list object
+    Get Create of (Client_Area(hObj)) U_cListPanel to hPanel
+    Set phoPanel to hPanel
+    Set phoCallback_Obj of (phoPanel(hObj)) to hObj
+    // Create a temporary object in the location where this should popup
+    // Get the GUI location of this object and use this to set the location
+    // of the actual list.
+    Get Parent of hObj to hParent
+    Get Create of hParent U_Form to hTemp
+    Set Location of hTemp to (Hi(Location(hObj))+Hi(Size(hObj))+piHiPopupOffset(hObj)) (Low(Location(hObj))+piLowPopupOffset(hObj))
+    Set Visible_State of hTemp to FALSE
+    Set Size of hTemp to (Hi(Size(hObj))) (Low(Size(hObj)))
+    Send Page_Object to hTemp TRUE
+    Get Absolute_GUIOrigin of hTemp to iLoc
+    Send Destroy of hTemp
+    Set GUILocation of (phoPanel(hObj)) to (Hi(iLoc)) (Low(iLoc))
+    Send Adjust_Logicals to (phoPanel(hObj))
+    // Create List.
+    Get Create of (phoPanel(hObj)) U_cAutoComplete_List to hList
+    Set phoList of (phoPanel(hObj)) to hList
+    Set Line_Width of hList to (Item_Count(oCol_Server(hObj))) 0
+    // Add each column to the list.
+    For iItem from 0 to (Item_Count(oCol_Server(hObj))-1)
+      Get Integer_Value of oCol_Server  item iItem to hServer
+      Get Integer_Value of oCol_File    item iItem to hFile
+      Get Integer_Value of oCol_Field   item iItem to hField
+      // make sure has server, file, and field.
+      // Recnum will be skipped, but this shouldn't have any masking anyways.
+      If ((hServer) and (hFile) and (hField)) Begin
+        Get File_Field_Mask_Type of hServer hFile hField to iMaskType
+        // if a mask is already defined in the DEO we will use that mask instead of
+        // the one in the DD. We assume the developer knew what they were doing to
+        // go to the extra trouble of creating a deo mask, yet no mask data-type.
+        Get File_Field_Mask of hServer hFile hField to sMask // Get the mask for this
+        // if we have no type but we've got a mask - auto-assign it
+        If ((iMaskType = 0) AND (sMask <> "")) Begin
+          Get_Attribute DF_FIELD_TYPE of hFile hField to iFieldType
+          If (iFieldType = DF_DATE) Move Mask_Date_Window to iMaskType
+          Else If (iFieldType = DF_BCD) Move Mask_Numeric_Window to iMaskType
+          Else Move Mask_Window to iMaskType
+        End
+        If (iMaskType > ASCII_WINDOW) Begin // if field mask type is set
+          Set Form_DataType of hList item iItem to iMaskType   // set mask type from ddo
+          // if the mask is blank but the field type is numeric or currency
+          // we will build an automatic mask based on our default mask
+          If ((sMask = "") AND ((iMaskType = MASK_NUMERIC_WINDOW) OR (iMaskType = MASK_CURRENCY_WINDOW))) Begin
+            Get Field_Number_Default_Mask hFile hField (If(iMaskType = Mask_Numeric_Window, Default_Numeric_Mask, Default_Currency_Mask)) to sMask
+          End
+          If (sMask <> "") Begin
+            Set Form_Mask of hList item iItem to sMask
+            // If we have a mask we must determine if the DEOs value should
+            // contain masking characters or not. This would probably only be
+            // used with strings.
+            Get File_Field_Mask_Value_State of hServer hFile hField to iMaskValState
+            //Set Form_Mask_Value_State item iItem to iMaskValState
+          End
+        End
+      End
+    Loop
+    Function_Return hList
+  End_Function // CreateList
+  
+End_Class // Form_AutoComplete_Mixin
+
+//************************************************************
+// This class is used to replace the normal DBForm when using
+// the autocomplete option.
+Class Dbform_AutoComplete Is a DBForm
+  //**********************************************************
+  // [INTERNAL]
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    Send Define_Form_AutoComplete_Mixin
+  End_Procedure // Construct_Object
+
+  Import_Class_Protocol Form_AutoComplete_Mixin
+End_Class // Dbform_AutoComplete
+
+//************************************************************
+// This class is used to replace the normal Form when using
+// the autocomplete option.
+Class Form_AutoComplete Is a Form
+  //**********************************************************
+  // [INTERNAL]
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    Send Define_Form_AutoComplete_Mixin
+  End_Procedure // Construct_Object
+
+  Import_Class_Protocol Form_AutoComplete_Mixin
+End_Class // Form_AutoComplete

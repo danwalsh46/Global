@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDfTimer is a dfTimer
+    Set ClassPackage To "cGlblDfTimer.pkg"
+    Inherit
+End_Class

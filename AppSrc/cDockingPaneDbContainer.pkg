@@ -1,0 +1,57 @@
+Use Windows.pkg
+
+Define C_$ERROR_ACTIVATING             for "msg_Activating returned a non zero value"
+Define C_$ERROR_CANT_ACCEPT_FOCUS      for "The focus_mode of the object is no_activate"
+Define C_$ERROR_CANT_CREATE_TREE       for "The object cannot be added to focus tree (probably due to lack of available memory)"
+Define C_$ERROR_ADD_TO_INACTIVE_OBJECT for "The object %1 is not active"
+Define C_$ERROR_NO_FOCUSABLE_CHILDREN  for "If the object being added to the focus tree has its client_area_state set to true, and none of its child objects could be added to the focus tree"
+
+{ DesignerClass = cDTView }
+{ OverrideProperty = Minimize_Icon InitialValue = False DesignTime = False }
+{ OverrideProperty = Caption_Bar InitialValue = False DesignTime = False }
+{ OverrideProperty = Visible_State InitialValue = False DesignTime = False }
+{ OverrideProperty = Popup_State InitialValue = False DesignTime = False }
+{ OverrideProperty = Maximize_Icon InitialValue = False DesignTime = False }
+{ OverrideProperty = Sysmenu_Icon InitialValue = False DesignTime = False }
+// Fake settings
+{ OverrideProperty = Border_Style InitialValue = Border_Normal DesignTime = False }
+{ OverrideProperty = Color InitialValue = clYellow }
+Class cDockingPaneDbContainer is a DbContainer3d
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set Minimize_Icon to False
+        Set Border_Style to Border_None
+        Set Caption_Bar to False    
+        Set Visible_State to False
+        Set Popup_State to False
+        Set Maximize_Icon to False
+        Set Sysmenu_Icon to False
+    End_Procedure
+    
+    Procedure AddDockingPaneDbContainerToFocusTree
+        Handle hoParent
+        Integer iRetval
+        
+        Get Parent to hoParent
+        
+        Get Msg_Add_Focus hoParent to iRetval
+        Case Begin
+            Case (iRetval = Error_Activating)            
+                Error DFERR_PROGRAM C_$ERROR_ACTIVATING
+                Case Break
+            Case (iRetval = Error_Cant_Accept_Focus)
+                Error DFERR_PROGRAM C_$ERROR_CANT_ACCEPT_FOCUS
+                Case Break
+            Case (iRetval = Error_Cant_Create_Tree)
+                Error DFERR_PROGRAM C_$ERROR_CANT_CREATE_TREE
+                Case Break
+            Case (iRetval = Error_Add_To_Inactive_Object)
+                Error DFERR_PROGRAM (SFormat (C_$ERROR_ADD_TO_INACTIVE_OBJECT, Name (hoParent)))
+                Case Break
+            Case (iRetval = Error_No_Focusable_Children)
+                Error DFERR_PROGRAM C_$ERROR_NO_FOCUSABLE_CHILDREN
+                Case Break
+        Case End
+    End_Procedure
+End_Class

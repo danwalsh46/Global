@@ -1,0 +1,40 @@
+//AB/ CLASSDEF
+Class Grid IS A AbstractControl ABGrid GridMixin DefineGridMixin
+    Set Item_Based_Object To True
+    Set Row_Based_Object  To True
+    Set Floating_Menu_Id  To GridFloater.Obj
+    Set ObjectNameMask    To "oGrid<count>"
+    Set ClassHelpName     To "Grid"
+    Set ClassCETV         To 8                        // use TreeView Image #8 (1-based offset)
+
+    // No Inherit here....intentional
+
+    Property Color Color clWindow                    // Background Color
+    Property Color CurrentCellColor clWindow         // Current cell background color
+    Property Color CurrentCellTextColor clWindowText // Current cell text color
+    Property Color CurrentRowColor clWindow          // Current highlighted row background Color
+    Property Color CurrentRowTextColor  clWindowText // Current highlighted row Text Color
+    Property Color TextColor clWindowText            // Text Color
+    Property Always_Generate Complex Size 70 150     // Object Size (Complex: height, width)
+    Property Complex Location 0 0                    // Object Location (Complex: Row, Column)
+    Property No_Visible No_Generate Item Integer Form_width
+    Property No_Visible No_Generate Item Integer Header_Label
+    Property No_Visible No_Generate Integer Line_Width
+    Property No_execute Boolean Resize_Column_state True  // Allow column resizing at runtime?
+    Property No_execute Boolean Highlight_Row_state False // Display current row in highlight colors?
+    Property No_Execute Integer Help_Id                   // Context Help ID
+    Property No_Execute Boolean ScrollOnThumbTrackState True // Should scroll occur when the thumb is dragged? When false, it scrolls when the thumb is released. Only set it to false if the scroll takes a long time.
+    Property No_Execute Boolean ThumbScrollState True        // Should thumb be sized proportionally to the scroll area? True=Proportional Scroll (normal windows), False=Scroll one line at a time.
+    Property Boolean Autosize_height_state False // When true, the grid's pixel height will be adjusted to exactly fit the number of rows in the display area. This avoids the display of partial rows. Important: Set false when using anchors!
+    Property No_Execute anchor peAnchors anNone  // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+    Property No_Execute mode peResizeColumn rcLastColumn rcNone rcAll rcLastColumn rcSelectedColumn // When grid is resized (via anchors), this determines how columns are resized. If set to "rcSelectedColumn", the property set in piResizeColumn is used.
+    Property No_Execute integer piResizeColumn 0 // Determines which column is sized when grid width is changed. This is only used if peResizeColumn is set to "rcSelectedColumn".
+    Property Mode GridLine_Mode  GRID_VISIBLE_BOTH GRID_VISIBLE_NONE GRID_VISIBLE_HORZ GRID_VISIBLE_VERT GRID_VISIBLE_BOTH // Should grid lines appear: NONE=No, HORZ=Horizontal Lines, VERT=Veritical Lines , BOTH=Horizontal and Vertical lines
+    Property            Color peGridLineColor     clBtnface  // Color for grid lines (see GridLine_Mode for display modes)
+    Property No_Execute Color peDisabledColor     clWindow   // Background color for all disabled cells. Only used if pbUseDisabledColor is true (else Color property is used).
+    Property            Color peDisabledTextColor clDkGray   // Text color for all disabled cells.
+    Property No_Execute Boolean pbUseDisabledColor False     // Determines if the background color of disabled cells is set by peDisabledColor (TRUE) or by Color (FALSE). Note peDisabledColor always sets disabled text.
+End_Class
+
+
+

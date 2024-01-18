@@ -1,0 +1,9 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    // Add images here...
+    //Send ImageList_Add ""
+
+    Send ImageList_Create
+    //AB-StoreEnd
+End_Object

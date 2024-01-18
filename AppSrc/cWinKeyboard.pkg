@@ -1,0 +1,510 @@
+Use cWinUserEx.h
+
+// Keyboard types
+Define KL_NAMELENGTH For 9
+
+Define KBT_Type       For 0 
+Define KBT_SubType    For 1
+Define KBT_NumberKeys For 2 
+
+Define KBT_IBM83_COMP       For 1
+Define KBT_Olivetty_COMP    For 2
+Define KBT_IBM84_COMP       For 3
+Define KBT_IBMENH_COMP      For 4
+Define KBT_NOKIA1050_COMP   For 5
+Define KBT_NOKIA9140_COMP   For 6
+Define KBT_JAPANESE_COMP    For 7
+
+Define KBS_IBM83_COMP       For "IBM PC/XT or compatible (83-key) keyboard"
+Define KBS_Olivetty_COMP    For "Olivetti 'ICO' (102-key) keyboard"
+Define KBS_IBM84_COMP       For "IBM PC/AT (84-key) or similar keyboard"
+Define KBS_IBMENH_COMP      For "IBM enhanced (101- or 102-key) keyboard"
+Define KBS_NOKIA1050_COMP   For "Nokia 1050 and similar keyboards"
+Define KBS_NOKIA9140_COMP   For "Nokia 9140 and similar keyboards"
+Define KBS_JAPANESE_COMP    For "Japanese keyboard"
+Define KBS_UNKNOWN          For "Unknown"
+
+Function GetKeyboardType Global Returns String
+    Integer iType
+    String  sType
+    Move (GetKeyboardTypeEf(0)) To iType
+         If (iType=KBT_IBM83_COMP    )  Move KBS_IBM83_COMP     To sType   
+    Else If (iType=KBT_Olivetty_COMP )  Move KBS_Olivetty_COMP  To sType   
+    Else If (iType=KBT_IBM84_COMP    )  Move KBS_IBM84_COMP     To sType   
+    Else If (iType=KBT_IBMENH_COMP   )  Move KBS_IBMENH_COMP    To sType   
+    Else If (iType=KBT_NOKIA1050_COMP)  Move KBS_NOKIA1050_COMP To sType   
+    Else If (iType=KBT_NOKIA9140_COMP)  Move KBS_NOKIA9140_COMP To sType   
+    Else If (iType=KBT_JAPANESE_COMP )  Move KBS_JAPANESE_COMP  To sType   
+    Else Move KBS_UNKNOWN To sType
+    Function_Return sType
+End_Function // GetKeyboardType
+
+Function GetKeyboardSubType Global Returns String
+    String  sType
+    Move (GetKeyboardTypeEf(1)) To sType
+    Function_Return (sType*"(OEM)")
+End_Function // GetKeyboardSubType
+
+Function GetKeyboardFuncKeys Global Returns String
+    String  sType
+    Move (GetKeyboardTypeEf(2)) To sType
+    Function_Return (sType*"keys")
+End_Function // GetKeyboardFuncKeys
+
+Function GetKeyboardLayoutId Global Returns String
+    Integer iRet
+    String  sID
+    Pointer lpID   
+    Move (Repeat(Character(0), KL_NAMELENGTH)) To sID
+    GetAddress Of sID To lpID
+    Move (GetKeyboardLayoutNameEf(lpID)) To iRet
+    Function_Return (Cstring(sID))
+End_Function // GetKeyboardLayouId
+
+Function GetLanguageName Global String sID Returns String
+    String sType 
+    Case Begin
+        Case (sID="0000") 
+            Move "<Language Neutral>" To sType            
+            Case Break
+        Case (sID="007F") 
+            Move "<Invariant Locale>" To sType            
+            Case Break
+        Case (sID="0400") 
+            Move "<User Default>" To sType
+            Case Break
+        Case (sID="0800") 
+            Move "<System Default>" To sType
+            Case Break
+        Case (sID="0436") 
+            Move "Afrikaans" To sType
+            Case Break
+        Case (sID="041C") 
+            Move "Albanian" To sType
+            Case Break
+        Case (sID="0401") 
+            Move "Arabic (Saudi Arabia)" To sType
+            Case Break
+        Case (sID="0801") 
+            Move "Arabic (Iraq)" To sType
+            Case Break
+        Case (sID="0C01") 
+            Move "Arabic (Egypt)" To sType
+            Case Break
+        Case (sID="1001") 
+            Move "Arabic (Libya)" To sType
+            Case Break
+        Case (sID="1401") 
+            Move "Arabic (Algeria)" To sType
+            Case Break
+        Case (sID="1801") 
+            Move "Arabic (Morocco)" To sType
+            Case Break
+        Case (sID="1C01") 
+            Move "Arabic (Tunisia)" To sType
+            Case Break
+        Case (sID="2001") 
+            Move "Arabic (Oman)" To sType
+            Case Break
+        Case (sID="2401") 
+            Move "Arabic (Yemen)" To sType
+            Case Break
+        Case (sID="2801") 
+            Move "Arabic (Syria)" To sType
+            Case Break
+        Case (sID="2C01") 
+            Move "Arabic (Jordan)" To sType
+            Case Break
+        Case (sID="3001") 
+            Move "Arabic (Lebanon)" To sType
+            Case Break
+        Case (sID="3401") 
+            Move "Arabic (Kuwait)" To sType
+            Case Break
+        Case (sID="3801") 
+            Move "Arabic (U.A.E.)" To sType
+            Case Break
+        Case (sID="3C01") 
+            Move "Arabic (Bahrain)" To sType
+            Case Break
+        Case (sID="4001") 
+            Move "Arabic (Qatar)" To sType
+            Case Break
+        Case (sID="042B") 
+            Move "Armenian" To sType
+            Case Break
+        Case (sID="042C") 
+            Move "Azeri (Latin)" To sType
+            Case Break
+        Case (sID="082C") 
+            Move "Azeri (Cyrillic)" To sType
+            Case Break
+        Case (sID="042D") 
+            Move "Basque" To sType
+            Case Break
+        Case (sID="0423") 
+            Move "Belarusian" To sType
+            Case Break
+        Case (sID="0402") 
+            Move "Bulgarian" To sType
+            Case Break
+        Case (sID="0455") 
+            Move "Burmese" To sType
+            Case Break
+        Case (sID="0403") 
+            Move "Catalan" To sType
+            Case Break
+        Case (sID="0404") 
+            Move "Chinese (Taiwan)" To sType
+            Case Break
+        Case (sID="0804") 
+            Move "Chinese (PRC)" To sType
+            Case Break
+        Case (sID="0C04") 
+            Move "Chinese (Hong Kong SAR, PRC)" To sType
+            Case Break
+        Case (sID="1004") 
+            Move "Chinese (Singapore)" To sType
+            Case Break
+        Case (sID="1404") 
+            Move "Chinese (Macau SAR)" To sType
+            Case Break
+        Case (sID="041A") 
+            Move "Croatian" To sType
+            Case Break
+        Case (sID="0405") 
+            Move "Czech" To sType
+            Case Break
+        Case (sID="0406") 
+            Move "Danish" To sType
+            Case Break
+        Case (sID="0465") 
+            Move "Divehi" To sType
+            Case Break
+        Case (sID="0413") 
+            Move "Dutch (Netherlands)" To sType
+            Case Break
+        Case (sID="0813") 
+            Move "Dutch (Belgium)" To sType
+            Case Break
+        Case (sID="0409") 
+            Move "English (United States)" To sType
+            Case Break
+        Case (sID="0809") 
+            Move "English (United Kingdom)" To sType
+            Case Break
+        Case (sID="0C09") 
+            Move "English (Australian)" To sType
+            Case Break
+        Case (sID="1009") 
+            Move "English (Canadian)" To sType
+            Case Break
+        Case (sID="1409") 
+            Move "English (New Zealand)" To sType
+            Case Break
+        Case (sID="1809") 
+            Move "English (Ireland)" To sType
+            Case Break
+        Case (sID="1C09") 
+            Move "English (South Africa)" To sType
+            Case Break
+        Case (sID="2009") 
+            Move "English (Jamaica)" To sType
+            Case Break
+        Case (sID="2409") 
+            Move "English (Caribbean)" To sType
+            Case Break
+        Case (sID="2809") 
+            Move "English (Belize)" To sType
+            Case Break
+        Case (sID="2C09") 
+            Move "English (Trinidad)" To sType
+            Case Break
+        Case (sID="3009") 
+            Move "English (Zimbabwe)" To sType
+            Case Break
+        Case (sID="3409") 
+            Move "English (Philippines)" To sType
+            Case Break
+        Case (sID="0425") 
+            Move "Estonian" To sType
+            Case Break
+        Case (sID="0438") 
+            Move "Faeroese" To sType
+            Case Break
+        Case (sID="0429") 
+            Move "Farsi" To sType
+            Case Break
+        Case (sID="040B") 
+            Move "Finnish" To sType
+            Case Break
+        Case (sID="040C") 
+            Move "French (Standard)" To sType
+            Case Break
+        Case (sID="080C") 
+            Move "French (Belgian)" To sType
+            Case Break
+        Case (sID="0C0C") 
+            Move "French (Canadian)" To sType
+            Case Break
+        Case (sID="100C") 
+            Move "French (Switzerland)" To sType
+            Case Break
+        Case (sID="140C") 
+            Move "French (Luxembourg)" To sType
+            Case Break
+        Case (sID="180C") 
+            Move "French (Monaco)" To sType
+            Case Break
+        Case (sID="0456") 
+            Move "Galician" To sType
+            Case Break
+        Case (sID="0437") 
+            Move "Georgian" To sType
+            Case Break
+        Case (sID="0407") 
+            Move "German (Standard)" To sType
+            Case Break
+        Case (sID="0807") 
+            Move "German (Switzerland)" To sType
+            Case Break
+        Case (sID="0C07") 
+            Move "German (Austria)" To sType
+            Case Break
+        Case (sID="1007") 
+            Move "German (Luxembourg)" To sType
+            Case Break
+        Case (sID="1407") 
+            Move "German (Liechtenstein)" To sType
+            Case Break
+        Case (sID="0408") 
+            Move "Greek" To sType
+            Case Break
+        Case (sID="0447") 
+            Move "Gujarati" To sType
+            Case Break
+        Case (sID="040D") 
+            Move "Hebrew" To sType
+            Case Break
+        Case (sID="0439") 
+            Move "Hindi" To sType
+            Case Break
+        Case (sID="040E") 
+            Move "Hungarian" To sType
+            Case Break
+        Case (sID="040F") 
+            Move "Icelandic" To sType
+            Case Break
+        Case (sID="0421") 
+            Move "Indonesian" To sType
+            Case Break
+        Case (sID="0410") 
+            Move "Italian (Standard)" To sType
+            Case Break
+        Case (sID="0810") 
+            Move "Italian (Switzerland)" To sType
+            Case Break
+        Case (sID="0411") 
+            Move "Japanese" To sType
+            Case Break
+        Case (sID="044B") 
+            Move "Kannada" To sType
+            Case Break
+        Case (sID="0457") 
+            Move "Konkani" To sType
+            Case Break
+        Case (sID="0412") 
+            Move "Korean" To sType
+            Case Break
+        Case (sID="0812") 
+            Move "Korean (Johab)" To sType
+            Case Break
+        Case (sID="0440") 
+            Move "Kyrgyz" To sType
+            Case Break
+        Case (sID="0426") 
+            Move "Latvian" To sType
+            Case Break
+        Case (sID="0427") 
+            Move "Lithuanian" To sType
+            Case Break
+        Case (sID="0827") 
+            Move "Lithuanian (Classic)" To sType
+            Case Break
+        Case (sID="042F") 
+            Move "FYRO Macedonian" To sType
+            Case Break
+        Case (sID="043E") 
+            Move "Malay (Malaysian)" To sType
+            Case Break
+        Case (sID="083E") 
+            Move "Malay (Brunei Darussalam)" To sType
+            Case Break
+        Case (sID="044E") 
+            Move "Marathi" To sType
+            Case Break
+        Case (sID="0450") 
+            Move "Mongolian" To sType
+            Case Break
+        Case (sID="0414") 
+            Move "Norwegian (Bokmal)" To sType
+            Case Break
+        Case (sID="0814") 
+            Move "Norwegian (Nynorsk)" To sType
+            Case Break
+        Case (sID="0415") 
+            Move "Polish" To sType
+            Case Break
+        Case (sID="0416") 
+            Move "Portuguese (Brazil)" To sType
+            Case Break
+        Case (sID="0816") 
+            Move "Portuguese (Portugal)" To sType
+            Case Break
+        Case (sID="0446") 
+            Move "Punjabi" To sType
+            Case Break
+        Case (sID="0418") 
+            Move "Romanian" To sType
+            Case Break
+        Case (sID="0419") 
+            Move "Russian" To sType
+            Case Break
+        Case (sID="044F") 
+            Move "Sanskrit" To sType
+            Case Break
+        Case (sID="0C1A") 
+            Move "Serbian (Cyrillic)" To sType
+            Case Break
+        Case (sID="081A") 
+            Move "Serbian (Latin)" To sType
+            Case Break
+        Case (sID="041B") 
+            Move "Slovak" To sType
+            Case Break
+        Case (sID="0424") 
+            Move "Slovenian" To sType
+            Case Break
+        Case (sID="040A") 
+            Move "Spanish (Spain, Traditional Sort)" To sType
+            Case Break
+        Case (sID="080A") 
+            Move "Spanish (Mexican)" To sType
+            Case Break
+        Case (sID="0C0A") 
+            Move "Spanish (Spain, Modern Sort)" To sType
+            Case Break
+        Case (sID="100A") 
+            Move "Spanish (Guatemala)" To sType
+            Case Break
+        Case (sID="140A") 
+            Move "Spanish (Costa Rica)" To sType
+            Case Break
+        Case (sID="180A") 
+            Move "Spanish (Panama)" To sType
+            Case Break
+        Case (sID="1C0A") 
+            Move "Spanish (Dominican Republic)" To sType
+            Case Break
+        Case (sID="200A") 
+            Move "Spanish (Venezuela)" To sType
+            Case Break
+        Case (sID="240A") 
+            Move "Spanish (Colombia)" To sType
+            Case Break
+        Case (sID="280A") 
+            Move "Spanish (Peru)" To sType
+            Case Break
+        Case (sID="2C0A") 
+            Move "Spanish (Argentina)" To sType
+            Case Break
+        Case (sID="300A") 
+            Move "Spanish (Ecuador)" To sType
+            Case Break
+        Case (sID="340A") 
+            Move "Spanish (Chile)" To sType
+            Case Break
+        Case (sID="380A") 
+            Move "Spanish (Uruguay)" To sType
+            Case Break
+        Case (sID="3C0A") 
+            Move "Spanish (Paraguay)" To sType
+            Case Break
+        Case (sID="400A") 
+            Move "Spanish (Bolivia)" To sType
+            Case Break
+        Case (sID="440A") 
+            Move "Spanish (El Salvador)" To sType
+            Case Break
+        Case (sID="480A") 
+            Move "Spanish (Honduras)" To sType
+            Case Break
+        Case (sID="4C0A") 
+            Move "Spanish (Nicaragua)" To sType
+            Case Break
+        Case (sID="500A") 
+            Move "Spanish (Puerto Rico)" To sType
+            Case Break
+        Case (sID="0430") 
+            Move "Sutu" To sType
+            Case Break
+        Case (sID="0441") 
+            Move "Swahili (Kenya)" To sType
+            Case Break
+        Case (sID="041D") 
+            Move "Swedish" To sType
+            Case Break
+        Case (sID="081D") 
+            Move "Swedish (Finland)" To sType
+            Case Break
+        Case (sID="045A") 
+            Move "Syriac" To sType
+            Case Break
+        Case (sID="0449") 
+            Move "Tamil" To sType
+            Case Break
+        Case (sID="0444") 
+            Move "Tatar (Tatarstan)" To sType
+            Case Break
+        Case (sID="044A") 
+            Move "Telugu" To sType
+            Case Break
+        Case (sID="041E") 
+            Move "Thai" To sType
+            Case Break
+        Case (sID="041F") 
+            Move "Turkish" To sType
+            Case Break
+        Case (sID="0422") 
+            Move "Ukrainian" To sType
+            Case Break
+        Case (sID="0420") 
+            Move "Urdu (Pakistan)" To sType
+            Case Break
+        Case (sID="0820") 
+            Move "Urdu (India)" To sType
+            Case Break
+        Case (sID="0443") 
+            Move "Uzbek (Latin)" To sType
+            Case Break
+        Case (sID="0843") 
+            Move "Uzbek (Cyrillic)" To sType
+            Case Break
+        Case (sID="042A") 
+            Move "Vietnamese" To sType
+            Case Break
+        Case Else  
+            Move "Unknown" To sType
+            Case Break
+    Case End
+    Function_Return sType
+End_Function
+
+Function GetKeyboardLayoutName Global Returns String
+    String sType sID
+    Move (GetKeyboardLayoutId()) To sId
+    Move (Left(sID, 4)) To sType
+    Move (Replace(sType, sID, "")) To sID
+    Function_Return (GetLanguageName(sID))
+End_Function
+

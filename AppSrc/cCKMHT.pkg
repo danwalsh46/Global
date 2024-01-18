@@ -1,0 +1,562 @@
+Use cCKMail2.pkg
+
+#REPLACE CKMHTUnlockCode "YourCodeGoesHere"
+
+// English
+#REPLACE CKTEXT_CREATEMHT       "Creating MHT email..."
+
+// Danish
+//#REPLACE CKTEXT_CREATEMHT     "Opretter MHT email..."
+
+
+// CLSID: {67DF9267-7503-4E64-A0A0-AB83C524BB6C}
+// IChilkatMHT Interface
+Class cComIChilkatMHT is a Mixin
+
+    // method GetMHT
+    Function ComGetMHT String llurl Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Get InvokeComMethod of hDispatchDriver 1 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetEML
+    Function ComGetEML String llurl Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Get InvokeComMethod of hDispatchDriver 2 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetAndSaveMHT
+    Function ComGetAndSaveMHT String llurl String llmhtFilename Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llmhtFilename
+        Get InvokeComMethod of hDispatchDriver 3 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetAndSaveEML
+    Function ComGetAndSaveEML String llurl String llemlFilename Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llemlFilename
+        Get InvokeComMethod of hDispatchDriver 4 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetEmail
+    Function ComGetEmail String llurl Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Get InvokeComMethod of hDispatchDriver 5 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetMime
+    Function ComGetMime String llurl Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Get InvokeComMethod of hDispatchDriver 6 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetAndZipMHT
+    Function ComGetAndZipMHT String llurl String llzipEntryFilename String llzipFilename Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 3
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llzipEntryFilename
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llzipFilename
+        Get InvokeComMethod of hDispatchDriver 7 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetAndZipEML
+    Function ComGetAndZipEML String llurl String llzipEntryFilename String llzipFilename Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 3
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llzipEntryFilename
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llzipFilename
+        Get InvokeComMethod of hDispatchDriver 8 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method GetWebEmail
+    Function ComGetWebEmail String llurl Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Get InvokeComMethod of hDispatchDriver 9 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // property Version
+    Function ComVersion Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 10 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // method AddExternalStyleSheet
+    Procedure ComAddExternalStyleSheet String llurl
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llurl
+        Send InvokeComMethod to hDispatchDriver 11 OLE_VT_VOID
+    End_Procedure
+
+    // property PreferMHTScripts
+    Function ComPreferMHTScripts Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 12 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property PreferMHTScripts
+    Procedure Set ComPreferMHTScripts Integer value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 12 OLE_VT_I4 to value
+    End_Procedure
+
+    // method ExcludeImagesMatching
+    Procedure ComExcludeImagesMatching String llpattern
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llpattern
+        Send InvokeComMethod to hDispatchDriver 13 OLE_VT_VOID
+    End_Procedure
+
+    // method RestoreDefaults
+    Procedure ComRestoreDefaults
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send InvokeComMethod to hDispatchDriver 14 OLE_VT_VOID
+    End_Procedure
+
+    // method UnlockComponent
+    Function ComUnlockComponent String llunlockCode Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llunlockCode
+        Get InvokeComMethod of hDispatchDriver 15 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method SaveLastError
+    Function ComSaveLastError String lllogFilename Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR lllogFilename
+        Get InvokeComMethod of hDispatchDriver 16 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property BaseUrl
+    Function ComBaseUrl Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 17 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property BaseUrl
+    Procedure Set ComBaseUrl String value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 17 OLE_VT_BSTR to value
+    End_Procedure
+
+    // property DebugHtmlBefore
+    Function ComDebugHtmlBefore Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 18 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property DebugHtmlBefore
+    Procedure Set ComDebugHtmlBefore String value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 18 OLE_VT_BSTR to value
+    End_Procedure
+
+    // property DebugHtmlAfter
+    Function ComDebugHtmlAfter Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 19 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property DebugHtmlAfter
+    Procedure Set ComDebugHtmlAfter String value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 19 OLE_VT_BSTR to value
+    End_Procedure
+
+    // property DebugTagCleaning
+    Function ComDebugTagCleaning Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 20 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property DebugTagCleaning
+    Procedure Set ComDebugTagCleaning Integer value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 20 OLE_VT_I4 to value
+    End_Procedure
+
+    // method UnpackMHT
+    Function ComUnpackMHT String llmhtFilename String llunpackDir String llhtmlFilename String llpartsSubdir Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 4
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llmhtFilename
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llunpackDir
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtmlFilename
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llpartsSubdir
+        Get InvokeComMethod of hDispatchDriver 21 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method IsUnlocked
+    Function ComIsUnlocked Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 22 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property NoScripts
+    Function ComNoScripts Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 23 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property NoScripts
+    Procedure Set ComNoScripts Integer value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 23 OLE_VT_I4 to value
+    End_Procedure
+
+    // method HtmlToMHTFile
+    Function ComHtmlToMHTFile String llhtml String llmhtFilename Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtml
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llmhtFilename
+        Get InvokeComMethod of hDispatchDriver 24 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method HtmlToEMLFile
+    Function ComHtmlToEMLFile String llhtml String llemlFilename Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 2
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtml
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llemlFilename
+        Get InvokeComMethod of hDispatchDriver 25 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // method HtmlToWebMail
+    Function ComHtmlToWebMail String llhtml Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtml
+        Get InvokeComMethod of hDispatchDriver 26 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // method HtmlToEmail
+    Function ComHtmlToEmail String llhtml Returns Variant
+        Handle hDispatchDriver
+        Variant retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtml
+        Get InvokeComMethod of hDispatchDriver 27 OLE_VT_DISPATCH to retVal
+        Function_Return retVal
+    End_Function
+
+    // property LastErrorHtml
+    Function ComLastErrorHtml Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 28 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property LastErrorXml
+    Function ComLastErrorXml Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 29 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property LastErrorText
+    Function ComLastErrorText Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 30 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property WebsiteLogin
+    Function ComWebsiteLogin Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 32 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property WebsiteLogin
+    Procedure Set ComWebsiteLogin String value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 32 OLE_VT_BSTR to value
+    End_Procedure
+
+    // property WebsitePassword
+    Function ComWebsitePassword Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 33 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property WebsitePassword
+    Procedure Set ComWebsitePassword String value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 33 OLE_VT_BSTR to value
+    End_Procedure
+
+    // property Proxy
+    Function ComProxy Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 34 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property Proxy
+    Procedure Set ComProxy String value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 34 OLE_VT_BSTR to value
+    End_Procedure
+
+    // method HtmlToMHT
+    Function ComHtmlToMHT String llhtml Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtml
+        Get InvokeComMethod of hDispatchDriver 35 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // property EmbedImages
+    Function ComEmbedImages Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 36 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property EmbedImages
+    Procedure Set ComEmbedImages Integer value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 36 OLE_VT_I4 to value
+    End_Procedure
+
+    // method HtmlToEML
+    Function ComHtmlToEML String llhtml Returns String
+        Handle hDispatchDriver
+        String retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtml
+        Get InvokeComMethod of hDispatchDriver 37 OLE_VT_BSTR to retVal
+        Function_Return retVal
+    End_Function
+
+    // method UnpackMhtStr
+    Function ComUnpackMhtStr String llmhtString String llunpackDir String llhtmlFilename String llpartsSubdir Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 4
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llmhtString
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llunpackDir
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llhtmlFilename
+        Send DefineParam to hDispatchDriver OLE_VT_BSTR llpartsSubdir
+        Get InvokeComMethod of hDispatchDriver 38 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property ConnectTimeout
+    Function ComConnectTimeout Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 39 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property ConnectTimeout
+    Procedure Set ComConnectTimeout Integer value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 39 OLE_VT_I4 to value
+    End_Procedure
+
+    // property ReadTimeout
+    Function ComReadTimeout Returns Integer
+        Handle hDispatchDriver
+        Integer retVal
+        Get phDispatchDriver to hDispatchDriver
+        Get InvokeComMethod of hDispatchDriver 40 OLE_VT_I4 to retVal
+        Function_Return retVal
+    End_Function
+
+    // property ReadTimeout
+    Procedure Set ComReadTimeout Integer value
+        Handle hDispatchDriver
+        Get phDispatchDriver to hDispatchDriver
+        Send PrepareParams to hDispatchDriver 1
+        Set ComProperty of hDispatchDriver 40 OLE_VT_I4 to value
+    End_Procedure
+End_Class
+
+// CoClass
+// ProgID: ChilkatMHT.ChilkatMHT.1
+// CLSID: {3994A57F-CB6E-4FC8-A6B9-7D5A41C317BF}
+// ChilkatMHT Class
+Class cCKMHT is a cComActiveXControl
+    Import_Class_Protocol cComIChilkatMHT
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psProgID to "{3994A57F-CB6E-4FC8-A6B9-7D5A41C317BF}"
+        Set peAutoCreate to acAutoCreate
+    End_Procedure
+End_Class
+
+object oMHT is a cCKMHT
+    Procedure OnCreate
+        // ToDo: Set the ActiveX properties here...
+        integer bOK 
+        get ComUnlockComponent CKMHTUnlockCode to bOK
+    #IFDEF Is$WebApp
+    #ELSE
+        if (not(bOK)) send stop_box CKTEXT_INVALIDCODE 
+    #ENDIF        
+    End_Procedure // OnCreate
+    
+    // method GetMHTEmail
+    Function GetMHTEmail String llurl Returns handle
+        Variant vretVal
+        handle hMail
+        send startProgress of oCkMail CKTEXT_CREATEMHT 
+        get createNewEmail of oCKMail to hMail
+        if (hMail<>0) begin
+            Forward Get ComGetEmail llurl to vretVal
+            if (isNullComObject(vretval)) begin
+                send destroy of hMail
+                move 0 to hMail
+            end
+            else begin
+                set pvComobject of hMail to vretVal
+                set ComCharset  of hMail to (psCharSet(oCkMail))
+                set ComFrom     of hMail to (psSender(oCkMail))
+            end
+        end
+        send stopProgress of oCkMail
+        Function_Return hMail
+    End_Function
+end_object
+
+

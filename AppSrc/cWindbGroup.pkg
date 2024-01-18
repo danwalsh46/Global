@@ -1,0 +1,41 @@
+//****************************************************************************
+// $Module type: Class
+// $Module name: cWindbGroup
+// $Author     : Nils G. Svedmyr
+// Created     : 2004-05-15 @ 16:02
+//
+// Description :
+//
+// $Rev History:
+//    2004-05-15  Module header created
+//****************************************************************************
+Use cWinToolTip.pkg
+
+Class cWindbGroup Is A dbGroup
+
+    Import_Class_Protocol cWinToolTip_mx
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Send Define_cWinToolTip
+        Set pbClassEnabledHandleType    To False // True=Default
+        Set pbClassDisabledHandleType   To True  // True=Default
+        Set pbClassEntryStateHandleType To True  // True=Default
+    End_Procedure // Construct_Object
+
+    // Augment to display ToolTips for child objects if
+    // this object sets the shadow_state for those child objects.
+    Procedure Set Enabled_State Integer iState
+        // The Group, RadioGroup, dbGroup and dbRadioGroup classes
+        // works a bit differently then other classes; read not consistantly.
+        // We cannot Forward_Send in this class, because then
+        // ToolTips won't work for this or any child objects.
+        // This has the disadvantage that the Group label and child
+        // object labels, will _not_ be shadowed.
+        // If you don't like this you cannnot have ToolTips for disbled
+        // Groups or there child objects. If you choose _not_ to have ToolTips
+        // for disbled objects comment out this whole procedure.
+        //Forward Set Enabled_State To iState
+        Broadcast Recursive Set Enabled_State To iState
+    End_Procedure // Procedure Set Enabled_State
+
+End_Class // cWindbGroup

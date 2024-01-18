@@ -1,0 +1,5 @@
+//AB/ CLASSDEF
+Class cppDbView Is a dbView
+    Set ClassPackage to "cppDbView.pkg"
+    Inherit
+End_Class

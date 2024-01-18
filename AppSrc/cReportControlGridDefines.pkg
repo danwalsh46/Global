@@ -1,0 +1,49 @@
+// Header file for cReportControlGrid classes.
+// **********************************************
+//
+Use WatermarkAlignment.pkg
+
+// Icon ID enumeration list.                          
+Enum_List            
+    Define RC_IconHeaderColumn for 1
+    Define RC_ButtonNormal    
+    Define RC_ButtonPressed
+    Define RC_IconDisabled              // Not currently used.
+    Define RC_IconHot                   // Not currently used.
+    Define RC_ImageChecked              // Not currently used.
+End_Enum_List
+
+// Key codes that differs between VDF and the Report Control
+// They are used by the OnKeyxxx events.
+Enum_List
+  Define RC_Key_End        for 35
+  Define RC_Key_Home
+  Define RC_Key_Up_Arrow   for 38
+  Define RC_Key_Down_Arrow for 40
+  Define RC_Key_Insert     for 45
+  Define RC_Key_Delete 
+  //Define RC_Key_F1       // Cannot be used, it is ignored.   
+  Define RC_Key_F2         for 113   
+  Define RC_Key_F3     
+  Define RC_Key_F4     
+  Define RC_Key_F5     
+  //Define RC_Key_F6       // Cannot be used, it is ignored.  
+  Define RC_Key_F7         for 118
+  Define RC_Key_F8     
+  Define RC_Key_F9     
+  Define RC_Key_F10    
+  Define RC_Key_F11    
+  Define RC_Key_F12    
+End_Enum_List                           
+
+// EditControlStyle enumeration list.
+Enum_List 
+  Define RC_Single_Line    for xtpEditStyleAutoHScroll // Displays text on a single line only.
+  Define RC_WordBreak      for xtpEditStyleMultiline   // Breaks words. EditControlStyle automatically breaks lines.
+  Define RC_Numeric        for xtpEditStyleNumber      // Numeric digits only.
+  Define RC_CapsLock       for xtpEditStyleUppercase   // Uppercase characters only.
+  Define RC_Read_Only      for xtpEditStyleReadOnly    // Do not allow to edit.
+End_Enum_List
+
+// Used by piCustomDraw method.
+Define OLEExtpCustomDrawNone for -1

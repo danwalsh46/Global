@@ -1,0 +1,211 @@
+//$- PLUSPAK GENERATED DOCUMENTATION
+//   - YOU MUST NOT MODIFY THESE AUTO-GENERATED LINES
+//
+// cTimePicker.pkg
+//
+// Provide an encapsulation of Windows TimePicker class.
+//
+// +------------------------------------------------------+
+// | *** COPYRIGHT 1998, STARZEN.  ALL RIGHT RESERVED *** |
+// | ***   NO PART OF THIS CODE MAY BE TRANSMITTED    *** |
+// | ***           TO NON-LICENSE HOLDERS             *** |
+// +------------------------------------------------------+
+//$- PLUSPAK END GENERATED DOCUMENTATION
+
+use plusbase
+Use cppDateTimePicker.pkg
+
+// Visual DataFlex 12.0 Migration Utility, added January 13, 2007: 10:10:21
+#IF (!@ >= 120)
+{ OverrideProperty=piHour InitialValue=-1 }
+{ OverrideProperty=piMinute InitialValue=-1 }
+{ OverrideProperty=piSecond InitialValue=-1 }
+#ENDIF
+// Visual DataFlex 12.0 Migration Utility, added February 8, 2007: 19:42:04
+#IF (!@ >= 120)
+{ OverrideProperty=piHour InitialValue=-1 }
+{ OverrideProperty=piMinute InitialValue=-1 }
+#ENDIF
+Class cppTimePicker_Mixin is a Message
+
+    Import_Class_Protocol cppDateTimePickerMixin
+
+    Procedure Define_cppTimePicker_Mixin
+        Send Define_cppDateTimePickerMixin
+
+        Set psClassName      To "cppTimePicker"
+        Set psSuperClassName To "cppDateTimePicker"
+
+        Property Integer piHour      Public -1
+        Property Integer piMinute    Public -1
+        Property Integer piSecond    Public -1
+
+        Set External_Class_Name "cTimePicker" To "SysDateTimePick32"
+        Set Window_Style To DTS_TIMEFORMAT True
+    End_Procedure
+    //
+    Procedure OnTimeChange Integer iHour Integer iMinute Integer iSecond
+    End_Procedure
+    //
+    Procedure DoSetTime Integer iHour Integer iMinute Integer iSecond
+        Local Handle hWnd
+        Local String sST
+        Local Pointer lpsST
+        ZeroType tSYSTEMTIME To sST
+
+        Put 1999 To sST at tSYSTEMTIME.wYear
+        Put 1 To sST at tSYSTEMTIME.wMonth
+        Put 1 To sST at tSYSTEMTIME.wDay
+
+        Put iHour   To sST at tSYSTEMTIME.wHour
+        Put iMinute To sST at tSYSTEMTIME.wMinute
+        Put iSecond To sST at tSYSTEMTIME.wSecond
+        GetAddress of sST To lpsST
+        Set piHour   To iHour
+        Set piMinute To iMinute
+        Set piSecond To iSecond
+        Get Window_Handle To hWnd
+        If hWnd Begin
+            Get Windows_Message DTM_SETSYSTEMTIME GDT_VALID lpsST TO WINDOWINDEX
+        End
+    End_Procedure
+    //
+
+    Procedure DoSetTimeFromDBVal Integer iTimeVal
+        Local Integer iHour iMinute iSecond
+
+        // iTimeVal:  HHMMSS
+        Move (ITimeVal / 10000) TO iHour
+        Move ((iTimeVal - (iHour*10000)) / 100) TO iMinute
+        Move (iTimeVal - (iHour*10000) - (iMinute*100)) TO iSecond
+
+        Send DoSetTime iHour iMinute iSecond
+    End_Procedure
+
+    Procedure Page Integer iState
+        If (pbShowNone(self))    Set Window_Style To DTS_SHOWNONE True
+        Forward Send Page iState
+        If (piHour(self)) ne -1 ;
+            Send DoSetTime (piHour(self)) (piMinute(self)) (piSecond(self))
+
+    End_Procedure
+    Procedure DoGetTime
+        Local Integer iHour iMinute iSecond
+        Local String sST
+        Local Pointer lpsST
+        ZeroType tSYSTEMTIME To sST
+        GetAddress of sST To lpsST
+        ASSERT "(Window_Handle(self)) gt 0"
+        Send Windows_Message DTM_GETSYSTEMTIME GDT_VALID lpsST
+        GetBuff  From  sSt at tSYSTEMTIME.wHour   To iHour
+        GetBuff  From  sSt at tSYSTEMTIME.wMinute To iMinute
+        GetBuff  From  sSt at tSYSTEMTIME.wSecond To iSecond
+        Set piHour   To iHour
+        Set piMinute To iMinute
+        Set piSecond To iSecond
+    End_Procedure
+    //
+
+    Function DoGetTimeVal Returns Integer
+        Send DoGetTime
+
+        Function_Return ((piHour(Self)*10000)+(piMinute(Self)*100)+piSecond(Self))
+    End_Function
+
+    Procedure Notify Integer wParam Integer lParam
+        Local Integer iVoid iCode iItem iHour iMinute iSecond
+        Local Pointer lpsNm lpsDTC
+        Local String sNm sDTC
+        ZeroType tNMHDR To sNm
+        GetAddress of sNm To lpsNm
+        Move (CopyMemory(lpsNm, lParam, tNMHDR_size)) To iVoid
+
+        GetBuff From sNm at tNMHDR.code    To iCode
+
+             If iCode eq -8            Send OnKillFocus
+        Else If iCode eq -7  Begin
+            Send Activate
+            Send OnSetFocus
+        End
+        Else If iCode eq DTN_DATETIMECHANGE Begin
+            ZeroType tNMDATETIMECHANGE To sDTC
+            GetAddress of sDTC To lpsDTC
+            Move (CopyMemory(lpsDTC, lParam, tNMDATETIMECHANGE_size)) To iVoid
+            GetBuff From sDTC at tNMDATETIMECHANGE.st.wHour   To iHour
+            GetBuff From sDTC at tNMDATETIMECHANGE.st.wMinute To iMinute
+            GetBuff From sDTC at tNMDATETIMECHANGE.st.wSecond To iSecond
+            Set piHour   To iHour
+            Set piMinute To iMinute
+            Set piSecond To iSecond
+            Send OnTimeChange iHour iMinute iSecond
+        End
+    End_Procedure
+
+End_Class // cppTimePicker_Mixin
+
+// Visual DataFlex 12.0 Migration Utility, added January 13, 2007: 10:10:21
+#IF (!@ >= 120)
+{ OverrideProperty=piSecond InitialValue=-1 }
+#ENDIF
+// Visual DataFlex 12.0 Migration Utility, added February 8, 2007: 19:42:04
+#IF (!@ >= 120)
+{ OverrideProperty=piMinute InitialValue=-1 }
+#ENDIF
+Class cppTimePicker is a DFControl
+    Import_Class_Protocol cppTimePicker_Mixin
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Send Define_cppTimePicker_Mixin
+    End_Procedure
+
+End_Class // cppTimePicker
+
+// Visual DataFlex 12.0 Migration Utility, added January 13, 2007: 10:10:22
+#IF (!@ >= 120)
+{ OverrideProperty=piHour InitialValue=-1 }
+{ OverrideProperty=piMinute InitialValue=-1 }
+{ OverrideProperty=piSecond InitialValue=-1 }
+#ENDIF
+Class cppDbTimePicker Is A dbFormExternalControl
+    Import_Class_Protocol cppTimePicker_Mixin
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Send Define_cppTimePicker_Mixin
+    End_Procedure
+
+    // we must identify all events that result in a changed
+    // value in the control and notify the DF side about this
+    // change. We notify DF by sending ControlValueChanged. If multiple
+    // events cause changes, multiple messages must be created all sending
+    // ControlValueChanged
+    Procedure OnTimeChange Integer iHour Integer iMinute Integer iSecond
+        Send ControlValueChanged
+    End_Procedure
+
+    // The class expects a message named Set ControlValue. It is passed a string
+    // and should be used to change the value of the windows control. This
+    // is the message "C" from above.
+    Procedure Set ControlValue string sVal
+        Send DoSetTimeFromDBVal (Integer(sVal))
+    End_Procedure
+
+    // The class expects a messsage named get controlValue. It will return
+    // the control's data value.
+    Function ControlValue Returns String
+        Local string sVal
+        Get DoGetTimeVal to sVal
+        Function_return sVal
+    End_Function
+
+End_Class // cppDbTimePicker
+
+
+
+
+
+
+

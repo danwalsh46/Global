@@ -1,0 +1,323 @@
+// cWinKernEx.pkg
+// Compiled By Sergey V. Natarov (senatc@postman.ru)
+// Windows Kernel Interface
+//
+
+Use cWinKernEx.h
+Use cWinNLS.h    // **WvA added 30 Aug, 2004, this package has a dependency on this header file.
+Use cWinBaseEx.h // **WvA added 30 Aug 
+
+Function WindowsTempPath Global Returns String
+    String sTemp
+    Integer iRet   
+    ZeroString MAX_PATH To sTemp   
+    Move (GetTempPathEf(MAX_PATH, AddressOf(sTemp))) To iRet
+    If (iRet>MAX_PATH) Begin
+        ZeroString iRet To sTemp
+        Move (GetTempPathEf(iRet, AddressOf(sTemp))) To iRet
+    End       
+    Function_Return (Cstring(sTemp))
+End_Function // GetTempPath
+
+Function WindowsLocale Global Integer iId Integer iL Returns String
+    String  sValue
+    Pointer lpValue
+    Integer iRet
+    ZeroString iL To sValue
+    GetAddress Of sValue To lpValue
+    Move (GetLocaleInfo (LOCALE_USER_DEFAULT, iId, lpValue, iL)) To iRet
+    Function_Return (Cstring (sValue))
+End_Function // WindowsLocale
+
+Function WindowsCalendarName Global Returns String
+    String sName
+    Integer iID
+    Move (WindowsLocale(LOCALE_ICALENDARTYPE, 2)) To iID
+    Case Begin
+        Case (iID=1) 
+            Move "Gregorian (localized)" To sName
+            Case Break
+        Case (iID=2) 
+            Move "Gregorian (English strings always)" To sName
+            Case Break
+        Case (iID=3) 
+            Move "Year of the Emperor (Japan)" To sName
+            Case Break
+        Case (iID=4) 
+            Move "Taiwan Calendar" To sName
+            Case Break
+        Case (iID=5) 
+            Move "Tangun Era (Korea)" To sName
+            Case Break
+        Case (iID=6) 
+            Move "Hijri (Arabic lunar)" To sName
+            Case Break
+        Case (iID=7) 
+            Move "Thai" To sName
+            Case Break
+        Case (iID=8) 
+            Move "Hebrew (Lunar)" To sName
+            Case Break
+        Case (iID=9) 
+            Move "Gregorian Middle East French calendar" To sName
+            Case Break
+        Case (iID=10) 
+            Move "Gregorian Arabic calendar" To sName
+            Case Break
+        Case (iID=11) 
+            Move "Gregorian Transliterated English calendar" To sName
+            Case Break
+        Case (iID=12) 
+            Move "Gregorian Transliterated French calendar" To sName
+            Case Break
+        Case Else  
+            Move "Unknown" To sName
+            Case Break
+    Case End
+    Function_Return sName
+End_Function
+
+Function GetCalendarInfo Global Integer iLocale Integer iCalendar Integer iCaltype Returns String
+    Integer iRet
+    String sData 
+    Pointer lpData
+    ZeroString 255 To sData    
+    GetAddress Of sData To lpData
+    Move (GetCalendarInfoEf(iLocale, iCalendar, iCaltype, lpData, 255, 0)) To iRet
+    Function_Return (CString (sData))
+End_Function // GetCalendarInfo
+
+Function GetDayIdByIndex Global Integer iIndex Returns Integer
+    If (iIndex=0) Function_Return LOCALE_SDAYNAME1 
+    If (iIndex=1) Function_Return LOCALE_SDAYNAME2 
+    If (iIndex=2) Function_Return LOCALE_SDAYNAME3 
+    If (iIndex=3) Function_Return LOCALE_SDAYNAME4 
+    If (iIndex=4) Function_Return LOCALE_SDAYNAME5 
+    If (iIndex=5) Function_Return LOCALE_SDAYNAME6 
+    If (iIndex=6) Function_Return LOCALE_SDAYNAME7 
+End_Function
+
+Function GetLongDayName Global Integer iDay Returns String
+    Function_Return (ToOem(WindowsLocale(GetDayIdByIndex(iDay), 25)))
+End_Function
+
+Function GetLogicalDriveName Global Returns String
+    String  sName
+    Pointer lpName
+    Integer iLength
+    ZeroString 255 To sName   
+    GetAddress Of sName To lpName
+    Move (GetLogicalDriveStringsEf(255, lpName)) To iLength   
+    Function_Return (Left(sName, iLength))
+End_Function // GetLogicalDriveName
+
+Function GetDriveType Global String sRoot Returns String
+    Pointer lpRoot
+    GetAddress Of sRoot To lpRoot
+    Function_Return (GetDriveTypeEf(lpRoot))
+End_Function // GetDriveType
+
+Function GetDriveTypeName Global Integer iDriveType Returns String
+    String sDriveType    
+    Case Begin
+        Case (iDriveType = DRIVE_UNKNOWN)
+            Move "Unknown" To sDriveType
+            Case Break
+        Case (iDriveType = DRIVE_NO_ROOT_DIR)
+            Move "Invalid Root Path" To sDriveType
+            Case Break
+        Case (iDriveType = DRIVE_REMOVABLE)
+            Move "Removable disk" To sDriveType
+            Case Break
+        Case (iDriveType = DRIVE_FIXED)
+            Move "Local disk" To sDriveType
+            Case Break
+        Case (iDriveType = DRIVE_REMOTE)
+            Move "Remote disk" To sDriveType
+            Case Break
+        Case (iDriveType = DRIVE_CDROM)
+            Move "CD-ROM drive" To sDriveType
+            Case Break
+        Case (iDriveType = DRIVE_RAMDISK)
+            Move "RAM drive" To sDriveType
+            Case Break
+    Case End
+    
+    Function_Return sDriveType
+End_Function // DriveType2Descr
+
+Function GetDriveNumber Global String sLetter Returns Integer
+    Move (Trim(Uppercase(sLetter))) To sLetter
+    If (Length(sLetter)>1) Move (Left(sLetter,1)) To sLetter
+    Function_Return (Pos(sLetter, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+End_Function
+
+Function GetVolumeFileSystem Global String sRoot Returns String
+    Integer iRet 
+    String sRet sFlags sFile
+    Pointer lpRoot lpFlags lpFile
+    If (Length(sRoot)<3) Function_Return 0
+    // Root
+    Move (sRoot+Character(0)) To sRoot
+    GetAddress Of sRoot To lpRoot
+    // Flags
+    ZeroType TDWVAREX To sFlags
+    GetAddress Of sFlags To lpFlags
+    // File name
+    ZeroString MAX_PATH To sFile
+    GetAddress Of sFile To lpFile   
+    //
+    Move "" To sRet
+    Move (GetVolumeInformationEf(lpRoot, 0, 0, 0, 0, lpFlags, lpFile, MAX_PATH)) To iRet
+    If (iRet) Move (CString(sFile)) To sRet
+    Function_Return sRet
+End_Function
+
+Function GetVolumeLabel Global String sRoot Returns String
+    Integer iRet
+    String sRet sName sFlags sFile
+    Pointer lpRoot lpName lpFlags lpFile
+    If (Length(sRoot)<3) Function_Return 0
+    // Root
+    Move (sRoot+Character(0)) To sRoot
+    GetAddress Of sRoot To lpRoot
+    // Name
+    ZeroString MAX_PATH To sName
+    GetAddress Of sName To lpName
+    // Flags
+    ZeroType TDWVAREX To sFlags
+    GetAddress Of sFlags To lpFlags
+    // File name
+    ZeroString MAX_PATH To sFile
+    GetAddress Of sFile To lpFile   
+    //
+    Move "" To sRet
+    Move (GetVolumeInformationEf(lpRoot, lpName, MAX_PATH, 0, 0, lpFlags, lpFile, MAX_PATH)) To iRet
+    If (iRet) Move (CString(sName)) To sRet
+    Function_Return sRet
+End_Function
+
+Function SetVolumeLabel String sRoot String sLabel Returns Integer
+    Pointer lpRoot lpLabel
+    If (sRoot="") Function_Return 0
+    If (sLabel="") Move 0 To lpLabel
+    Else Begin
+        Move (sLabel+Character(0)) To sLabel
+        GetAddress Of sLabel To lpLabel
+    End
+    Move (sRoot+Character(0)) To sRoot
+    GetAddress Of sRoot       To lpRoot
+    Function_Return (SetVolumeLabelEf(lpRoot, lpLabel)) 
+End_Function
+
+Function FString Global String sVar Returns String
+    String sRet sTmp
+    Move "" To sRet
+    While (Length(sVar)>3)
+       Move (Right(sVar, 3)) To sTmp
+       Move (Left(sVar, Length(sVar)-3)) To sVar
+       Move (','+sTmp+sRet) To sRet 
+    Loop
+    Function_Return (sVar+sRet)
+End_Function
+
+Function GetDiskFreeSpace Global String sRoot Returns String
+    Integer iRet
+    UBigInt uFree uTotal uTotalFree
+    Pointer lpRoot lpFree lpTotal lpTotalFree
+    Move (sRoot+Character(0)) To sRoot
+    Move 0 To uFree
+    Move 0 To uTotal
+    Move 0 To uTotalFree
+    GetAddress Of sRoot To lpRoot
+    GetAddress Of uFree To lpFree
+    GetAddress Of uTotal To lpTotal
+    GetAddress Of uTotalFree To lpTotalFree
+    Move (GetDiskFreeSpaceExEf(lpRoot, lpFree, lpTotal, lpTotalFree)) To iRet
+    If (iRet) Function_Return (String(uFree))
+    Function_Return "0"
+End_Function
+
+Function GetDiskTotalBytes Global String sRoot Returns String
+    Integer iRet
+    String sRet
+    UBigInt uFree uTotal uTotalFree
+    Pointer lpRoot lpFree lpTotal lpTotalFree
+    Move (sRoot+Character(0)) To sRoot
+    Move 0 To uFree
+    Move 0 To uTotal
+    Move 0 To uTotalFree
+    Move 0 To iRet
+    GetAddress Of sRoot To lpRoot
+    GetAddress Of uFree To lpFree
+    GetAddress Of uTotal To lpTotal
+    GetAddress Of uTotalFree To lpTotalFree
+    Move (GetDiskFreeSpaceExEf(lpRoot, lpFree, lpTotal, lpTotalFree)) To iRet
+    If (iRet) Function_Return (String(uTotal))
+    Function_Return "0"
+End_Function
+
+Function GetShortPathName Global String sLongPath Returns String
+    String sShortPath
+    Integer iRetval
+    ZeroString MAX_PATH To sShortPath
+    Move (GetShortPathNameEf(AddressOf (sLongPath), AddressOf (sShortPath), MAX_PATH)) To iRetval
+    Function_Return (Cstring(sShortPath))
+End_Function // GetShortPathName
+
+Function GetLongPathName Global String sShortPath Returns String
+    String sLongPath
+    Integer iRetval
+    ZeroString MAX_PATH To sLongPath
+    Move (GetLongPathNameEf(AddressOf(sShortPath), AddressOf(sLongPath), MAX_PATH)) To iRetval
+    Function_Return (Cstring(sLongPath))
+End_Function // GetLongPathName
+
+Function GetComputerName Global Returns String
+    String sComputerName
+    Dword dwNameSize
+    Integer iRetval
+    ZeroString MAX_COMPUTERNAME_LENGTH To sComputerName
+    Move MAX_COMPUTERNAME_LENGTH To dwNameSize
+    Move (GetComputerNameEf(AddressOf(sComputerName), AddressOf(dwNameSize))) To iRetval
+    Function_Return (CString(sComputerName))
+End_Function // GetComputerName
+
+Function GetSystemDirectory Global Returns String
+    String sSystemDirectory
+    Integer iResult
+    ZeroString MAX_PATH To sSystemDirectory
+    Move (GetSystemDirectoryEf( AddressOf(sSystemDirectory), MAX_PATH)) To iResult
+    Function_Return (Cstring(sSystemDirectory))
+End_Function // GetSystemDirectory
+
+Function GetWindowsDirectory Global Returns String
+    String sWinDir
+    Integer iResult    
+    ZeroString MAX_PATH To sWinDir
+    Move (GetWindowsDirectoryEf(AddressOf(sWinDir), MAX_PATH)) To iResult    
+    Function_Return (Cstring (sWinDir))
+End_Function // GetWindowsDirectory
+
+Function GetCurrentDirectory Global Returns String
+    String sWinDir
+    Integer iResult    
+    ZeroString MAX_PATH To sWinDir
+    Move (GetCurrentDirectoryEf(MAX_PATH, AddressOf(sWinDir))) To iResult    
+    Function_Return (Cstring (sWinDir))
+End_Function // GetCurrentDirectory
+
+
+Function GetTempPath Global Returns String
+    String sTempPath
+    Integer iRetVal
+    ZeroString MAX_PATH To sTempPath
+    Move (GetTempPathEf(MAX_PATH, AddressOf (sTempPath))) To iRetVal
+    If (iRetVal > MAX_PATH) Begin
+        ZeroString iRetval To sTempPath
+        Move (GetTempPathEf(iRetVal, AddressOf (sTempPath))) To iRetVal
+    End   
+    Function_Return (Cstring (sTempPath))
+End_Function // GetTempPath
+
+

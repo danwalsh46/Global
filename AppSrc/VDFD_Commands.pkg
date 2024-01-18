@@ -1,0 +1,189 @@
+//**********************************************************************************[v4]***
+// Copyright (c) 2006 Threshold Software
+// All rights reserved.
+//
+// DO NOT DISTRIBUTE THIS FILE OR ANY PART OF IT !
+//
+// $FileName    : VDFD_Commands.pkg
+// $ProjectName : VDFD Framework
+// $Authors     : Todd Forsberg
+// $Created     : 06.15.2006  19:59          
+//
+// Contents:
+//
+//
+// Properties:
+//
+//     
+// Methods:     
+//      
+//     
+// Required Files:
+//  
+//
+//*****************************************************************************************
+
+// 06.15.2006 The "Column" define  caused problems with the column property, so   Todd      20:00             
+//            I changed it to "ColumnID" // TRF 02/2006                                                       
+
+
+#COMMAND VDFD_Define R
+  #IFDEF !1
+  #ELSE 
+    Define !1 !2 !3 !4 !5 !6 !7 !8 !9
+  #ENDIF
+#ENDCOMMAND
+
+VDFD_Define VDFD_RELEASE_VERSION
+
+//VDFD_Define VDFD_SHOW_EXTRA_INFO
+//VDFD_Define VDFD_DEBUG_MODE // disable this line for non-debug mode
+
+#IFDEF VDFD_RELEASE_VERSION
+#ELSE
+  VDFD_Define VDFD_BETA_CODE
+  VDFD_Define VDFD_DISPLAY_SHOWLN
+#ENDIF
+
+VDFD_Define Table_Column For File_Field
+//VDFD_Define RowID        for Recnum 
+// 06.15.2006 The "Column" define  caused problems with the column property, so   Todd      20:00             
+//            I changed it to "ColoumID" // TRF 02/2006                                                       
+VDFD_Define ColumnID     For Field  
+
+#COMMAND Beta_Code_Begin
+  #IFDEF VDFD_BETA_CODE
+#ENDCOMMAND
+
+#COMMAND Beta_Code_End
+  #ENDIF
+#ENDCOMMAND
+
+#COMMAND Begin_History_Block
+  #IFDEF VDFD_NEVER_COMPILE_THIS_CODE
+#ENDCOMMAND
+
+#COMMAND End_History_Block
+  #ENDIF
+#ENDCOMMAND
+
+#COMMAND RegisterPropertyHandle !1  //This is cool! Just set property to Self why move to windowindex? It will yield the same result!  
+  Move Self To WindowIndex          //Wow I tried it program won't run This is being used in some strange place! Makes no sense.
+  Delegate Set !1 To WindowIndex    //Gregg 01/27/2007  RegisterPropertyHandle is always used in object creation so self is not changed!
+#ENDCOMMAND                         //Very funny. Found out why 1 min later. I would like to know why! Now I Know. There are child ojects being created by parent.
+                                    //And the strange place is in cTSAppClientArea.pkg the creation of the global popup calendar. No Big Deal!      
+#COMMAND VDFD_External_Function R R R
+  #IFDEF !1
+    Send Stop_Box "External Function Name Allready Defined !1 at line: !a" "** Warning **"
+  #ELSE 
+    #IFDEF VDFD_SHOW_EXTRA_INFO
+      Showln !1 !2 !3 !4 !5 !6 !7 !8 !9
+    #ENDIF
+  #ENDIF
+  External_Function !1 !2 !3 !4 !5 !6 !7 !8 !9
+#ENDCOMMAND 
+
+#COMMAND Register_Property R R  //This is handy! Gregg
+  Register_Function !2 Returns !1
+  Register_Procedure Set !2 !1 sVal
+#ENDCOMMAND
+
+#COMMAND DefaultValue !1 !2
+  If (!1 = "") Move !2 To !1
+#ENDCOMMAND  
+
+#COMMAND VDFD_DefaultValue !1 !2
+  If (!1 = "") Move !2 To !1
+#ENDCOMMAND  
+
+#COMMAND MoveMax R "TO" R
+  If (!1 > !3) Move !1 To !3
+#ENDCOMMAND
+
+#COMMAND MoveMin R "TO" R
+  If (!1 < !3) Move !1 To !3
+#ENDCOMMAND
+
+#COMMAND VDFD_DEBUG
+  #IFDEF VDFD_DEBUG_MODE
+    !1 !2 !3 !4 !5 !6 !7 !8 !9
+  #ENDIF
+#ENDCOMMAND                   
+
+#COMMAND VDFD_DEBUG_ERROR
+  #IFDEF VDFD_DEBUG_MODE
+    If (err) !1 !2 !3 !4 !5 !6 !7 !8 !9
+    Indicate err False
+  #ENDIF
+#ENDCOMMAND 
+
+#COMMAND Increment_Property R //This is handy If I can Remember I have used this
+  Register_Property Integer R
+  Set !1 To (!1(Self)+1)
+#ENDCOMMAND       
+
+#COMMAND Decrement_Property R //This is handy If I can Remember I have used this too!
+  Register_Property Integer R
+  Set !1 To (!1(Self)-1)
+#ENDCOMMAND
+
+#COMMAND VDFD_Showln
+  #IFDEF VDFD_DISPLAY_SHOWLN
+    Showln !1 !2 !3 !4 !5 !6 !7 !8 !9
+    Append_Output "C:\Log.Txt"
+    Writeln !1 !2 !3 !4 !5 !6 !7 !8 !9
+    Close_Output 
+  #ENDIF
+#ENDCOMMAND
+
+//
+#COMMAND VDFD_Framework_Option R
+  #IFSAME VDFD_Framework_!1 True
+  !2 !3 !4 !5 !6 !7 !8 !9
+  #ENDIF
+#ENDCOMMAND
+
+//02/09/2007 GAF Add
+#COMMAND Register_Objects !1 !2 !3 !4 !5 !6 !7 !8 !9
+  Multi$ Register_Object !1 !2 !3 !4 !5 !6 !7 !8 !9
+#ENDCOMMAND  
+
+//02/09/2007 GAF Add
+#COMMAND Open_Tables !1 !2 !3 !4 !5 !6 !7 !8 !9
+  Multi$ Open !1 !2 !3 !4 !5 !6 !7 !8 !9
+#ENDCOMMAND  
+
+//02/09/2007 GAF Add
+#COMMAND Zero_Tables !1 !2 !3 !4 !5 !6 !7 !8 !9
+  Multi$ ZeroFile !1 !2 !3 !4 !5 !6 !7 !8 !9
+#ENDCOMMAND  
+
+
+//03/30/2007
+#COMMAND Declare_Tables !1 !2 !3 !4 !5 !6 !7 !8 !9
+  Multi$ Declare_Datafile !1 !2 !3 !4 !5 !6 !7 !8 !9
+#ENDCOMMAND  
+
+//04/03/2007
+#COMMAND Register_Procedures !1 !2 !3 !4 !5 !6 !7 !8 !9
+  Multi$ Register_Procedure !1 !2 !3 !4 !5 !6 !7 !8 !900
+#ENDCOMMAND  
+
+//09/25/2008
+#COMMAND Use_Packages !1 !2 !3 !4 !5 !6 !7 !8 !9
+  Multi$ Use !1 !2 !3 !4 !5 !6 !7 !8 !9
+#ENDCOMMAND 
+
+//05/28/2007 late night gismo
+//#COMMAND MakeCString !1 !2 
+  //Move (!1 + Character(0)) To !2
+//#ENDCOMMAND  
+// Possible Idea: ?????
+//VDFD_FrameworkOptions_Begin // this works fine but could be improved...  TRF
+  // Add framework options here
+Define VDFD_Framework_FocusColor For True
+//VDFD_FrameworkOptions_End
+
+
+// End of File: VDFD_Commands.pkg
+

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblList is a List
+    Set ClassPackage To "cGlblList.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,11 @@
+//AB/ CLASSDEF
+Class TabDialog is a AbstractTabDialog ABTabDialog ABTabDialog_Mixin Define_ABTabDialog_Mixin
+    Set TabPageClassName To "TabPage"
+    Set Control_Type     To ctBaseContainer
+    Set Floating_Menu_Id To TabFloater.obj
+    Set ObjectNameMask   To "oTabDialog<count>"
+    Set ClassHelpName    To "TabDialog"
+    Set ClassCETV        To 13                // use TreeView Image #13 (1-based offset)
+    Set ClassPackage     To "dfTabDg.pkg"
+    Inherit
+End_Class

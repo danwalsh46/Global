@@ -1,0 +1,84 @@
+//***************************************************************************
+//*
+//* Class:        cGlblTreeView
+//* Package Name: cGlblTreeView.pkg
+//*
+//***************************************************************************
+
+Use DfTreeVw.pkg
+
+Struct tGlblTreeViewData
+    Integer eGroup
+    Integer iData
+    String  sNote
+End_Struct
+
+Class cGlblTreeView is a TreeView
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+        Property tGlblTreeViewData[] ptData
+
+        // Create child objects
+
+        // Set property values:
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+    Procedure DoDeleteChildItems Handle hChildItem
+        Handle hChild hSibling
+        //
+        Get ChildItem hChildItem to hChild
+        While (hChild <> 0)
+            Get NextSiblingItem hChild to hSibling
+            Send DoDeleteItem hChild
+            Move hSibling to hChild
+        Loop
+    End_Procedure // DoDeleteChildItems
+
+    // this function adds the type and data values to the struct array
+    // and returns an index integer valuee.  The allows other methods to
+    // easily determine the data type
+    Function CreateDataValue Integer eGroup Integer iData String sNote Returns Integer
+        tGlblTreeViewData[] tData
+        Integer iItem
+        //
+        Get ptData                to tData
+        Move (SizeOfArray(tData)) to iItem
+        Move eGroup               to tData[iItem].eGroup
+        Move iData                to tData[iItem].iData
+        Move sNote                to tData[iItem].sNote
+        Set ptData                to tData
+        //
+        Function_Return iItem
+    End_Function
+    //
+    Function IsItemDataValue Integer iItem Boolean bType Returns Integer
+        tGlblTreeViewData[] tData
+        Integer iValue
+        //
+        Get ptData to tData
+        If (bType) Begin
+            Move tData[iItem].eGroup to iValue
+        End
+        Else Begin
+            Move tData[iItem].iData  to iValue
+        End
+        Function_Return iValue
+    End_Function
+    //
+    Function IsItemNoteValue Integer iItem Returns String
+        tGlblTreeViewData[] tData
+        String sNote
+        //
+        Get ptData to tData
+        Move tData[iItem].sNote to sNote
+        Function_Return sNote
+    End_Function
+
+End_Class

@@ -1,0 +1,767 @@
+// cWinFileSystem.pkg
+//
+// Author: Allan Kim Eriksen, Sergey V. Natarov (senatc@postman.ru)
+//
+// Version: 1.0.1
+//
+// This class provides basic methods to access Windows file system. 
+// Against Direct_Input/Direct_Output commands of VDF, you are not 
+// limited by number of channels etc. Each opened file works with its
+// own handler (this class).
+//
+// To provide more simple access to the methods and properties of this
+// class, we have created a number of commands.
+//
+
+Use cWindowsEx.h // cWindowsEx Framework
+Use cWinPathEx.pkg // Functions to work with file paths
+
+Define CWINFILESYSTEM_BUFFER_SIZE For 8192
+
+//DOC//PUBLIC
+// Provides basic functionality on file operations, using Windows Kernel module.
+Class cWinFileSystem Is a message
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        //DOC//PRIVATE
+        // Internal class property. Stores opened file handle.
+        Property Handle  phFile         Public 0
+        //DOC//PRIVATE
+        Property String  piReadBuffer   Public CWINFILESYSTEM_BUFFER_SIZE
+        //DOC//PRIVATE
+        Property String  psReadBuffer   Public ""
+        //DOC//PUBLIC
+        // Allows to open file with particular file mode.
+        // By default, opens file for Read/Write operation.
+        //    Valid open modes:
+        //    GENERIC_READ     
+        //    GENERIC_WRITE    
+        //    GENERIC_RANDOM (Read and Write)
+        //    CREATE_NEW       
+        //    CREATE_ALWAYS    
+        //    OPEN_EXISTING    
+        //    OPEN_ALWAYS      
+        //    TRUNCATE_EXISTING
+        Property Integer pbOpenMode     Public GENERIC_RANDOM
+        Property Integer pbShareMode    Public FNULL
+        //DOC//PUBLIC
+        // Default open file in exclusive mode. Please refer
+        // to MSDN for more deatils on file open attributes.
+        Property Integer pbFileAttribute Public FILE_ATTRIBUTE_NORMAL
+        //DOC//PUBLIC
+        // This property returns full qualified path to the 
+        // currently assigned file
+        Property String  psFileName     Public ""
+        //DOC//PUBLIC
+        // If this property true, then current file is successfully
+        // opened by current object.
+        Property Boolean pbIsOpened     Public False
+        //DOC//PUBLIC
+        // If End Of File reached, this property is True
+        Property Boolean pbEOF          Public False
+        //DOC//PUBLIC
+        // Number of bytes read during last read_file function
+        Property Integer piBytesRead    Public 0
+        //DOC//PUBLIC
+        // This property stores file current position after attempt
+        // to set new position in the file. To retrieve position in
+        // the file, please use Get File_Position method.
+        Property Integer piCurrentPosition Public 0
+        //DOC//PUBLIC
+        // Allows prohibit to the object to report errors,
+        // occured during file operations.
+        Property Boolean pbReportErrors  Public True
+        //DOC//PUBLIC
+        // If Lock_File procedure used and completed successfully, then
+        // this property returns true.
+        Property Boolean pbLocked        Public False
+        //DOC//PRIVATE
+        Property Integer piLockPosition  Public 0
+        //DOC//PRIVATE
+        Property Integer piLockSize      Public 0
+        //
+    End_Procedure
+
+    //DOC//PUBLIC
+    // Opens file specified.
+    Procedure Open_File String sOpenFile
+        String  sFile
+        Pointer lpFile
+        Integer hFile iErr iSize
+        If (num_arguments>0) Move sOpenFile To sFile
+        Else Get psFileName To sFile
+        If (sFile="") Procedure_Return // Nothing to open
+        If ((phFile(Self)<>0)And(pbIsOpened(Self))) Send Close_File
+        Move (sFile+Character(0)+Character(0)) To sFile
+        GetAddress Of sFile To lpFile
+        Move (CreatefileEf(lpFile, pbOpenMode(Self), pbShareMode(Self), FNULL, OPEN_EXISTING, pbFileAttribute(Self), FNULL)) To hFile
+        If (hFile) Begin
+            Set phFile To hFile
+            Set pbIsOpened To True
+            Set psFileName To sFile
+            Get File_Size  To iSize
+            If (iSize<CWINFILESYSTEM_BUFFER_SIZE) Set piReadBuffer To iSize
+        End
+        Else Begin
+            Move (GetLastErrorEf()) To iErr
+            If ((iErr)And(pbReportErrors(Self))) Send WindowsError iErr
+            Set pbEOF To False
+        End
+    End_Procedure
+
+    //DOC//PUBLIC
+    // Closes opened file
+    Procedure Close_File
+        Handle hFile
+        Integer iRet 
+        Get phFile To hFile
+        If ((hFile=0)Or(Not(pbIsOpened(Self)))) Procedure_Return
+        If (pbLocked(Self)) Send Unlock_File
+        Move (CloseHandleEf(hFile)) To iRet
+        If ((iRet=0)And(pbReportErrors(Self))) Send WindowsError (GetLastErrorEf())
+        Else Begin
+            Set psFileName  To ""
+            Set phFile      To 0
+            Set pbIsOpened  To False
+            Set pbEOF       To False
+            Set piBytesRead To 0
+            Set piReadBuffer To CWINFILESYSTEM_BUFFER_SIZE
+            Set psReadBuffer To ""
+        End
+    End_Procedure
+    
+    //DOC//PUBLIC
+    //Locking a region of a file gives the threads of the locking process exclusive access 
+    //to the specified region using this file handle. If the file handle is inherited by a 
+    //process created by the locking process, the child process is not granted access to 
+    //the locked region.
+    //
+    //Locking a region of a file does not prevent reading from a mapped file view.
+    //
+    //You can lock bytes that are beyond the end of the current file. This is useful to 
+    //coordinate adding records to the end of a file.
+    Procedure Lock_File Integer dwPos Integer dwSize
+        Handle hFile
+        Integer iRet
+        Get phFile To hFile
+        If (pbLocked(Self)) Send UnLock_File
+        If ((hFile=0)Or(Not(pbIsOpened(Self)))) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File not opened."
+            Procedure_Return
+        End
+        Move (LockFileEf(hFile, dwPos, 0, dwSize, 0)) To iRet
+        If (iRet) Begin
+            Set pbLocked        To True
+            Set piLockPosition  To dwPos
+            Set piLockSize      To dwSize
+        End
+    End_Procedure
+
+    //DOC//PUBLIC
+    //Unlocking a region of a file releases a previously acquired lock on the file.
+    //The region to unlock must correspond exactly to an existing locked region. 
+    //Two adjacent regions of a file cannot be locked separately and then unlocked 
+    //using a single region that spans both locked regions.
+    Procedure UnLock_File
+        Integer dwPos dwSize
+        Integer hFile iRet
+        If (Not(pbLocked(Self))) Procedure_Return
+        Get phFile To hFile
+        If ((hFile=0)Or(Not(pbIsOpened(Self)))) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File not opened."
+            Procedure_Return
+        End
+        Get piLockPosition  To dwPos
+        Get piLockSize      To dwSize
+        Move (UnLockFileEf(hFile, dwPos, 0, dwSize, 0)) To iRet
+        If (iRet) Begin
+            Set pbLocked        To False
+            Set piLockPosition  To 0
+            Set piLockSize      To 0
+        End
+    End_Procedure
+    
+    //DOC//PUBLIC
+    // This function allows to read from file.
+    // If function returns an empty string the end of file has been
+    // reached or an error has occured. pbEOF property will be True.
+    // No errors occures if you try to read past end of file.
+    // To speed up reading process use a high number of bytes to read in
+    // iNumberOfBytes! Note that iNumberOfBytes must not exceed 
+    // the argument size!
+    Function Read_File Integer iNumberOfBytes Returns String
+        String  sOut
+        Handle  hFile
+        // Buffer
+        String  sBuffer
+        Pointer lpBuffer
+        Integer iMaxBuffer iArgument
+        Integer iBytesread
+        //
+        Integer iRet
+        //
+        Move "" To sOut
+        Move 0  To iBytesRead
+        Get_Argument_Size To iArgument
+        Set_Argument_Size 64000
+        //
+        If ((phFile(Self)=0)Or(Not(pbIsOpened(Self)))) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File not opened."
+            Set_Argument_Size iArgument
+            Function_Return ""
+        End
+        If (pbEOF(Self)) Function_Return ""
+        //
+        Get_Argument_Size To iMaxBuffer
+        If (iNumberOfBytes > iMaxBuffer) Begin
+            If (pbReportErrors(Self)) Error dferr_program "Block size to read exceeds argument size!"
+            Set_Argument_Size iArgument
+            Function_Return ""
+        End
+        //
+        Get phFile To hFile
+        //
+        ZeroString iNumberOfBytes To sBuffer
+        GetAddress Of sBuffer To lpBuffer
+        //
+        Set piBytesRead To 0
+        //
+        Move (ReadFileEf(hFile, lpBuffer, iNumberOfBytes, AddressOf(iBytesRead), FNULL)) To iRet
+        //
+        If ((iRet=0)And(pbReportErrors(Self))) Send WindowsError (GetLastErrorEf()) 
+        Else Begin
+            Move (Left(sBuffer, iBytesRead)) To sOut
+            If ((iBytesRead = 0) Or (iBytesRead<>iNumberOfBytes)) ;
+                Set pbEof To True
+            Set piBytesRead To iBytesRead
+        End
+        Set_Argument_Size iArgument
+        Function_Return sOut
+    End_Function
+
+    //DOC//PUBLIC
+    // End of file routine for the readln function
+    Function File_EOF Returns Boolean
+        If (Not(pbEOF(Self))) Function_Return False
+        Else Function_Return (psReadBuffer(Self)="")
+    End_Function
+
+    //DOC//PUBLIC
+    // This function allows readln of file
+    Function Readln_File Returns String
+        String sTmp sCR sLF
+        Integer iArgument iBuffer
+        String sBuffer sAddToBuffer
+        //
+        Get_Argument_Size To iArgument
+        //
+        Get piReadBuffer To iBuffer
+        If (iBuffer>32000) Move 16000 To iBuffer
+        Set_Argument_Size 64000
+        //
+        Move (Character(13)) To sCR
+        Move (Character(10)) To sLF
+        Get psReadBuffer To sBuffer
+        If (sBuffer="") Begin
+            Get Read_File iBuffer To sBuffer
+            If (sBuffer="") Begin
+                Set psReadBuffer To ""
+                Set_Argument_Size iArgument
+                Function_Return "" // Nothing to read
+            End
+        End
+        If (sBuffer<>"") Begin
+            While ((Not(pbEof(Self)))And(Not(sBuffer Contains sCR)))
+                Get Read_File iBuffer To sAddToBuffer
+                Move (sBuffer+sAddToBuffer) To sBuffer
+                If ((pbEof(Self))And(Not(sBuffer Contains sCR))) Begin
+                    Set psReadBuffer To ""
+                    Set_Argument_Size iArgument
+                    Function_Return sBuffer // EOF reached, nothing found
+                End
+                If (Length(sBuffer)>=iArgument) Begin
+                    Set pbEof To True
+                    Set psReadBuffer To ""
+                    Set_Argument_Size iArgument
+                    Function_Return sBuffer // Argument size exceeded...
+                End
+            Loop
+            If (sBuffer Contains sCr) Begin
+                Move (Left(sBuffer, Pos(sCR, sBuffer)-1)) To sTmp
+                Move (Replace(sTmp+sCR, sBuffer, "")) To sBuffer
+                If (Left(sBuffer, 1)=sLF) Move (Replace(sLF, sBuffer, "")) To sBuffer
+                Set psReadBuffer To sBuffer
+                Set_Argument_Size iArgument
+                Function_Return sTmp
+            End
+            Else If (pbEof(Self)) Begin
+                Set psReadBuffer To ""
+                Set_Argument_Size iArgument
+                Function_Return sBuffer // Rest of the buffer...
+            End
+        End
+        //
+        Set_Argument_Size iArgument
+        //
+    End_Function
+    
+    //DOC//PUBLIC
+    // This procedure allows write data into the file
+    Procedure Write_File String sBuffer
+        Integer iRet
+        Handle  hFile
+        // Buffer
+        Pointer lpBuffer
+        Integer iBytesWritten
+        Integer iNumberOfBytes
+        //
+        Get phFile  To hFile
+        // Is file opened?
+        If ((hFile=0)Or(Not(pbIsOpened(Self)))) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File not opened."
+            Procedure_Return 
+        End
+        If (sBuffer="") Procedure_Return // Nothing to write
+        //
+        Move (Length(sBuffer)) To iNumberOfBytes
+        GetAddress Of sBuffer  To lpBuffer
+        //
+        Move 0 To iBytesWritten
+        //
+        Move (WriteFileEf(hFile, lpBuffer, iNumberOfBytes, AddressOf(iBytesWritten), FNULL)) To iRet
+        If ((iRet=0)And(pbReportErrors(Self))) Send WindowsError (GetLastErrorEf()) 
+        If (iBytesWritten<>iNumberOfBytes) Error dferr_program "Not all data could be written!"
+    End_Procedure
+
+    //DOC//PUBLIC
+    // This procedure allows write data into the file
+    Procedure Writeln_File String sBuffer
+        Send Write_File (sBuffer+Character(13)+Character(10))
+    End_Procedure
+
+    //DOC//PUBLIC
+    // Allows to execute file specified
+    Procedure Execute_File
+        String sFile
+        If ((phFile(Self)<>0)And(pbIsOpened(Self))) Send Close_File
+        If (pbIsOpened(Self)) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File opened. Can't execute."
+            Procedure_Return
+        End
+        Get psFileName To sFile
+        If (sFile="") Procedure_Return // Nothing to do...
+        Send ShellExecute "open" sFile 1
+    End_Procedure
+
+    //DOC//PUBLIC
+    // Function returns true if file specified exists
+    Function File_Exists Returns Integer
+        String sFile
+        Get psFileName To sFile
+        If (sFile="") Function_Return False
+        Else Function_Return (SWAPathFileExists(sFile))
+    End_Function
+
+    //DOC//PUBLIC
+    // This function returns file name without path. Read only.
+    Function File_Title Returns String
+        String sFile
+        Get psFileName To sFile
+        If (sFile="") Function_Return ""
+        Else Function_Return (SWAPathFindFileName(sFile))
+    End_Function
+
+    //DOC//PUBLIC
+    // Returns file date and time of creation
+    Function File_Created Returns String
+        String  sFindData
+        Pointer lpFindData lpFile
+        Handle  hFindFile 
+        Integer dwLowDateTime dwHighDateTime
+        Integer dwFileSizeHigh dwFileSizeLow 
+        Integer iRet
+        //
+        String sFile
+        Get psFileName To sFile
+        If (sFile="") Function_Return ""
+        //
+        Move (sFile+Character(0)) To sFile
+        ZeroType Win32_Find_Data To sFindData
+        GetAddress Of sFindData  To lpFindData
+        GetAddress Of sFile      To lpFile
+        Move (OemToAnsi(lpFile, lpFile)) To iRet
+        Move (FindFirstFileEf( lpFile, lpFindData)) To hFindFile
+        If (hFindFile <> INVALID_HANDLE_VALUE) Begin
+            GetBuff From sFindData At Win32_Find_Data.dwCRLowDateTime  To dwLowDateTime
+            GetBuff From sFindData At Win32_Find_Data.dwCRHighDateTime To dwHighDateTime
+            Function_Return (vConvertFileDateTime (dwLowDateTime, dwHighDateTime))
+        End
+    End_Function
+
+    //DOC//PUBLIC
+    // Returns file date and time of the last access
+    Function File_Accessed Returns String
+        String  sFindData
+        Pointer lpFindData lpFile
+        Handle  hFindFile 
+        Integer dwLowDateTime dwHighDateTime
+        Integer dwFileSizeHigh dwFileSizeLow 
+        Integer iRet
+        //
+        String sFile
+        Get psFileName To sFile
+        If (sFile="") Function_Return ""
+        //
+        Move (sFile+Character(0)) To sFile
+        ZeroType Win32_Find_Data To sFindData
+        GetAddress Of sFindData  To lpFindData
+        GetAddress Of sFile      To lpFile
+        Move (OemToAnsi(lpFile, lpFile)) To iRet
+        Move (FindFirstFileEf( lpFile, lpFindData)) To hFindFile
+        If (hFindFile <> INVALID_HANDLE_VALUE) Begin
+            GetBuff From sFindData At Win32_Find_Data.dwLALowDateTime  To dwLowDateTime
+            GetBuff From sFindData At Win32_Find_Data.dwLAHighDateTime To dwHighDateTime
+            Function_Return (vConvertFileDateTime (dwLowDateTime, dwHighDateTime))
+        End
+        Function_Return ""
+    End_Function
+
+    //DOC//PUBLIC
+    // Returns file date and time of the last write
+    Function File_Wrote Returns String
+        String  sFindData
+        Pointer lpFindData lpFile
+        Handle  hFindFile 
+        Integer dwLowDateTime dwHighDateTime
+        Integer dwFileSizeHigh dwFileSizeLow 
+        Integer iRet
+        //
+        String sFile
+        Get psFileName To sFile
+        If (sFile="") Function_Return ""
+        //
+        Move (sFile+Character(0)) To sFile
+        ZeroType Win32_Find_Data To sFindData
+        GetAddress Of sFindData  To lpFindData
+        GetAddress Of sFile      To lpFile
+        Move (OemToAnsi(lpFile, lpFile)) To iRet
+        Move (FindFirstFileEf( lpFile, lpFindData)) To hFindFile
+        If (hFindFile <> INVALID_HANDLE_VALUE) Begin
+            GetBuff From sFindData At Win32_Find_Data.dwLWLowDateTime  To dwLowDateTime
+            GetBuff From sFindData At Win32_Find_Data.dwLWHighDateTime To dwHighDateTime
+            Function_Return (vConvertFileDateTime (dwLowDateTime, dwHighDateTime))
+        End
+        Function_Return ""
+    End_Function
+
+    //DOC//PUBLIC
+    // This function returns file extention. Read only.
+    Function File_Extention Returns String
+        String sFile
+        Get psFileName To sFile
+        If (sFile="") Function_Return ""
+        Else Function_Return (SWAPathFindExtension(sFile))
+    End_Function
+
+    //DOC//PUBLIC
+    // This function returns file path without file name. Read only.
+    Function File_FullPath Returns String
+        String sFile
+        Get psFileName To sFile
+        If (sFile="") Function_Return ""
+        Else Function_Return (SWAPathRemoveFileSpec(sFile))
+    End_Function
+
+    //DOC//PUBLIC
+    // Retrives the file size from a file.
+    Function File_Size Returns Integer
+        Integer iFilesize 
+        Handle  hFile
+        Move 0 To iFilesize
+        Get phFile To hFile
+        // Is file opened?
+        If ((hFile=0)Or(Not(pbIsOpened(Self)))) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File not opened."
+            Procedure_Return 
+        End
+        Move (GetFileSizeEf(hFile, FNULL)) To iFileSize
+        If ((iFileSize = -1)And(pbReportErrors(Self)))  Send WindowsError (GetLastErrorEf()) 
+        Function_Return iFileSize
+    End_Function
+
+    //DOC//PUBLIC
+    // This property gets/sets the file position from a binary file.
+    Procedure Set File_Position Integer iPos
+        Integer iNewPos 
+        Handle  hFile 
+        Move -1 To iNewPos
+        Get phFile To hFile
+        // Is file opened?
+        If ((hFile=0)Or(Not(pbIsOpened(Self)))) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File not opened."
+            Function_Return -1
+        End
+        Move (SetFilePointerEf(hFile, iPos, FNULL, FILE_BEGIN)) To iNewPos
+        If ((iNewPos = -1)And(pbReportErrors(Self)))  Send WindowsError (GetLastErrorEf()) 
+        Set piCurrentPosition To iNewPos
+    End_Procedure
+    Function File_Position Returns Integer
+        Integer iNewPos 
+        Handle  hFile 
+        Move -1 To iNewPos
+        Get phFile To hFile
+        // Is file opened?
+        If ((hFile=0)Or(Not(pbIsOpened(Self)))) Begin
+            If (pbReportErrors(Self)) Error dferr_program "File not opened."
+            Function_Return -1
+        End
+        Move (SetFilePointerEf(hFile, 0, FNULL, FILE_CURRENT)) To iNewPos
+        If ((iNewPos = -1)And(pbReportErrors(Self)))  Send WindowsError (GetLastErrorEf()) 
+        Function_Return iNewPos
+    End_Function
+
+    //DOC//PUBLIC
+    // Allows to delete current file
+    Procedure Delete_File
+        String  sFile
+        Integer iRet
+        Get psFileName To sFile
+        If (sFile="") Procedure_Return // Nothing to do...
+        If (pbIsOpened(Self)) Begin
+            Send Close_File
+            If (pbIsOpened(Self)) Begin
+                If (pbReportErrors(Self)) Error dferr_program "Can't delete file."
+                Procedure_Return
+            End
+        End
+        Move (sFile+Character(0)) To sFile
+        Move (DeleteFileEf(AddressOf(sFile))) To iRet
+        If (iRet=0) Send WindowsError (GetLastErrorEf()) ("Can't delete file"*sFile)
+    End_Procedure
+
+    //DOC//PUBLIC
+    // Allows to rename current file (Moves a file or directory).
+    Procedure Rename_File String sNewFileName
+        Integer iRet
+        String sFrom sTo
+        Get psFileName To sFrom
+        If (sFrom="") Procedure_Return // Nothing to do...
+        If (pbIsOpened(Self)) Begin
+            Send Close_File
+            If (pbIsOpened(Self)) Begin
+                If (pbReportErrors(Self)) Error dferr_program "Can't delete file."
+                Procedure_Return
+            End
+        End
+        Move (sFrom+Character(0)) To sFrom
+        Move (sNewFileName+Character(0)) To sTo
+        Move (MoveFileEf(AddressOf(sFrom), AddressOf(sTo))) To iRet
+        If ((iRet=0)And(pbReportErrors(Self))) Send WindowsError (GetLastErrorEf()) ("Can't rename file"*sFrom*"to"*sTo)
+    End_Procedure
+
+    //DOC//PUBLIC
+    // Copies a file. Overwriting an existing file by default.
+    Procedure Copy_File String sNewFileName Boolean bOverwrite
+        Integer iRet
+        String sFrom sTo
+        Boolean bFileOverwrite
+        Get psFileName To sFrom
+        If (sFrom="") Procedure_Return // Nothing to do...
+        If (pbIsOpened(Self)) Begin
+            Send Close_File
+            If (pbIsOpened(Self)) Begin
+                If (pbReportErrors(Self)) Error dferr_program "Can't delete file."
+                Procedure_Return
+            End
+        End
+        Move (sFrom+Character(0)) To sFrom
+        Move (sNewFileName+Character(0)) To sTo
+        If (Num_Arguments>1) Move bOverwrite To bFileOverwrite
+        Else Move (False) To bFileOverwrite
+        Move (CopyFileEf(AddressOf(sFrom), AddressOf(sTo), bFileOverwrite)) To iRet
+        If ((iRet=0)And(pbReportErrors(Self))) Send WindowsError (GetLastErrorEf()) ("Can't copy file"*sFrom*"to"*sTo)
+    End_Procedure
+    //
+End_Class
+
+//DOC//PUBLIC
+// Allows to define up to the 9 filesystem objects in the application.
+//
+// <B>Usage:</B>
+//     <I>FileSystem hoFs1 hoFs2 hoFs3</I>
+//
+#COMMAND FILESYSTEM
+  #IF (!0>0)
+    Integer !1
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !1
+    End_Object
+  #ENDIF
+  #IF (!0>1)
+    Integer !2
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !2
+    End_Object
+  #ENDIF
+  #IF (!0>2)
+    Integer !3
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !3
+    End_Object
+  #ENDIF
+  #IF (!0>3)
+    Integer !4
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !4
+    End_Object
+  #ENDIF
+  #IF (!0>4)
+    Integer !5
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !5
+    End_Object
+  #ENDIF
+  #IF (!0>5)
+    Integer !6
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !6
+    End_Object
+  #ENDIF
+  #IF (!0>6)
+    Integer !7
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !7
+    End_Object
+  #ENDIF
+  #IF (!0>7)
+    Integer !8
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !8
+    End_Object
+  #ENDIF
+  #IF (!0>8)
+    Integer !9
+    Object oFS Is a cWinFileSystem
+      Move (Object_ID(Self)) To !9
+    End_Object
+  #ENDIF
+  #IF (!0>9)
+      #ERROR 300 "Too much FileSystem type arguments"
+  #ENDIF 
+#ENDCOMMAND
+
+//DOC//PUBLIC
+// Opens existent file within file system id specified.
+//
+// <B>Format:</B>
+//     <I>fs.open {hoFs} {FileName}</I>
+//
+// <B>Usage:</B>
+//     <I>FileSystem hoFS
+//     fs.Open hoFS "C:\CONFIG.SYS"</I>
+//
+#COMMAND FS.Open
+  Send Open_File To !1 !2
+#ENDCOMMAND
+
+//DOC//PUBLIC
+// Closes currently opened file within filesystem specified.
+//
+// <B>Format:</B>
+//     <I>fs.close {hoFS}</I>
+//
+// <B>Usage:</B>
+//     <I>FileSystem hoFS
+//     fs.open hoFS "C:\CONFIG.SYS"
+//     fs.close hoFS</I>
+//
+#COMMAND FS.Close
+  Send Close_File To !1 
+#ENDCOMMAND
+
+//DOC//PUBLIC
+// Allows to read number of bytes from the file into the buffer specified.
+//
+// <B>Format:</B>
+//     <I>fs.read {hoFs} {nBytes} {sBuffer}</I>
+//
+// <B>Usage:</B>
+//     <I>String sBuffer
+//     FileSystem hoFS
+//     fs.open hoFS "C:\CONFIG.SYS"
+//     fs.read hoFS 50 sBuffer
+//     fs.close hoFS</I>
+//
+#COMMAND FS.READ
+  Get Read_File Of !1 !2 To !3
+#ENDCOMMAND
+
+//DOC//PUBLIC
+// Allows to read the line from the file into the buffer specified.
+//
+// <B>Format:</B>
+//     <I>fs.readln {hoFs} {sBuffer}</I>
+//
+// <B>Usage:</B>
+//     <I>String sBuffer
+//     FileSystem hoFS
+//     fs.open hoFS "C:\CONFIG.SYS"
+//     fs.readln hoFS sBuffer
+//     fs.close hoFS</I>
+//
+#COMMAND FS.Readln
+  Get Readln_File Of !1 To !2
+#ENDCOMMAND
+
+//DOC//PUBLIC
+// Allows to write number of bytes into the file from the buffer specified.
+//
+// <B>Format:</B>
+//     <I>fs.readln {hoFs} {sBuffer}</I>
+//
+// <B>Usage:</B>
+//     <I>FileSystem hoFS
+//     fs.open hoFS "C:\CONFIG.SYS"
+//     fs.write hoFS "REM This is a comment"
+//     fs.close hoFS</I>
+//
+#COMMAND FS.Write
+  Send Write_File To !1 !2 
+#ENDCOMMAND
+
+//DOC//PUBLIC
+// Allows to write the line into the file from the buffer specified.
+//
+// <B>Format:</B>
+//     <I>fs.writeln {hoFs} {sBuffer}</I>
+//
+// <B>Usage:</B>
+//     <I>FileSystem hoFS
+//     fs.open hoFS "C:\CONFIG.SYS"
+//     fs.writeln hoFS "driver=driver.sys"
+//     fs.close hoFS</I>
+//
+#COMMAND FS.Writeln
+  Send Writeln_File To !1 !2 
+#ENDCOMMAND
+
+//DOC//PUBLIC
+//Locking a region of a file gives the threads of the locking process exclusive access 
+//to the specified region using this file handle.
+//
+// <B>Format:</B>
+//     <I>fs.lock {hoFS} {iPosition} {iNumberOfBytes}</I>
+//
+#COMMAND FS.LOCK
+  Send Lock_File To !1 !2 !3
+#ENDCOMMAND
+
+//DOC//PUBLIC
+//Unlocking a region of a file releases a previously acquired lock on the file.
+//
+// <B>Format:</B>
+//     <I>fs.unlock {hoFS}</I>
+//
+#COMMAND FS.UNLOCK
+  Send UnLock_File To !1
+#ENDCOMMAND

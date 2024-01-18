@@ -1,0 +1,287 @@
+// An_CB_mixin.pkg////////////////////////////////////////////////////////////
+//
+//  Defines a mixin class to support the setting of the colour of a Checkbox 
+//  label and the use of Form_Border ClientEdge on the Checkbox itself. The 
+//  border is placed around only the checkbox itself and not the label. 
+//
+//  This has been found to be of especial value when using Skins - some skins 
+//  make standard checkboxes all but invisible.  Adding this mixin to your 
+//  Checkbox and dbCheckbox classes cures this.  However, if no skin is 
+//  applied you might think that the standard checkbox looks better.  The 
+//  message DepressCBBorder has been provided so that you can broadcast this 
+//  to change the appearance of all checkboxes (you could add a checkbox to 
+//  your skin selection dialog so your users can choose the style of checkbox 
+//  they prefer for their choice of skin).
+//
+//  To achieve this a class has been constructed that combines two 
+//  checkboxes: one with no label whose border can be depressed and one whose 
+//  actual checkbox can't be seen to provide the label that has a dotted line 
+//  around it when it has the focus. The 'label' checkbox is partially hidden 
+//  by placing it in a container3d (which has no border) offset so that its 
+//  box is outside the boundary of the container3d.  Procedures have then 
+//  been added to synchronise the operation of the two checkboxes (clicking 
+//  on the label selects/deselects the other checkbox) so that they operate 
+//  as one standard checkbox.
+//
+//----------------------------------------------------------------------------
+//
+//  Produced by Ancilla Software, a trading name of Peter Crook, The Banks,
+//  Belle Hill, Kingsbridge, TQ7 1NJ, United Kingdom.
+//  AncillaSoftware@yahoo.co.uk
+//  Not to be used or distributed without the above attribution.
+//
+//  Provided as-is, without warranty and to be used at your own risk.
+//
+//----------------------------------------------------------------------------
+//  Usage:
+//  ~~~~~~
+//  Although the class definition is complex is usage is quite straight-
+//  forward: define your own checkbox and dbcheckbox classes as follows and 
+//  then base your checkboxes and dbcheckboxes on these:
+//
+//    Use An_CB_mixin.pkg
+//
+//    Class An_Checkbox is a CheckBox
+//        Procedure Construct_Object
+//            Forward Send Construct_Object
+//            Send Define_An_Checkbox
+//        End_Procedure
+//        Import_Class_Protocol An_Checkbox_mixin
+//    End_Class
+//    
+//    Class An_dbCheckbox is a dbCheckBox
+//        Procedure Construct_Object
+//            Forward Send Construct_Object
+//            Send Define_An_Checkbox
+//        End_Procedure
+//        Import_Class_Protocol An_Checkbox_mixin
+//    End_Class
+//
+//  To give the Checkbox the sculpted appearance (or not) Send DepressCBBorder True|False 
+//  to it.  You can Broadcast Recursive Send DepressCBBorder to set the form border of all 
+//  checkboxes, e.g. when loading a different Style.
+//
+//  If you intend to use Anchors you must add the following procedure to the 
+//  Panel or View that contains any checkboxes:
+//
+//    Procedure OnResize
+//        Broadcast Recursive Send Locate_yourself
+//    End_Procedure
+//
+//  This will ensure that the label moves with the checkbox when the Window 
+//  is resized.  However it will give the wrong behaviour if you set the 
+//  anchors to a value that causes the size of the checkbox to alter.
+//  So don't use any value for the anchors that include opposite sides 
+//  (TopBottom, LeftRight or All).
+//
+//----------------------------------------------------------------------------
+//  Modifications:
+//  ~~~~~~~~~~~~~~
+//   4/ 3/2009  PDC Created.
+//  10/ 5/2009  PDC Fixed problem with setting Anchors.
+//                  Use_Parent_Status_Help set true for child objects.
+//  26/ 5/2009  PDC Height limited to a minimum of 10.
+//   1/ 7/2009  PDC Tried adding test for active_state at line 188 to avoid 
+//                  fatal divide by zero Error.
+//  21/ 1/2010  PDC Fixed problem in which previous focus was made active 
+//                  after clicking on checkbox or label.
+//   7/ 6/2011  PDC Imported An_Typeface_mixin and re-wrote sizing messages.
+//                  Added colour-setting support.
+//   9/ 7/2011  PDC Moved references to An_Typeface_mixin to importing class 
+//                  definitions.
+//                  Renamed from An_CECB_Mixin.
+//
+//----------------------------------------------------------------------------
+//
+
+Use Windows.pkg
+
+Class cLabelCheckBox is a CheckBox
+    // This defines a checkbox of which only the label will be seen.  It is positioned 
+    // in a container3d in such a way that the checkbox itself is hidden.
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set phoLabel to Self
+        Forward Set Location to 0 -10 // so that this object's checkbox is outside the boundary of the container, showing only its label
+        Set Use_Parent_Status_Help to True
+    End_Procedure   // Construct_Object
+    Function Deo_Object Returns Integer
+        // Fool toolbars into thinking it is
+        Function_Return 1
+    End_Function
+    Function Server Returns Integer
+        // Needed because this is not a dbCheckbox
+        Register_Function phoBox Returns Handle
+        Function_Return (Server(phoBox(Self)))
+    End_Function
+    Procedure Set Location Integer iRowPos Integer iColPos
+        Forward Set Location to 0 -10
+    End_Procedure
+    Procedure Set Select_State Integer iItem Integer bSelect
+        Handle hoFocus hoBox
+        Register_Function pbChanging Returns Boolean
+        Forward Set Select_State item iItem to bSelect
+        If (not(pbChanging(Self)) and Focus(Desktop) = Self) Begin
+            Get phoBox to hoBox
+            Set pbChanging to True
+            Get Focus to hoFocus
+            Send Activate to hoBox  // So that we can check if box has focus during OnChange event.
+            Set Select_State of hoBox to bSelect
+            Send Activate to hoFocus
+            Set pbChanging to False
+        End
+    End_Procedure
+    Procedure Set Size Integer iHeight Integer iWidth
+        Forward Set Size to iHeight iWidth
+        Delegate Set Size to iHeight (iWidth - 9)
+    End_Procedure
+    // After autosizing this object set the size of its container 
+    // to the size of the label text.
+    //
+    Procedure Autosize String sLabel
+        Integer iSize
+        Forward Send Autosize sLabel
+        If (sLabel <> '') Begin
+            Get Text_Extent sLabel to iSize
+            Delegate Set Guisize to (Hi(iSize) + 3) (Low(iSize) + 4)
+            Delegate Send Adjust_logicals
+        End
+    End_Procedure
+End_Class   // cLabelCheckBox
+Class cLabelCBContainer is a Container3d
+    // This contains the checkbox of which only the label will be seen.
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Integer iSize
+        Object oLabelCheckBox is a cLabelCheckBox
+        End_Object  // oLabelCheckBox
+        Set phoLabelContainer to Self
+        Set Border_Style to Border_None
+        Set Location to (Hi(Location(Parent(Self)))) (Low(Location(Parent(Self))))
+        Set Attach_Parent_State to True    // otherwise sometimes e.g. Start Centre is made active when CB is clicked.
+        Set Use_Parent_Status_Help to True
+    End_Procedure   // Construct_Object
+    Function Deo_Object Returns Integer
+        Function_Return 1
+    End_Function
+    Procedure Set Location Integer iRowPos Integer iColPos
+        Forward Set Location to iRowPos (iColPos + 10)
+    End_Procedure
+End_Class   // cLabelCBContainer
+Class An_Checkbox_mixin is a mixin
+    // This defines the checkbox of which only the checkbox itself is seen, 
+    // and which can have its border set to Border_ClientEdge without the 
+    // label being depressed as well as the box.
+    Procedure DepressCBBorder Boolean bDepress
+        // This procedure is provided so that you can Broadcast Send DepressCBBorder
+        // to set the form border of all checkboxes, eg when loading a different Style.
+        Set Form_Border to (If(bDepress,Border_ClientEdge,Border_None))
+    End_Procedure
+    Procedure define_An_Checkbox
+        Property Boolean pbChanging
+        Property Handle  phoBox
+        Property Handle  phoLabelContainer
+        Property Handle  phoLabel
+        Object oLabelCBContainer is a cLabelCBContainer
+        End_Object  // oLabelCheckbox
+        Set phoBox to Self
+        Set Size to 10 10
+        Set Skip_State to True
+    End_Procedure   // define_cCheckbox
+    Procedure Set Label String sVal
+        If (phoLabel(Self)) Set Label of (phoLabel(Self)) to sVal
+    End_Procedure
+    Procedure Set Size Integer iHeight Integer iWidth
+        Integer iSize
+        Move (iHeight max 10) to iHeight    // Problems if less than 10
+        Forward Set Size to iHeight iHeight     // Make square
+    End_Procedure
+    Procedure Set Location Integer iRowPos Integer iColPos
+        Forward Set Location to iRowPos iColPos
+        Broadcast Recursive Set Location to iRowPos iColPos
+    End_Procedure
+    Procedure Set Color Integer iColor
+        Handle hoLabel
+        Forward Set Color to iColor
+        If (BuildingObjectID = 0) Begin
+            Get phoLabel to hoLabel
+            If (hoLabel) Set Color of hoLabel to iColor
+        End
+    End_Procedure
+    Procedure OnResize
+        // To be callled by an OnResize procedure in the containing View or Panel
+        If (Active_State(Self)) Begin
+            Integer iLocation iRowPos iColPos
+            Get GuiLocation to iLocation
+            Move (Hi(iLocation))  to iRowPos
+            Move (Low(iLocation)) to iColPos
+            Get GuiToDialog iRowPos iColPos to iLocation
+            Broadcast Set Location to (Hi(iLocation)) (Low(iLocation))
+        End
+    End_Procedure
+    Procedure Set Shadow_State Boolean bState
+        Forward Set Shadow_State to bState
+        Broadcast Recursive Set Shadow_State to bState
+    End_Procedure
+    Procedure Set Enabled_State Boolean bState
+        Forward Set Enabled_State to bState
+        Broadcast Recursive Set Enabled_State to bState
+    End_Procedure
+    Procedure Set Visible_State Boolean bState
+        Forward Set Visible_State to bState
+        Broadcast Recursive Set Visible_State to bState
+    End_Procedure
+    Procedure Activating Returns Integer
+        Integer iNoGo
+        Handle  hoOldFocus
+        Forward Get msg_Activating to iNoGo
+        If (not(iNoGo)) Get msg_Activate of (phoLabelContainer(Self)) to iNoGo
+        // if this is not sent the label of the checkbox is not displayed 
+        // and you cannot navigate to the checkbox with the cursor until 
+        // you click on the box.
+        // Interestingly (?) it is not needed for dbchekcboxes.
+        Procedure_Return iNoGo
+    End_Procedure
+    Procedure Deactivating Returns Integer
+        Integer iNoGo
+        Forward Get msg_Deactivating to iNoGo
+        If (not(iNoGo)) Get msg_Deactivate   of (phoLabelContainer(Self)) to iNoGo
+            // if this is not sent the label of the checkbox is not displayed 
+            // when the panel is next activated.
+            // Interestingly (?) it is not needed for dbchekcboxes.
+        Procedure_Return iNoGo
+    End_Procedure
+    Procedure Mouse_Up Integer iWindowNumber Integer iPosition
+        Forward Send Mouse_Up iWindowNumber iPosition
+        Send Activate to (phoLabelContainer(Self))
+    End_Procedure
+    Procedure Mouse_Click Integer iWindowNumber Integer iPosition
+        Forward Send Mouse_Click iWindowNumber iPosition
+        Send Activate to (phoLabelContainer(Self))
+    End_Procedure
+    Procedure Set Select_State Integer iItem Integer bSelect
+        Handle hoServer
+        Integer iFile iField
+        // use this rather than OnChange in case user forgets to forward the latter
+        Forward Set Select_State item iItem to bSelect
+        If (not(pbChanging(Self))) Begin
+            Set pbChanging to True
+            Set Select_State of (phoLabel(Self)) to bSelect
+            Set pbChanging to False
+        End
+        #IFDEF GET_extended_deo_state   // in case there are no DEOs in the Project
+         If (extended_deo_State(Self) and (pbChanging(Self) or Focus(Desktop) = Self)) Begin
+             // This mixin is used by both Checkbox and dbCheckbox classes.  Which one is the current object?
+             Get Data_File to iFile
+             If (iFile <> 0) Begin
+                 // Surely this shouldn't be necessary - but it seems to be!
+                 Get Data_Field to iField
+                 Get Server to hoServer
+                 If (hoServer <> 0) Set File_Field_Changed_State of hoServer iFile iField to True
+             End
+         End
+        #ENDIF
+    End_Procedure
+End_Class   // cCECheckbox_mixin
+
+//End of file/////////////////////////////////////////////////////////////////

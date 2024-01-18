@@ -1,0 +1,9 @@
+//AB/ CLASSDEF
+Class Form is an AbstractForm Form FormMixin DefineFormMixin
+    Set ClassCETV      To 6                 // use TreeView Image #6 (1-based offset)
+    Set ClassHelpName  To "Form"
+    Set ObjectNameMask To "oForm<count>"
+    Inherit
+    Property No_Execute Boolean Password_State     False  // When this property is set true, each character of a form's value is displayed as a "*", rather than the key that is pressed.
+    Property Mode               Prompt_Button_Mode pb_PromptOff pb_PromptOff pb_PromptOn // Should prompt button appear? pb_PromptOff=No Prompt. pb_PromptOn=Create Prompt.
+End_Class

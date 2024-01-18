@@ -1,0 +1,42 @@
+Use DFEntry.pkg
+// Michael Mullan Michael@DanesBridge.com 
+// Feel free to use this code as you see fit. 
+// Send me an email if you fix a bug
+// Don't tell me if you find a bug!
+// 11/08/2014
+
+Class dbFormDisabled  is a dbForm
+    
+    Procedure Construct_Object
+        
+        Forward Send Construct_Object
+
+    End_Procedure
+    
+    // prevent the context menu from changing the value 
+    Function CanPaste Returns Boolean
+        Function_Return False 
+    End_Function
+    Function CanCut Returns Boolean
+        Function_Return False 
+    End_Function
+    Function CanDelete Returns Boolean
+        Function_Return False 
+    End_Function
+        
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        // prevent the shortcut keys from working 
+        On_Key Key_Ctrl+Key_X Send None 
+        On_Key Key_Ctrl+Key_v Send None
+        On_Key Key_Delete     Send None
+        // override the colors 
+        Set Color to clBtnFace
+        //Stops Key pressing from working.
+        Set Entry_State to False
+		// this stops label shadowing when blank
+		Set Label_Shadow_Display_Mode to TBSHADOW_ON_NONE
+    End_Procedure
+
+End_Class

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblRadio is a Radio
+    Set ClassPackage To "cGlblRadio.pkg"
+    Inherit
+End_Class

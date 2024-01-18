@@ -1,0 +1,65 @@
+Use Windows.pkg
+Use dfEntry.pkg
+Use cBackgroundTextBox.pkg
+
+Class dbHintForm is a dbForm
+    
+    Procedure Construct_Object
+        Property Integer piHintForm
+        Forward Send Construct_Object
+        Integer iRetVal hoHint
+        Get Create (RefClass(cBackgroundTextBox)) to hoHint 
+        Get msg_Add_Focus of hoHint (Self)  to iRetVal
+        Set piParent of hoHint to (Self) 
+        Set piHintForm to hoHint 
+        
+    End_Procedure
+    
+    Procedure Set psHint String sHint 
+        If (piHintForm(Self) > 0 ) Begin 
+            Set Value of (piHintForm(Self)) to sHint
+            Send ShowHint
+            Send Refresh  Mode_clear  
+        End
+    End_Procedure     
+    
+    
+    Procedure key Integer iKeyValue //Returns Integer
+        If (piHintForm(Self) > 0 ) Begin 
+            If (Visible_State(piHintForm(Self))) Begin
+                Set Visible_State of (piHintForm(Self)) to False 
+            End
+        End
+        Forward Send Msg_Key iKeyValue
+    End_Procedure
+    
+    Procedure Refresh Integer notifyMode
+        Forward Send Refresh notifyMode
+        Send ShowHint 
+    End_Procedure
+    
+    Procedure OnKillFocus 
+        Send ShowHint 
+    End_Procedure
+    
+    Procedure ShowHint
+       If (piHintForm(Self) = 0 ) Procedure_Return  
+       Set Visible_State of (piHintForm(Self)) to (trim(Value(Self)) = '') 
+    End_Procedure
+    
+    
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        Handle hoHint 
+        Get piHintForm(Self) to hoHint
+        Integer iWhere iOffset 
+        Get Location of Self to iWhere 
+        Set Location of hoHint to (Hi(iwhere)+2) (Low(iwhere)+5)
+        Get Size of Self to iwhere 
+        If (Prompt_Button_Mode(Self) <> PB_PromptOff) Move ( 20) to iOffset 
+        Else Move 7 to iOffset 
+        Set Size of hoHint to 10 (Low(iwhere) - iOffset) 
+        Set TextColor of hoHint to clGrayText 
+    End_Procedure
+
+End_Class

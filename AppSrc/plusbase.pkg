@@ -1,0 +1,127 @@
+//$- PLUSPAK GENERATED DOCUMENTATION
+//   - YOU MUST NOT MODIFY THESE AUTO-GENERATED LINES
+//
+// plusbase.pkg
+//
+// Provide header information
+//
+// +------------------------------------------------------------------+
+// | *** COPYRIGHT 1997, STARZEN TECHNOLOGIES. ALL RIGHT RESERVED *** |
+// | *** NO PART OF THIS CODE CODE MAY BE TRANSMITTED             *** |
+// | *** TO NON_LICENSE HOLDERS                                   *** |
+// +------------------------------------------------------------------+
+//$- PLUSPAK END GENERATED DOCUMENTATION
+
+Integer ghoProgram // global object-id of cProgram object
+Integer ghoPanel   // global object-id of program's panel
+
+DEFINE_SYMBOL self    For current_object
+//DEFINE_SYMBOL Boolean For Integer
+DEFINE_SYMBOL HOBJ    For Integer
+
+DEFINE_SYMBOL Event        For Procedure
+DEFINE_SYMBOL End_Event    For End_Procedure
+DEFINE_SYMBOL Event_Return For Procedure_Return
+
+// Published is a RTTI symbol for readability
+DEFINE_SYMBOL Published For Public
+
+#COMMAND ASSERT R
+//Send Info_Box 'ASSERT MACRO1'
+    #IFDEF _DEBUG_
+//Send Info_Box 'ASSERT MACRO2'
+    #IF (!0=1)
+    If (NOT(!1)) Begin
+         Send Stop_Box ("At Line: "+string(!a)+"\n\nExpression: "+ !1) "ASSERTION FAILED"
+    End
+    #ELSE
+    If (NOT(!1)) Begin
+         Send Stop_Box (!2 +"\n\nAt Line: "+string(!a)+"\n\nExpression: "+ !1) "ASSERTION FAILED"
+    End
+    #ENDIF
+    #ENDIF
+#ENDCOMMAND
+
+#COMMAND DEBUG_SHOWLN
+    #IFDEF _DEBUG_
+    SHOWLN !1 !2 !3 !4 !5 !6 !7 !8 !9
+    #ENDIF
+#ENDCOMMAND
+
+#COMMAND DEBUG_SHOW
+    #IFDEF _DEBUG_
+    SHOW !1 !2 !3 !4 !5 !6 !7 !8 !9
+    #ENDIF
+#ENDCOMMAND
+
+#REPLACE ICC_LISTVIEW_CLASSES |CI$00000001 // listview, header
+#REPLACE ICC_TREEVIEW_CLASSES |CI$00000002 // treeview, tooltips
+#REPLACE ICC_BAR_CLASSES      |CI$00000004 // toolbar, statusbar, trackbar, tooltips
+#REPLACE ICC_TAB_CLASSES      |CI$00000008 // tab, tooltips
+#REPLACE ICC_UPDOWN_CLASS     |CI$00000010 // updown
+#REPLACE ICC_PROGRESS_CLASS   |CI$00000020 // progress
+#REPLACE ICC_HOTKEY_CLASS     |CI$00000040 // hotkey
+#REPLACE ICC_ANIMATE_CLASS    |CI$00000080 // animate
+#REPLACE ICC_WIN95_CLASSES    |CI$000000FF
+
+#IFDEF   ICC_DATE_CLASSES
+#ELSE
+#Replace ICC_DATE_CLASSES     |CI$00000100 // month picker, date picker, time picker, updown
+#ENDIF
+
+#Replace ICC_USEREX_CLASSES   |CI$00000200 // comboex
+#REPLACE ICC_COOL_CLASSES     |CI$00000400 // rebar (coolbar) control
+
+#IFDEF get_InitCommonControlsEx
+#ELSE
+External_Function InitCommonControlsEx "InitCommonControlsEx" COMCTL32.DLL Pointer lpCCE Returns Integer
+#ENDIF
+
+Type tINITCOMMONCONTROLSEX
+    Field tINITCOMMONCONTROLSEX.dwSize as Dword              // size of this structure
+    Field tINITCOMMONCONTROLSEX.dwICC  as Dword              // flags indicating which classes to be initialized
+End_Type
+
+Procedure Global_DoInitCommonControls Integer iICC
+    Local String sICC
+    Local Pointer lpsICC
+    ZeroType tINITCOMMONCONTROLSEX To sICC
+    Put 8 To sICC At tINITCOMMONCONTROLSEX.dwSize
+    Put iICC To sICC At tINITCOMMONCONTROLSEX.dwICC
+    GetAddress of sICC To lpsICC
+    Move (InitCommonControlsEx(lpsICC)) To WindowIndex
+End_Procedure
+
+// symbols used by bitmap-loading
+Define LR_DEFAULTCOLOR     For |CI$0000
+Define LR_MONOCHROME       For |CI$0001
+Define LR_COLOR            For |CI$0002
+Define LR_COPYRETURNORG    For |CI$0004
+Define LR_COPYDELETEORG    For |CI$0008
+Define LR_LOADFROMFILE     For |CI$0010
+Define LR_LOADTRANSPARENT  For |CI$0020
+Define LR_DEFAULTSIZE      For |CI$0040
+Define LR_VGACOLOR         For |CI$0080
+Define LR_LOADMAP3DCOLORS  For |CI$1000
+Define LR_CREATEDIBSECTION For |CI$2000
+Define LR_COPYFROMRESOURCE For |CI$4000
+Define LR_SHARED           For |CI$8000
+
+#if (!@ < 7)
+External_Function LoadImage "LoadImageA" User32.dll ;
+    Handle hInst String sFile Integer iType Integer cx ;
+    Integer cy Integer uFlags Returns Handle
+#endif
+
+#IFDEF get_LoadIcon
+#ELSE
+External_Function LoadIcon "LoadIconA" User32.dll ;
+    Handle hInst Integer iType Returns Handle
+#ENDIF
+
+External_Function GetEnhMetaFile "GetEnhMetaFileA" GDI32.dll ;
+    String sFile Returns Handle
+
+
+Define IMI_HAND For 32513
+

@@ -1,0 +1,8 @@
+//AB/ CLASSDEF
+Class DbGrid_AutoComplete is a dbGrid
+    Set ObjectNameMask To "oDbGrid_AutoComplete<count>"
+    Property No_Execute Integer piMax_Finds 10
+    Property No_Execute Integer piTimeDelay 300
+    Inherit
+    Set ClassPackage to "DBGrid_AutoComplete.pkg"
+End_Class // cDbform_AutoComplete

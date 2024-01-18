@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cSzDbWizardPage is a dbContainer3d
+    Set ClassPackage To "cSzDbWizard.pkg"
+    Inherit
+End_Class

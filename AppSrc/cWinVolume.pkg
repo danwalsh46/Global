@@ -1,0 +1,212 @@
+// cWinVolume,pkg
+// Sergey V. Natarov (senatc@postman.ru)
+// This class retrieves some usefull information about system volume specified.
+//
+// <B>Simple usage:</B>
+//
+//     <I>Integer hoVol
+//     Get Create U_cWinVolume to hoVol
+//     ...
+//     Set Volume_Root of hoVol To "C:\"
+//     Get Label of hoVol To sVolLabel
+//     Get psType of hoVol To sVolType
+//     Get psSerial of hoVol To sVolSerial
+//     Get psFreeBytes of hoVol to sFreeBytes
+//     Get psTotalBytes of hoVol to sTotalBytes
+//     Get pbNetDrive of hoVol to bNet
+//     ... etc</I>
+//
+// Note: Retrieving volume information takes some time.
+//
+
+Use cWinFunc.pkg    //This is a collection of functions/procedures to aid in binary operations
+Use cWinKernEx.pkg  //Windows Kernel API interface
+Use cWinNetWk.pkg   // **WvA Sept 03, 2004 added
+
+Class cWinVolumeInfo is a Message
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        //If class completed retrieveing of the information, 
+        //then this property set to true
+        Property Boolean pbReady            public False
+        //
+        Property String  psRoot             public "C:\"
+        Property Boolean pbRead             public True
+        //
+        Property String  psFileSystem       public ""
+        Property String  psLabel            public ""
+        //
+        Property Integer piType             Public 0
+        Property String  psType             public "Unknown"
+        Property String  psSerial           Public "0000-0000"
+        //
+        Property String  psFreeBytes        Public "0"
+        Property String  psTotalBytes       Public "0"
+        //
+        Property Boolean pbNetDrive         Public False
+        Property Integer piConnectionStatus Public 0
+        Property String  psConnectionName   Public ""
+        //
+        Property Boolean pbNamedStreams
+        Property Boolean pbReadOnly
+        Property Boolean pbObjectIds
+        Property Boolean pbReparsePoints
+        Property Boolean pbSparseFiles
+        Property Boolean pbVolumeQuotas
+        Property Boolean pbCasePreserved
+        Property Boolean pbCaseSensitive
+        Property Boolean pbComPression
+        Property Boolean pbEncryption
+        Property Boolean pbPersistentACLS
+        Property Boolean pbUnicode
+        Property Boolean pbIsCompressed
+    End_Procedure
+    //Allows to specify volume root for collecting information.
+    //If property <B><I>pbRead</I></B> set to True, then performs
+    //collecting information about volume.
+    Procedure Set Volume_Root String sVolume
+        if (sVolume="") procedure_return
+        Move (Left(sVolume, 1)+":\") to sVolume
+        Set psRoot To sVolume
+        If (pbRead(Self)) Send Read_Volume sVolume
+    End_Procedure
+    //Returns currently used volume root
+    Function Volume_Root returns string
+        Function_Return (psRoot(Self))
+    End_Function
+    //Allows to refresh collected data
+    Procedure Refresh
+        Send Read_Volume (psRoot(Self))
+    End_Procedure
+    Procedure Delete_Data
+        Set psFileSystem       To ""
+        Set psLabel            To ""
+        //                     
+        Set piType             To 0 
+        Set psType             To "Unknown"
+        Set psSerial           To "0000-0000"
+        //
+        Set psFreeBytes        To "0"
+        Set psTotalBytes       To "0"
+        //
+        Set pbNetDrive         To False
+        Set piConnectionStatus To 0
+        Set psConnectionName   To "" 
+        //
+        Set pbNamedStreams     To False
+        Set pbReadOnly         To False
+        Set pbObjectIds        To False
+        Set pbReparsePoints    To False
+        Set pbSparseFiles      To False
+        Set pbVolumeQuotas     To False
+        Set pbCasePreserved    To False
+        Set pbCaseSensitive    To False
+        Set pbComPression      To False
+        Set pbEncryption       To False
+        Set pbPersistentACLS   To False
+        Set pbUnicode          To False
+        Set pbIsCompressed     To False
+        //                     
+        Set pbReady            To False
+    End_Procedure
+    Procedure Volume_Info String sRoot
+        Integer iRet iSerial iFlags
+        String sRet sSerial sName sComp sFlags sFile
+        UBigInt uFree uTotal uTotalFree
+        Pointer lpFree lpTotal lpTotalFree
+        Pointer lpRoot lpSerial lpName lpComp lpFlags lpFile
+        If (Length(sRoot)<3) Function_Return 0
+        // Root
+        Move (sRoot+Character(0)) to sRoot
+        GetAddress of sRoot to lpRoot
+        // Name
+        ZeroString MAX_PATH to sName
+        GetAddress of sName to lpName
+        // Serial
+        ZeroType TDWVAREX to sSerial
+        GetAddress of sSerial To lpSerial
+        // Component length
+        ZeroType TDWVAREX to sComp
+        GetAddress of sComp To lpComp
+        // Flags
+        ZeroType TDWVAREX to sFlags
+        GetAddress of sFlags To lpFlags
+        // File name
+        ZeroString MAX_PATH to sFile
+        GetAddress of sFile To lpFile   
+        //
+        Move "" to sRet
+        Move (GetVolumeInformationEf(lpRoot, lpName, MAX_PATH, lpSerial, lpComp, lpFlags, lpFile, MAX_PATH)) to iRet
+        If (iRet) Begin
+           GetBuff From sSerial At tdwvarEx.dwvar To iSerial
+           GetBuff From sFlags At tdwvarEx.dwvar  To iFlags
+           Set psLabel        To (CString(sName))
+           Set psFileSystem   To (CString(sFile)) 
+           Move (Insert('-', (DwordToHex(iSerial)), 5)) to sSerial
+           Set psSerial       To sSerial
+           If (iFlags) Begin
+              Set pbNamedStreams   To (iFlags iAnd FILE_NAMED_STREAMS) 
+              Set pbReadOnly       To (iFlags iAnd FILE_READ_ONLY_VOLUME) 
+              Set pbObjectIds      To (iFlags iAnd FILE_SUPPORTS_OBJECT_IDS)
+              Set pbReparsePoints  To (iFlags iAnd FILE_SUPPORTS_REPARSE_POINTS)
+              Set pbSparseFiles    To (iFlags iAnd FILE_SUPPORTS_SPARSE_FILES) 
+              Set pbVolumeQuotas   To (iFlags iAnd FILE_VOLUME_QUOTAS) 
+              Set pbCasePreserved  To (iFlags iAnd FS_CASE_IS_PRESERVED) 
+              Set pbCaseSensitive  To (iFlags iAnd FS_CASE_SENSITIVE) 
+              Set pbComPression    To (iFlags iAnd FS_FILE_COMPRESSION) 
+              Set pbEncryption     To (iFlags iAnd FS_FILE_ENCRYPTION) 
+              Set pbPersistentACLS To (iFlags iAnd FS_PERSISTENT_ACLS) 
+              Set pbUnicode        To (iFlags iAnd FS_UNICODE_STORED_ON_DISK) 
+              Set pbIsCompressed   To (iFlags iAnd FS_VOL_IS_COMPRESSED) 
+           End
+        End
+        Move 0 to uFree
+        Move 0 to uTotal
+        Move 0 to uTotalFree
+        GetAddress of sRoot To lpRoot
+        GetAddress of uFree to lpFree
+        GetAddress of uTotal to lpTotal
+        GetAddress of uTotalFree to lpTotalFree
+        Move (GetDiskFreeSpaceExEf(lpRoot, lpFree, lpTotal, lpTotalFree)) To iRet
+        If (iRet) Begin
+            Set psFreeBytes  To (String(uFree))
+            Set psTotalBytes To (String(uTotal))
+        End
+    End_Procedure
+    Procedure Read_Volume String sVolume
+        Integer iDriveType
+        Send Delete_Data
+        If (sVolume="") Move (psRoot(Self)) to sVolume
+        Send Volume_Info sVolume
+        Move (GetDriveType(sVolume)) to iDriveType
+        Set piType To iDriveType
+        Set psType To (GetDriveTypeName(iDriveType)) 
+        Set pbReady To True
+        If (iDriveType=DRIVE_REMOTE) Send Connection_Status sVolume
+    End_Procedure
+    Procedure Connection_Status String sDrive
+        Integer iRet 
+        String sNetname sLength sDesc
+        Pointer lpDrive lpNetName lpLength
+        Move (Left(sDrive, 1)+':') to sDrive
+        Zerotype TDWVAREX to sLength
+        Put 255 to sLength at tdwVarEx.dwVar
+        ZeroString 255 to sNetName
+        GetAddress of sDrive   to lpDrive
+        GetAddress of sLength  to lpLength
+        GetAddress of sNetName to lpNetName
+        Move (WNetGetConnectionEf(lpDrive, lpNetName, lpLength)) to iRet
+        Set piConnectionStatus To iRet
+        Set psConnectionName   To (CString(sNetName))
+        Set pbNetDrive         To True
+    End_Procedure
+    Procedure Set Label String sLabel
+        Integer iRet
+        If (not(pbReady(Self))) Procedure_Return
+        Move (SetVolumeLabel(psRoot(Self), sLabel)) to iRet
+        If (iRet) Set psLabel To sLabel
+    End_Procedure
+    Function Label returns string
+        Function_Return (psLabel(Self))
+    End_Function
+End_Class

@@ -1,0 +1,17 @@
+//AB/ CLASSDEF
+Class cAnimation is a AbstractControl cIdeAnimation ControlMixin DefineControlMixin
+    Set ClassPackage To "cAnimation.pkg"
+    Set ObjectNameMask To "oAnimation<count>"
+    Set ClassHelpName To "cAnimation"
+    Property boolean pbActive      False // When Set to true, start playing an animation file.
+    Property boolean pbAutoSize    True // Automatically sizes the control to the size of the animation frame, when set to True. When set to False, the animation will play in the center with the control.
+    Property Integer piRepetitions 0 // Determines the number of times that an animation file will repeat, when it is played. Set this property to zero, and the animation will repeat indefinitely.
+    Property boolean pbTransparent True // Allows you to match an animation's background color to that of the control’s Color property, creating a "transparent" background.
+    Property Mode    peAnimation   aviNone aviEmptyRecycle aviFileCopy aviFileDelete aviFileFind aviFileMove aviFileRecycle aviFindComputer aviNone aviSearch // Provides several built-in animation files for you to use.
+    Property Complex Location 0 0 // Object Location (Complex: Row, Column)
+    Property Color Color clBtnFace // Background Color
+    Property String psFileName // Name of an animation file on disk that you want to play. Setting this property to a non-null value will set the peAnimation property to aviNone.
+    Property Always_Generate Complex Size 30 70 // Object Size (Complex: height, width)
+    Property Mode Border_Style Border_None Border_None Border_Normal Border_Dialog Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style
+    Property no_execute anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+End_Class

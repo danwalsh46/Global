@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+Class cOk_bn Is a Button 
+    Set ClassPackage to "cOk_bn.pkg"
+    Inherit
+    Property No_Visible No_Generate String Label "&OK" 
+End_Class

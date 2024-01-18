@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cDgFtpTransfer is a cFtpTransfer
+    Set ClassPackage To "cGlblFtpTransfer.pkg"
+    Inherit
+End_Class

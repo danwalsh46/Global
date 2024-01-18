@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblWizardCloseButton is a Button
+    Set ClassPackage To "cGlblDbWizard.pkg"
+    Inherit
+End_Class

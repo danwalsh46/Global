@@ -1,0 +1,347 @@
+// cCKmail.pkg
+//
+// VDF interface to the Chilkat Mail ActiveX component
+// Required version of Chilkat Mail is 7.2.0 or higher...
+//
+// Created by Torben Lund, DataPower  tl@datapower.dk  http://www.datapower.dk
+//
+// To use these classes, you need to have installed the Chilkat Mail component, can be downloaded from
+// http://www.chilkatsoft.com   You need to have an unlock code to make the component work.
+// You can get a 30-day evaluation with full functionality at http://www.chilkatsoft.com/register30.asp
+
+// When cCKmail.pkg is used in your VDF program a global object named oCKmail is declared.
+// You need to get your own unlock code and place it below
+
+#REPLACE CKUnlockCode "UDanWalMAIL_QhhTebQQNHKL"
+
+// Constant text definitions for CkMailMan
+// Replace with your own language text....
+
+// English
+#REPLACE CKTEXT_WORKING       "Working..."
+#REPLACE CKTEXT_SENDING       "Sending..."
+#REPLACE CKTEXT_RETRIEVING    "Retrieving headers ..."
+#REPLACE CKTEXT_RECEIVING     "Receiving email..."
+#REPLACE CKTEXT_CONNECTING    "Connecting to SMTP server..."
+#REPLACE CKTEXT_NOCONNECT     "Could not connect to SMTP server"
+#REPLACE CKTEXT_INVALIDCODE   "ChilKatMail unlock code is NOT valid!"
+
+// Danish
+//#REPLACE CKTEXT_WORKING     "Arbejder..."
+//#REPLACE CKTEXT_SENDING     "Sender..."
+//#REPLACE CKTEXT_RETRIEVING  "Modtager brevhoveder ..."
+//#REPLACE CKTEXT_RECEIVING   "Modtager email..."
+//#REPLACE CKTEXT_CONNECTING  "Tilslutter til SMTP server..."
+//#REPLACE CKTEXT_NOCONNECT   "Kunne ikke skabe forbindelse til SMTP server"
+//#REPLACE CKTEXT_INVALIDCODE "ChilKatMail unlock code er IKKE gyldig!"
+
+// For convenience you can configure a default SMTP server, Sender and charset in you workspace file,
+// if you do so, you don't have to specify these data each time you create and send a mail.
+// You must create a section called [ChilkatMail] and place the data there.
+
+// [ChilKatMail]
+// CKDefaultSMTPHost=smtp.yourdomain.com
+// CKDefaultSender=info@yourdomain.com
+// CKDefaultCharSet=iso-8859-1
+
+// Example 1  - most simple way to send an email:
+
+//   use cCKMail.pkg
+//   integer iRet
+//   get comQuickSend of oCKmail "" "mickey@disney.com" "Subject text" "Mail body text" to iRet
+//   send info_box (if(iRet=0,"Mail could not be sent!","Mail sent OK"))
+//
+
+
+// Example 2  - Send plain text email with file attachment:
+
+//    integer iRet
+//    string sRet
+//    handle hMail
+//    get CreateNewEmail of oCKmail to hMail
+//    if (hMail<>0) begin
+//        get comAddTo   of hMail "Mickey Mouse" "mickey@disney.com" to iRet
+//        set comSubject of hMail to "Subject text"
+//        set comBody    of hMail to "Mail body text"
+//        get ComAddFileAttachment of hMail "c:\files\myfile.zip" to sRet
+//        get sendEmail  of hMail to iRet
+//        send destroy of hMail
+//    end
+//    send info_box (if(hMail=0 OR iRet=0,"Mail could not be sent!","Mail sent OK"))
+//
+
+
+// Example 3  - Send HTML email with embedded image and signature from a file:
+
+//    integer iRet
+//    string sRet sTxt
+//    handle hMail
+//    get CreateNewEmail of oCKmail to hMail
+//    if (hMail<>0) begin
+//        get comAddTo   of hMail "" "mickey@disney.com" to iRet
+//        set ComSubject of hMail to "Subject text"
+//        send addHtmlText of hMail '<center><font face="Comic Sans MS" size=16 color=$FF0000>'
+//        send addHtmlText of hMail "My home<p>"
+//        send addImage    of hMail "c:\images\disneyland.jpg") "MIDDLE"
+//        send addHtmlText of hMail "<p>Disneyland</font><br>Have You ever been there?</CENTER><p>"
+//        get ComLoadTextFileToUnicode of hMail "c:\files\signature.htm" "iso-8859-1" to sTxt
+//        send addHtmlText of hMail sTxt
+//        send constructHTMLbody of hMail
+//        get sendEmail  of hMail to iRet
+//        send destroy of hMail
+//    end
+//    send info_box (if(hMail=0 OR iRet=0,"Mail could not be sent!","Mail sent OK"))
+//
+
+// Example 4  - Get a list of emails on your POP3 server:
+
+//    integer iCount iItem iRet
+//    handle hMailMan hMail hBundle
+//    variant vBundle vMail
+//    string sFrom sSubject
+//    datetime dtSent
+//    move oCKMail to hMailMan
+//    set ComMailHost of hMailMan to "mail.yourdomain.com"
+//    set comPopUserName of hMailMan to "yourPOP3username"
+//    set comPopPassword of hMailMan to "yourPOP3password"
+//    get create U_cCKmailBundle to hBundle
+//    get createNewEmail of hMailMan to hMail
+//    if (hMail<>0 and hBundle<>0) begin
+//        get ComGetAllHeaders of hMailMan 0 to vBundle
+//        set pvComObject of hBundle to vBundle
+//        get comMessageCount of hBundle to iCount
+//        if (iCount>0) begin
+//            decrement iCount
+//            send delete_data of oGrid1
+//            for iItem from 0 to iCount
+//                get comGetEmail of hBundle iItem to vMail
+//                set pvComObject of hMail to vMail
+//                get comFromName of hMail to sFrom
+//                if (sFrom="") get comFrom of hMail to sFrom
+//                get comSubject  of hMail to sSubject
+//                get comLocalDate of hMail to dtSent
+//                send releaseComObject of hMail
+//                send add_item of oGrid1 msg_none sFrom
+//                send add_item of oGrid1 msg_none sSubject
+//                send add_item of oGrid1 msg_none dtSent
+//            loop
+//        end
+//        send releaseComObject of hBundle
+//        send destroy of hMail
+//        send destroy of hBundle
+//    end
+
+use cComChilkatMailMan2.pkg
+#IFDEF Is$WebApp
+// make a dummy class that understands the progress messages, but do nothing    
+Class cMailSendProgress is a cObject
+    procedure activateprogress string sTxt
+    end_procedure
+    procedure displayStatus DWORD iPrc
+    end_procedure
+    procedure deactivate
+    end_procedure
+End_Class
+
+#ELSE
+Use cProgressBar.pkg
+
+Class cMailSendProgress is a BasicPanel
+    procedure construct_object
+        forward send construct_object
+        set Maximize_icon to false 
+    	set Minimize_icon to false 
+    	set SysMenu_icon to false 
+        set size to 40 285
+        set locate_mode to center_on_screen
+        set label to CKTEXT_WORKING 
+        object oPrg is a cProgressBar
+            set size to 10 275
+            set location to 5 5
+            set pbSmooth to true
+        end_object
+    end_procedure
+    procedure activateprogress string sTxt
+        set label to sTxt
+        send activate
+    end_procedure
+    procedure displayStatus DWORD iPrc
+        set piPosition of oPrg to iPrc
+    end_procedure
+end_class
+
+#ENDIF
+
+class cCKmailMan is a cComChilkatMailMan2
+    procedure construct_object
+        forward send construct_object
+        property string psCharSet public "iso-8859-1"
+        property string psSender  public ""
+        object oMailSendProgress is a cMailSendProgress
+        end_object
+    End_Procedure
+    Procedure OnComSendPercentDone DWORD llpctDone
+        send displayStatus of oMailSendProgress llpctDone
+    End_Procedure
+    Procedure OnComReadPercentDone DWORD llpctDone
+        send displayStatus of oMailSendProgress llpctDone
+    End_Procedure
+    procedure startProgress string sTxt
+        send activateprogress of oMailSendProgress sTxt
+        send displayStatus of oMailSendProgress 0
+    end_procedure
+    procedure stopProgress
+        send deactivate of oMailSendProgress
+    end_procedure
+    function ComSendEmail variant vMail returns integer
+        integer iRet
+        send startProgress CKTEXT_SENDING
+        forward get ComSendEmail vMail to iRet
+        send stopProgress
+        function_return iRet
+    end_function
+    function ComQuickSend string sSender string sReceiver string sSubject string sBody string sServer returns integer
+        integer iRet
+        string sSmtp
+        send startProgress CKTEXT_SENDING
+        if (num_arguments > 4) move sServer to sSmtp
+        if (sSmtp="") get ComSmtpHost to sSmtp
+        if (sSender="") get psSender to sSender
+        forward get ComQuickSend sSender sReceiver sSubject sBody sSmtp to iRet
+        send stopProgress
+        function_return iRet
+    end_function
+    Function ComGetAllHeaders Integer llnumBodyLines Returns Variant
+        variant vRet
+        send startProgress CKTEXT_RETRIEVING 
+        forward get ComGetAllHeaders llnumBodyLines to vRet
+        send stopProgress
+        function_return vRet
+    end_function
+    Function ComFetchEmail String llUidl Returns Variant
+        variant vRet
+        send startProgress CKTEXT_RECEIVING 
+        forward get ComFetchEmail llUidl to vRet
+        send stopProgress
+        function_return vRet
+    end_function
+end_class
+
+class cCKemail is a cComChilkatEmail2
+    procedure construct_object
+        forward send construct_object
+        object oTxt is an array
+        end_object
+        property handle phMailManObj public 0
+    end_procedure
+    procedure addHTMLText string sTxt
+        integer iCount
+        get item_count of oTxt to iCount
+        set value of oTxt item iCount to sTxt
+    end_procedure
+    procedure addImage string sImageFile string sAlign
+        integer iCount
+        string sDocID sTxt
+        get item_count of oTxt to iCount
+        get ComAddRelatedFile sImageFile to sDocID
+        move ('<img src="cid:'+sDocID+'"') to sTxt
+        if (num_arguments>1 and sAlign<>"") append sTxt (" align="+sAlign)
+        set value of oTxt item iCount to (sTxt+">")
+    end_procedure
+    procedure constructHTMLbody
+        string sTxt
+        integer iCount iItem
+        handle hTxt
+        move oTxt to hTxt
+        get item_count of hTxt to iCount
+        if (iCount>0) begin
+            move "<html><head></head><body>" to sTxt
+            decrement iCount
+            for iItem from 0 to iCount
+                append sTxt (string_value(hTxt,iItem))
+            loop
+            append sTxt "</body></html>"
+            send ComSetHtmlBody sTxt
+        end
+    end_procedure
+    function SendEmail returns dWord
+        // method SendEmail
+        DWORD lretVal
+        integer iRetry iPrc
+        handle hObj
+        variant vMail
+        get phMailManObj to hObj
+        get pvComObject to vMail
+        if (isNullComObject(vMail)=0 and hObj<>0) begin
+            send startProgress of hObj CKTEXT_CONNECTING 
+            move 0 to iRetry
+            move 0 to iPrc
+            while (iRetry<3)
+                if (ComVerifySmtpConnection(hObj)=1 AND ComVerifySmtpLogin(hObj)=1) begin
+                    get comSendEmail of hObj vMail to lretVal
+                    if (lRetval=1) Function_Return lretVal
+                    send startProgress of hObj CKTEXT_CONNECTING 
+                end
+                add 33 to iPrc
+                send OnComSendPercentDone of hObj iPrc
+                increment iRetry
+            Loop
+            error 511 CKTEXT_NOCONNECT 
+            send stopProgress of hObj
+        end
+        else move 0 to lretVal
+        Function_Return lretVal
+    end_function        
+end_class
+
+class cCKmailBundle is a cComChilkatEmailBundle2
+end_class
+
+object oCkMail is a cCKmailMan
+
+    Procedure OnCreate
+        // ToDo: Set the ActiveX properties here...
+        string sPath sWs
+        handle hoIniFile
+        string CKDefaultSMTPHost CKDefaultSender CKDefaultCharSet 
+        integer bOK 
+        
+        get psprogrampath of (oWorkspace(ghoApplication)) to sPath
+        get psworkspacename of (oWorkspace(ghoApplication)) to sWs
+        
+        Get Create U_cIniFile To hoIniFile
+        Set psFilename of hoIniFile To (sPath+"\"+sWs+".ws")
+    
+        Get ReadString of hoIniFile "ChilKatMail" "CKDefaultSMTPHost" ""  To CKDefaultSMTPHost
+        Get ReadString of hoIniFile "ChilKatMail" "CKDefaultSender" ""    To CKDefaultSender
+        Get ReadString of hoIniFile "ChilKatMail" "CKDefaultCharSet" ""   To CKDefaultCharSet 
+    
+        Send Destroy of hoIniFile 
+        
+        get ComUnlockComponent CKUnlockCode to bOK
+    #IFDEF Is$WebApp
+    #ELSE
+        if (not(bOK)) send stop_box CKTEXT_INVALIDCODE 
+    #ENDIF        
+        set ComSmtpHost to CKDefaultSMTPHost
+        set psCharSet to CKDefaultCharSet
+        set psSender  to CKDefaultSender
+    End_Procedure // OnCreate
+    
+    function CreateNewEmail returns handle
+        handle hObj hMailMan
+        move self to hMailMan
+        object oEML is a cCKemail
+            set phMailManObj to hMailMan
+            move self to hObj
+        end_object
+        send CreateComObject of hObj
+        if (isComObjectCreated(hObj)) begin
+            set ComCharset of hObj to (psCharSet(hMailMan))
+            set ComFrom    of hObj to (psSender(hMailMan))
+        end
+        else move 0 to hObj
+        function_return hObj
+    end_function
+    
+end_object

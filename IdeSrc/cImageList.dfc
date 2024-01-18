@@ -1,0 +1,15 @@
+//AB/ CLASSDEF
+Class cImageList is a AbstractNonVisualContainer
+    Set ClassCETV      To 33            // use TreeView Image #33 (1-based offset)
+    Set ObjectNameMask To "oImageList<count>"
+    Set ClassHelpName  To "cImageList"
+
+    Inherit
+    
+    Property No_Visible String Bitmap "cImageList.bmp"
+
+    Property No_Execute Color piBackColor clNone // Background color of images. If default (clNone), the images will be added transparently.
+    Property No_Execute Integer piMaxImages      // Maximum number of images that will be held in the imagelist.
+    Property No_Execute Integer piImageWidth 16  // Width, in pixels, of each image. Every image in an imagelist must be the same size.
+    Property No_Execute Integer piImageHeight 16 // Height, in pixels, of each image. Every image in an imagelist must be the same size.
+End_Class  // ImageList

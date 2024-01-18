@@ -1,0 +1,22 @@
+//AB/ CLASSDEF
+Class cComControl is an AbstractForm cComControl ABOCX_ClientMixin DefineABOCX_ClientMixin
+    Set ClassPackage To "FlexCom.pkg"
+    Set ClassHelpName To "cComControl"
+    Inherit
+    Property No_Generate No_Visible Complex Color
+    Property No_Generate No_Visible Complex TextColor
+    Property No_Generate No_Visible Mode    Form_Border
+    Property String PropertyFile // name of the OCX property file. This is used to load and save the ActiveX control's built in proeprties.
+    Set Floating_Menu_Id TO OCXControlFloater.obj
+End_Class
+
+Class cDbComControl is an AbstractdbForm cDbComControl ABdbOCX_ClientMixin DefineABdbOCX_ClientMixin
+    Set ClassPackage To "FlexCom.pkg"
+    Set ClassHelpName To "cDbComControl"
+    Inherit
+    Property No_Generate No_Visible Complex Color
+    Property No_Generate No_Visible Complex TextColor
+    Property No_Generate No_Visible Mode    Form_Border
+    Property String PropertyFile // Name of the OCX property file (OCP file). This is used to load and save the ActiveX control's built in proeprties.
+    Set Floating_Menu_Id TO OCXControlFloater.obj
+End_Class

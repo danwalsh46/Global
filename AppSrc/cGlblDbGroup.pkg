@@ -1,0 +1,31 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDbGroup
+//* Package Name: cGlblDbGroup.pkg
+//*
+//***************************************************************************
+
+Use DFAllEnt.pkg
+//Use Container_Exit_Mixin.Pkg
+
+Class cGlblDbGroup is a dbGroup
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+        Set Auto_Clear_DEO_state to FALSE
+
+//        Send EnableContainerExitAbility
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+//    Import_Class_Protocol cContainerExitControl
+
+End_Class

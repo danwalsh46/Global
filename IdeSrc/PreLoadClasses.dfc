@@ -1,0 +1,542 @@
+//AB/ CLASSDEF - these are loaded when the Studio starts up
+
+Class DataDictionary IS A BaseMetaType DataDictionary DataDictionaryMixin DefineDataDictionaryMixin
+    Set peClassLibrary To clCommon                  // this class belongs to all class libraries
+    Set ClassPackage   To "DataDict.pkg"
+    Property No_Visible No_Generate Integer Constrain_File
+    Property No_Visible No_Generate Integer DDO_Server
+End_Class
+
+Class AbstractProject is a BaseMetaType
+    Set Drop_Allowed     To (TD_DRAG_NONVISUAL + TD_DRAG_PANEL) // (TD_DRAG_CONTROL + TD_DRAG_FIELDS + TD_DRAG_CONTAINER_CONTROL)
+    Set Band_Allowed     To False
+    Set Control_Type     To ctProject
+    Set Floating_Menu_Id To ComponentFloater.obj
+
+    Property No_Generate Color Color 16763329         // Background Color
+    Property No_Visible Pseudo Complex Size  220 440  // Default Canvas Size
+
+    Property String  ProjectName      ""
+    Property String  ProjectFileName  ""
+    Property String  GenerateFileName ""
+    Property Boolean pbGenerateHeader True    // determines whether the //AB-Ignore block is generated before the first block of custom code.
+End_Class
+
+Class Application_Project is a AbstractProject Application_Project ApplicationProjectMixin DefineApplicationProjectMixin
+    Set Floating_Menu_Id To ProjectFloater.obj
+    Inherit
+End_Class
+
+Class MdiFrame_Project is a AbstractProject MdiFrame_Project MdiFrameProjectMixin DefineMdiFrameProjectMixin
+    Set Floating_Menu_Id To ProjectFloater.obj
+    Inherit
+    Property No_Execute No_Generate String  psToolbarPackage    // Name of package containing the program's toolbar
+    Property No_Execute No_Generate String  psStatusBarPackage  // Name of package containing the program's status bar.
+    Property No_Execute No_Generate String  psMenuPackage       // Name of package containing the program's menubar
+    Property No_Execute No_Generate Boolean pbMenuAutogen       // True if the Studio will generate a standard menubar with View and Report menus, False if you wish to define your own menu bar.
+    Property No_Execute No_Generate Integer View_mode
+End_Class
+
+Class WebApp_Project is a AbstractProject WebApp_Project WebAppProjectMixin DefineWebAppProjectMixin
+    Set Floating_Menu_Id To ProjectFloater.obj
+    Inherit
+End_Class
+
+Class Component_Project is a AbstractProject Component_Project ComponentProjectMixin DefineComponentProjectMixin
+    Set Floating_Menu_Id To EVCFloater.obj
+    Inherit
+    Property No_Generate Color Color clWindow  // Background Color
+    Property No_Execute  No_Generate Boolean pbDefineExtendedFields False    // if true then generated DDOs will Send DefineAllExtendedFields
+End_Class
+
+Class View_Project is a Component_Project
+    Set Floating_Menu_Id To ComponentFloater.obj
+    Inherit
+End_Class
+
+Class Lookup_Project is a Component_Project
+    Set Floating_Menu_Id To ComponentFloater.obj
+    Inherit
+End_Class
+
+Class Dialog_Project is a Component_Project
+    Set Floating_Menu_Id To ComponentFloater.obj
+    Inherit
+End_Class
+
+Class Report_Project is a Component_Project
+    Set Floating_Menu_Id To ComponentFloater.obj
+    Inherit
+    Property No_Generate Boolean pbDefineExtendedFields True  // if true then generated DDOs will Send DefineAllExtendedFields
+End_Class
+
+Class WebObject_Project is a Component_Project
+    Inherit
+    Property No_Generate Color Color 16763329 // Background Color
+    Property No_Generate Boolean pbDefineExtendedFields True  // if true then generated DDOs will Send DefineAllExtendedFields
+End_Class
+
+Class WebService_Project is a Component_Project
+    Inherit
+    Property No_Generate Color Color 16763329 // Background Color
+    Property No_Generate Boolean pbDefineExtendedFields True  // if true then generated DDOs will Send DefineAllExtendedFields
+End_Class
+
+
+Class BusinessProcess_Project is a Component_Project
+    Inherit
+    Property No_Generate Color Color 16763329 // Background Color
+    Property No_Generate Boolean pbDefineExtendedFields True  // if true then generated DDOs will Send DefineAllExtendedFields
+End_Class
+
+
+// *** OBSOLETE *** [JVh VDF 8.2]
+Class APP_Project is a AbstractProject APP_Project AppProjectCtrlMixin DefineAppProjectCtrlMixin
+    Set Floating_Menu_Id TO ProjectFloater.obj
+    Inherit
+    Property No_Visible No_Generate string psProject_Version
+    Property No_Visible No_Generate string psButtonBar_Pkg
+    Property No_Visible No_Generate string psStatusBar_pkg
+    Property No_Visible No_Generate string psMenu_pkg
+    Property No_Visible No_Generate No_execute Integer View_mode
+    Property No_Visible No_Generate string Component
+    Property No_Execute Anchor peAnchors anNone // When a container is resized, this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+End_Class
+
+Class AbstractContainer is a BaseMetaType
+    Set Drop_Allowed     To (TD_DRAG_CONTROL + TD_DRAG_FIELDS + TD_DRAG_CONTAINER_CONTROL + TD_DRAG_NONVISUAL)
+    Set Control_Type     To ctBaseContainer
+    Set Type_Of_Drag     To TD_DRAG_CONTROL
+    Set Floating_Menu_Id TO ControlFloater.obj
+
+    Property Always_Generate Complex Size    50 130 // Object Size (Complex: height, width)
+    Property Complex Location 0 0                   // Object Location (Complex: Row, Column)
+    Property Color Color clBtnFace                  // Background Color
+    Property Color TextColor clWindowText           // Text Color
+    Property String Bitmap                          // Bitmap resource name or file name (options: /T=transparent /3D=3D Display)
+    Property No_Execute Integer Help_Id             // Context Help ID
+    Property No_Execute Anchor peAnchors anNone     // When a container is resized, this determines how child objects are moved and resized. Objects can be anchored in any combination of left, right, top or bottom.
+End_Class
+
+
+Class AbstractNonVisualContainer is a AbstractContainer Container3d ClientControlMixin DefineClientControlMixin
+    Set Control_Type   To ctBaseContainer        // Disable DataBase tab page in Properties, allow object nesting
+    Set Drop_Allowed   To TD_DRAG_NONVISUAL      // Allow dropping of non_visual objects
+    Set Type_Of_Drag   To TD_DRAG_NONVISUAL      // This is a non_visual object
+    Set Size_Allowed   To True
+
+    Inherit
+    //don't show location
+    Property No_Visible Pseudo Complex Location 0 0
+    //don't show size
+    Property No_Visible Pseudo Complex Size 20 20
+    //show this bitmap on control
+    Property No_Visible             Integer Bitmap_Style Bitmap_Actual
+    Property No_Visible No_Generate Mode    Border_Style Border_Normal
+    Property No_Visible No_Generate Color   Color        clWhite
+End_Class
+
+
+Class AppClientArea is a AbstractContainer AbClientArea AbClientAreaMixin DefineAbClientAreaMixin
+    Set ObjectNameMask     To "Client_Area"
+    Set ClassHelpName      To "AppClientArea"
+    Set Floating_Menu_Id   TO ClientAreaFloater.obj
+    Set ClassCETV          To 36
+    Set Drop_allowed       to False
+    Set Move_Allowed       To False
+    Set Size_Allowed       To False
+    Set Cut_Allowed        To False
+    Set Delete_Allowed     To False
+    Set ClassPackage       To "DfAClnt.pkg"
+
+    // Inherit // Note no Inherit of properties
+    Property No_Visible No_Generate Mode Border_Style Border_ClientEdge
+    Property No_Visible No_Generate Complex Location 10 10
+    Property No_visible No_Generate Complex Size  50 100
+    Property No_Execute Integer Help_Id // Context Help ID
+    Property Color Color clAppWorkSpace // Select color for client area background
+End_Class
+
+Class AbstractdbContainer is an AbstractContainer
+    Set Control_Type     To ctDataContainer
+    Set Floating_Menu_Id To EntryFormFloater.obj
+    Inherit
+    Property No_Visible No_Generate Item String Data_Element ""
+    Property No_Visible No_Generate Integer Server
+    Property No_Execute Boolean Auto_Clear_DEO_State True // Clear DEOs after successful Save or Delete?
+    Property No_Execute Integer Help_Id // Help ID for context help
+End_Class
+
+Class dbContainer3d is a AbstractdbContainer dbContainer3d EntryDialogMixin DefineEntryDialogMixin
+    Set ObjectNameMask To "oDbContainer<count>"
+    Set ClassHelpName  To "dbContainer3d"
+    Set ClassCETV      To 13                // use TreeView Image #13 (1-based offset)
+    Set ClassPackage   To "dfClient.pkg"
+    Inherit
+    Property Mode Border_Style Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge  // Border Display style
+    Property Mode Bitmap_Style Bitmap_Actual Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center // Bitmap display mode. Display as-is, stretch to fill object, Tile, or Center.
+End_Class
+
+Class dbGroup Is A AbstractdbContainer dbGroup EntryGroupMixin DefineEntryGroupMixin
+    Set ObjectNameMask To "oDbGroup<count>"
+    Set ClassHelpName  To "dbGroup"
+    Set ClassCETV      To 3                // use TreeView Image #3 (1-based offset)
+    Set ClassPackage   To "dfClient.pkg"
+    Inherit
+    Property String Label // Text/Label for Group
+    Property Always_Generate Complex Size 40 80
+End_Class
+
+Class AbstractView is a BaseMetaType
+    Set Floating_Menu_Id To EVCFloater.obj
+    Set Drop_Allowed     To (TD_DRAG_CONTROL + TD_DRAG_FIELDS + TD_DRAG_CONTAINER_CONTROL + TD_DRAG_NONVISUAL)
+    Set Type_Of_Drag     To TD_DRAG_PANEL  // TD_DRAG_CONTROL
+    Set Delete_Allowed   To False
+
+    Property            Mode    Border_Style  Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style - Use "Border_Thick" to make view resizable via anchors.
+    Property            Boolean Caption_Bar   TRUE   // Show caption bar?
+    Property No_Execute Boolean Sysmenu_Icon  TRUE   // Show System Menu icon in caption bar?
+    Property            Boolean Minimize_Icon TRUE   // show minimize icon in caption bar?
+    Property            Boolean Maximize_Icon FALSE  // show maximize icon in caption bar?
+
+    Property No_Visible No_Generate            Integer Server
+    Property No_Visible No_Generate            String  Main_DD
+    Property No_Execute No_Generate No_Visible Anchor  peAnchors anNone
+
+    Property String                  Bitmap                 // Bitmap resource name or file name (options: /T=transparent /3D=3D Display)
+    Property Mode                    Bitmap_Style Bitmap_Actual Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center // Bitmap display mode. Display as-is, stretch to fill object, Tile, or Center.
+    Property Color                   Color        clBtnFace // Background Color
+    Property No_Execute Integer      Help_Id                // Context Help ID
+    Property String                  Icon                   // Icon resource name or file name.
+    Property String                  Label                  // Text to appear in the caption bar
+    Property No_Execute Mode         Locate_Mode  No_Locate No_Locate Smart_Locate Popup_Locate Center_On_Screen Center_On_Panel Center_On_Parent  // Provides for auto positioning panels in app. No_Locate: No auto-location is done, Popup_Locate: Panel locates itself relative to invoking object (&& item), Center_On_Screen: Panel appears in center of screen, Center_On_Panel: Panel is centered in current main program panel, Center_On_Parent: Panel appears in center of parent container, Smart_Locate: Panel tries to apply best locating strategy for current conditions.
+    Property Complex                 Location  0 0          // Object Location (Complex: Row, Column)
+
+    Property No_Execute Mode         peNeighborHood nhPublic nhPublic nhPrivate nhNo // If a Neighborhood (nhPublic), all objects within may address each other with short name. nhPrivate=no short access at all. nhNo=not Neighborhood, check parent (rarely used).
+    Property Always_Generate Complex Size      150 300      // Object Size (Complex: height, width)
+    Property No_Execute Complex      piMaxSize 0 0          // Maximum allowed size of panel (Complex: Height, Width) used with anchor resizing. 0,0=No restrictions. Set in Dialog Units (not GUI).
+    Property No_Execute Complex      piMinSize 0 0          // Minimum allowed size of panel (Complex: Height, Width) used with anchor resizing. 0,0=No restrictions. Set in Dialog Units (not GUI).
+    Property Color                   TextColor clWindowText // Text Color
+End_Class
+
+Class Panel is a AbstractView ABPanel PanelCtrlMixin DefinePanelCtrlMixin
+    Set ClassHelpName    To "Panel"
+    Set Floating_Menu_Id To PanelFloater.obj
+    Set Control_Type     To ctBaseContainer
+    Set Cut_Allowed      To False
+    Set ClassCETV        To 11                 // use TreeView Image #11
+    Set ClassPackage     To "dfPanel.pkg"
+    Inherit
+    Property Mode Border_Style Border_Thick Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style - Use "Border_Thick" to make view resizable via anchors.
+    Property No_Visible No_Generate String Bitmap
+    Property No_Visible No_Generate Color TextColor clWindowText
+    Property No_Visible No_Generate Mode Bitmap_Style Bitmap_Actual
+    Property            Boolean Maximize_Icon TRUE  // show maximize icon in caption bar?
+End_Class
+
+Class dbView is a AbstractView ABdbView EVCCtrlMixin DefineEVCCtrlMixin
+    Set ObjectNameMask To "oView<count>"
+    Set ClassHelpName  To "dbView"
+    Set ClassCETV      To 11                // use TreeView Image #11 (1-based offset)
+    Set ClassPackage   To "dfClient.pkg"
+    Inherit
+    Property Always_Generate Complex Location             6 6
+    Property No_Execute      Boolean Auto_Clear_DEO_State True  // Clear DEOs after successful Save or Delete?
+End_Class
+
+Class ReportView is a AbstractView ABdbView EVCCtrlMixin DefineEVCCtrlMixin
+    Set ObjectNameMask To "oReportView<count>"
+    Set ClassHelpName  To "ReportView"
+    Set ClassCETV      To 11                // use TreeView Image #11 (1-based offset)
+    Set ClassPackage   To "dfrptvw.pkg"
+    Inherit
+    Property Always_Generate Complex Location 6 6
+    Property No_Execute Mode   Output_Device_Mode Print_To_Printer Print_To_Printer Print_To_Window Print_To_File Print_To_Printer_No_Dialog // Directs the output of reports from embedded WinReport and CrystalReport objects; it has no use in objects containing other types of report objects.
+    Property No_Execute String Output_Device_Name // Directs the output of reports from embedded BasicReport objects; it has no use in objects containing other types of report objects.
+End_Class
+
+Class dbModalPanel is a AbstractView AbDialog SLCtrlMixin DefineSLCtrlMixin
+    Set ObjectNameMask To "oDbModalPanel<count>"
+    Set ClassHelpName  To "dbModalPanel"
+    Set ClassCETV      To 11                // use TreeView Image #11 (1-based offset)
+    Set ClassPackage   To "dfdbmdpn.pkg"
+    Inherit
+    Property Always_Generate Complex Size 100 200
+    Property Mode Border_Style  Border_Thick Border_None Border_Normal Border_Dialog Border_ClientEdge Border_Thick Border_WindowEdge Border_StaticEdge // Border Display style - Use "Border_Thick" to make view resizable via anchors.
+End_Class
+
+Class ModalPanel is a AbstractView AbDialog SLCtrlMixin DefineSLCtrlMixin
+    Set ObjectNameMask To "oModalPanel<count>"
+    Set ClassHelpName  To "ModalPanel"
+    Set ClassCETV      To 11                // use TreeView Image #11 (1-based offset)
+    Inherit
+    Property Always_Generate Complex Size 100 200
+End_Class
+
+Class AbstractTabDialog is a BaseMetaType
+    Set Type_Of_Drag To TD_DRAG_CONTAINER_CONTROL
+
+    Property Always_Generate Complex Size     90 180 // Object Size (Complex: height, width)
+    Property                 Complex Location 0  0   // Object Location (Complex: Row, Column)
+    Property No_visible No_Generate Integer TabPageNumber
+    Property No_visible No_Generate String TabLabel   // Button label for current page. This is a pseudo-property. The real property is "Label" within tab page (click-on body of page).
+    Property No_visible No_Generate String TabToolTip // Tooltip text for current page. This is a pseudo-property. The real property is "Tab_ToolTip_Value" within tab page (click-on body of page).
+    Property            Boolean MultiLine_State False // False=show all the tabs in one line across the top of the control (w/ spin control it too many tabs). True=wrap the tabs across multiple lines.
+    Property No_Visible Boolean Buttons_State   False
+    Property Mode TabWidth_Mode twRaggedRight twRaggedRight twRightJustify twFixedWidth // Specifies how tab button's width is determined.
+    Property Mode Rotate_Mode RM_None RM_None RM_Ring RM_Rotate_in_Ring RM_Rotate // Governs keyboard navigation when the Next key is pressed in the last object in a tab page.
+    Property No_Execute Integer Default_tab 0 // This determines what tab page will be displayed as a default. This default tab page is displayed when the messages Top_of_panel or Request_tab_display (with no parameter) are sent. -1=no default
+    Property No_Execute Integer Help_Id  // Context Help ID
+
+    Property Mode peTabPosition tpTop tpTop tpBottom                  // The position of the tabs can be on the top or the bottom of the tab-dialog.
+    Property Mode peTabStyle    tsTabs tsTabs tsButtons tsFlatButtons // The tabs can be displayed as regular tabs, buttons or flat buttons.
+
+    Property Boolean pbHotTrack True // To enable hot-tracking on the labels of the tab-pages, set this property to True. Hot-tracking only operates if the peTabStyle property is set to tsTabs.
+    Property Boolean pbFlatSeparators False // If the tab-dialog has its peTabStyle property set to tsFlatButtons, 3D-separators can be drawn between the buttons. Set this property to True to draw the separators and False to remove them.
+    Property NO_EXECUTE Integer phoImageList // To permit images to be displayed on tab-pages, you need to assign an imagelist in the tab-dialog. Set this property to the object-handle of a cImageList instance.
+    Property No_Execute Anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+    Property No_Execute Boolean pbResetPageOnActivate False // When activating, which includes forward navigation into tab dialog, should we reset the page to the default_tab.
+    Property No_Execute Mode Skip_Button_Mode SBM_SMART SBM_ALWAYS SBM_NEVER SBM_SMART // When keyboard (not mouse) navigation into and through tab pages should the tab button be skipped (not take the focus)? SBM_SMART=do what windows does.
+    Property No_Execute Boolean Pointer_only_state False // If you click on a tab button should it take the button focus (true) or the page the focus (false)
+    Property No_execute Boolean pbResetPageOnActivate False // if true, sending activate to tab-dialog will cause Default_tab page to activate. Can be used with forward keyboard navigation.
+End_Class
+
+Class dbTabDialog is a AbstractTabDialog ABTabDialog ABdbTabDialog_Mixin Define_ABdbTabDialog_Mixin
+    Set Control_Type     To ctDataContainer
+    Set Floating_Menu_Id To TabFloater.obj
+    Set TabPageClassName To "dbTabPage"
+    Set ObjectNameMask   To "oDbTabDialog<count>"
+    Set ClassHelpName    To "dbTabDialog"
+    Set ClassCETV        To 13                // use TreeView Image #13 (1-based offset)
+    Set ClassPackage     To "dfTabDlg.pkg"
+    Inherit
+    Property No_Visible No_Generate Item String Data_Element ""
+    Property No_Visible No_Generate Integer Server
+    Property No_execute Boolean Auto_Clear_DEO_state True // Clear DEOs after successful Save or Delete?
+End_Class
+
+Class AbstractTabPage is a BaseMetaType
+    Set Drop_Allowed To (TD_DRAG_CONTROL + TD_DRAG_FIELDS + TD_DRAG_CONTAINER_CONTROL + TD_DRAG_NONVISUAL)
+    Set Band_Allowed to True
+    Set Move_Allowed To False
+    Set Size_Allowed To False
+    Set ClassCETV    To 18                // use TreeView Image #24 (1-based offset)
+    Property String Label // Text/Label for Tab page
+    Property String Tab_ToolTip_Value // Tooltip text for tab page
+    Property No_Visible No_Generate Complex Size 0 0
+    Property No_Visible No_Generate Complex Location 0 0
+    Property String Bitmap // Bitmap resource name or file name (options: /T=transparent /3D=3D Display)
+    Property Color Color clBtnFace // Background Color
+    Property Color TextColor clWindowText // Text Color
+    Property Boolean pbHighlightTab False // Should tab be visually highlighted when selected?
+    Property Integer piImageIndex 0 // The index of the image from the tab-dialog's imagelist. Before images can be displayed, the phoImageList property of the tab-dialog must be set the object-handle of a cImageList-derived object.
+    Property NO_EXECUTE Integer Help_Id  // Context Help ID
+End_Class
+
+
+Class dbTabPage is a AbstractTabPage ABTabPage ABdbTabPage_Mixin Define_ABdbTabPage_Mixin
+    Set Control_Type     To ctDataContainer
+    Set Floating_Menu_Id To TabFloater.obj
+    Set ObjectNameMask   To "oDbTabPage<count>"
+    Set ClassHelpName    To "dbTabPage"
+    Set ClassPackage     To "dfTabDlg.pkg"
+    Inherit
+    Property No_Visible No_Generate Integer Server 0
+End_Class
+
+Class AbstractControl is a BaseMetaType
+    Set Type_Of_Drag     To TD_DRAG_CONTROL
+    Set Control_Type     To ctBASE
+    Set Floating_Menu_Id To ControlFloater.obj
+
+    Property String Label // Text/Label associated with this Control
+    Property Always_Generate Complex Size     13 85  // Object Size (Complex: height, width)
+    Property                 Complex Location 0  0   // Object Location (Complex: Row, Column)
+    Property String Status_Help // Help text that appears in status window when this control has the focus
+    Property Color Color clWindow  // Background Color
+    Property Color TextColor clWindowText // Text Color
+    Property No_Execute Integer Help_Id  // Context Help ID
+    Property No_Execute Anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+End_Class
+
+Class AbstractForm is a AbstractControl
+    Set Item_Based_Object To FALSE
+    Set Floating_Menu_Id  To ControlFloater.obj
+    Inherit
+    Property Item Mode Form_Border Border_ClientEdge Border_None Border_Normal Border_Dialog Border_ClientEdge // Visual Border Style for object.
+    Property Integer Label_Row_Offset // Row offset for Label. Result depends on Label_Justification_Mode
+    Property Integer Label_Col_Offset 60 // Column offset for Label. Value depends on Label_Justification_Mode
+    Property Mode Label_Justification_Mode jMode_Left jMode_Left jMode_Right jMode_Top // Mode determines where label's row and column values are offset
+    Property No_Execute Mode Form_DataType Ascii_window Mask_window mask_numeric_window mask_date_window mask_currency_window ascii_window date_window 0 1 2 3 4 5 6 7 8 // Control's datatype. If numeric, select number of digits to right of decimal
+End_Class
+
+Class AbstractdbData is a AbstractControl
+    Set Item_Based_Object To True
+    Set Entry_Item_Object To True
+    Set Floating_Menu_Id  To EntryFormFloater.obj
+    Set Control_Type      To ctDataAware
+    Inherit
+    Property No_Visible No_Generate Item String Data_Element ""
+    //Property No_Visible No_Generate Integer ServerFile 0
+    Property No_Visible No_Generate Integer Server
+End_Class
+
+Class AbstractdbForm is a AbstractdbData
+    Inherit
+    Property Item Mode Form_Border Border_ClientEdge Border_None Border_Normal Border_Dialog Border_ClientEdge // Visual Border Style for object.
+    Property Integer Label_Row_Offset // Row offset for Label. Result depends on Label_Justification_Mode
+    Property Integer Label_Col_Offset 60 // Column offset for Label. Value depends on Label_Justification_Mode
+    Property Mode Label_Justification_Mode jMode_Left jMode_Left jMode_Right jMode_Top // Mode determines where label's row and column values are offset
+End_Class
+
+Class dbSpinForm IS A AbstractdbForm abdbSpinForm SpinEntryFormMixin DefineSpinEntryFormMixin
+    Set ObjectNameMask          To "oDbSpinForm<count>"
+    Set ObjectNameMaskDataAware To "o<file>_<field>"
+    Set ClassHelpName           To "dbSpinForm"
+    Set ClassCETV               To 14                // use TreeView Image #14 (1-based offset)
+    Set ClassPackage            To "dfSpnEnt.pkg"
+
+    Inherit
+    //Property Integer Current_Position 0
+    Property Integer Maximum_Position 32767  // Maximum Spin Value allowed
+    Property Integer Minimum_Position -32767 // Mimumum Spin Value allowed
+    Property Boolean Wrap_State FALSE // Should spinner "wrap" when at maximum or minimum value?
+End_Class
+
+Class dbComboForm Is A AbstractdbForm abdbComboForm ComboEntryMixin DefineComboEntryMixin
+    Set ObjectNameMask          To "oDbComboForm<count>"
+    Set ObjectNameMaskDataAware To "o<file>_<field>"
+    Set ClassHelpName           To "dbComboForm"
+    Set ClassCETV               To 15                // use TreeView Image #15 (1-based offset)
+    Set ClassPackage            To "dfCEntry.pkg"
+    Inherit
+    Property Item Boolean Entry_State True // Does the Combo Form allow text entry into the main form?
+    Property No_Execute Boolean Combo_Sort_State True // Should the combo-list's items be sorted?
+    Property No_execute Mode Undefined_Save_Mode cb_err_update_blank_value cb_err_update_blank_value cb_err_update_none cb_err_update_window_value // If Form data does not match, validation data, what should be saved?
+    Property No_execute Mode Undefined_Display_Mode cb_err_update_window_value cb_err_update_blank_value cb_err_update_none cb_err_update_window_value // if DDO data does not match combo any data what is displayed?
+    Property No_execute Mode Code_Display_Mode cb_code_display_description cb_code_display_description cb_code_display_code cb_code_display_both // if a code validation list, display code, description or both?
+    Property No_Visible Mode Form_Border Border_ClientEdge Border_ClientEdge
+    Property Integer ListRowCount 0 // How many drop-down rows are required (0 = use size to determine number of rows)
+    Property Integer ListWidth    0 // Width of dropped-down list (0=default width of edit)
+End_Class
+
+Class dbForm is a AbstractdbForm ABdbForm EntryFormMixin DefineEntryFormMixin
+    Set ObjectNameMask          To "oDbForm<count>"
+    Set ObjectNameMaskDataAware To "o<file>_<field>"
+    Set ClassHelpName           To "dbForm"
+    Set ClassCETV               To 6                 // use TreeView Image #6 (1-based offset)
+    Set ClassPackage            To "dfEntry.pkg"
+    Inherit
+    Property Mode Prompt_Button_Mode  pb_PromptAuto pb_PromptOff pb_PromptOn pb_PromptAuto // Should prompt button appear? Auto=Create prompt if prompt_object exists. Off=No Prompt. On=Create Prompt.
+End_Class
+
+Class dbCheckBox IS A AbstractdbData ABdbCheckBox EntryCheckBoxMixin DefineEntryCheckBoxMixin
+    Set ObjectNameMask          To "oDbCheckbox<count>"
+    Set ObjectNameMaskDataAware To "o<file>_<field>"
+    Set ClassHelpName           To "dbCheckBox"
+    Set ClassCETV               To 1                 // use TreeView Image #1 (1-based offset)
+    Set ClassPackage            To "dfEnChk.pkg"
+    Inherit
+    Property No_Visible No_Generate Integer EntryOptions 0
+    Property String Bitmap  // Bitmap resource name or file name (options: /T=transparent /3D=3D Display)
+    Property Color Color clBtnFace
+    Property Always_Generate Complex Size 10 50
+    Property Mode AlignmentMode taRightJustify taLeftJustify taRightJustify // Should text appear to the left or right of the checkbox?
+End_Class
+
+Class dbEdit IS A AbstractdbData dbEdit EditControlMixin DefineEditControlMixin
+    Set Item_Based_Object       To False
+    Set Drop_Allowed            To False
+    Set Floating_Menu_Id        To dbEditFloater.obj
+    Set ObjectNameMask          To "oDbEdit<count>"
+    Set ObjectNameMaskDataAware To "o<file>_<field>"
+    Set ClassHelpName           To "dbEdit"
+    Set ClassCETV               To 10                 // use TreeView Image #10 (1-based offset)
+    Set ClassPackage            To "dfTxtWin.pkg"
+
+    Inherit
+
+    Property Integer Label_Row_Offset 1 // Row offset for Label. Result depends on Label_Justification_Mode
+    Property Integer Label_Col_Offset 0 // Column offset for Label. Value depends on Label_Justification_Mode
+    Property Mode Label_Justification_Mode jMode_Top jMode_Left jMode_Right jMode_Top // Mode determines where label's row and column values are offset
+    Property Always_Generate Complex Size 60 120
+    Property No_Execute Boolean Read_Only_State False  // If true, the contents of the edit buffer are protected.
+    Property No_Execute Boolean Wrap_State      True   // If true, text input will break and wrap to the next line at the end of the object. Otherwise input continues onward on the same line until a carriage return/linefeed is input.
+End_Class
+
+Class AbstractdbGrid IS A AbstractControl
+    Set Control_Type      To ctDataAware
+    Set Drop_Allowed      To TD_DRAG_FIELDS
+    Set Floating_Menu_Id  To TableFloater.Obj
+    Set Item_Based_Object To True
+    Set Row_Based_Object  To True
+    Set Entry_Item_Object To True
+    Set ClassCETV         To 8                        // use TreeView Image #8 (1-based offset)
+
+    // NOTE: No Inherit from AbstractControl
+
+    Property No_Visible No_Generate Integer Server
+    Property No_Visible No_Generate Integer Row_Main_File 0
+    Property No_Visible No_Generate Item Integer Form_width
+    Property No_Visible No_Generate Item Integer Header_Label
+    Property No_Visible No_Generate Item Integer Column_Checkbox_state
+    Property No_Visible No_Generate Integer Main_file
+
+    Property Integer Ordering -1  // Index to use for sort. Sort order can also be determined by ordering in DDO?
+    Property Complex Size 70 100  // Object Size (Complex: height, width)
+    Property Complex Location 0 0 // Object Location (Complex: Row, Column)
+    Property Color Color clWindow // Background Color
+    Property Color TextColor clWindowText   // Text Color
+    Property Color CurrentRowColor clWindow // Current highlighted row background Color
+    Property Color CurrentRowTextColor  clWindowText // Current highlighted row Text Color
+    Property Color CurrentCellColor     clWindow     // Current cell background color
+    Property Color CurrentCellTextColor clWindowText // Current cell text color
+    Property Mode GridLine_Mode  Grid_Visible_Both Grid_Visible_None Grid_Visible_Horz Grid_Visible_Vert Grid_Visible_Both // Should grid lines appear: NONE=No, HORZ=Horizontal Lines, VERT=Veritical Lines , BOTH=Horizontal and Vertical lines
+    Property            Color   peGridLineColor     clBtnface // Color for grid lines (see GridLine_Mode for display modes)
+    Property No_Execute Color   peDisabledColor     clWindow  // Background color for all disabled cells. Only used if pbUseDisabledColor is true (else Color property is used).
+    Property            Color   peDisabledTextColor clDkGray  // Text color for all disabled cells.
+    Property No_execute Boolean pbUseDisabledColor  False     // Determines if the background color of disabled cells is set by peDisabledColor (TRUE) or by Color (FALSE). Note peDisabledColor always sets disabled text.
+    Property No_execute Boolean Resize_Column_state True      // Allow column resizing at runtime?
+    Property No_execute Boolean Highlight_Row_state True      // Display current row in highlight colors?
+    Property No_Execute Integer Help_Id          // Context Help ID
+    Property No_execute anchor  peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+    Property Boolean Autosize_height_state False // When true, the grid's pixel height will be adjusted to exactly fit the number of rows in the display area. This avoids the display of partial rows. Important: Set false when using anchors!
+    Property no_execute Mode peResizeColumn rcLastColumn rcNone rcAll rcLastColumn rcSelectedColumn // When grid is resized (via anchors), this determines how columns are resized. If set to "rcSelectedColumn", the property set in piResizeColumn is used.
+    Property no_execute Integer piResizeColumn 0 // Determines which column is sized when grid width is changed. This is only used if peResizeColumn is set to "rcSelectedColumn".
+    Property no_execute Boolean pbHeaderTogglesDirection False // If set true, clicking on the header of an indexed column will toggle pbReverseOrdering causing the column order to reverse. Does not work with batch_state=True
+    Property no_execute Boolean pbReverseOrdering False // If set true, the list will be displayed in reverse order. This only works with non-batch lists.
+End_Class
+
+Class dbGrid IS A AbstractdbGrid ABTable RowMixin DefineRowMixin
+    Set ObjectNameMask          To "oDbGrid<count>"
+    Set ObjectNameMaskDataAware To "o<file>_Grid"
+    Set ClassHelpName           To "dbGrid"
+    Set ClassPackage            To "dfTable.pkg"
+    Inherit
+    Property Always_Generate Boolean Wrap_State True // When in last column should Tab/Enter navigate to next row in grid (True) or next object (False)?
+    Property Always_Generate Complex Size 70 150
+    Property no_execute Boolean pbEmbeddedPrompts False // If true, prompt buttons are displayed in cells that have prompt_objects associated with them.
+    Property no_execute string psEmbeddedButtonValue "..." // Text to appear within embedded prompt buttons (if pbEmbeddedPrompts is true).
+    Property no_execute Mode Prompt_Button_Mode pb_PromptAuto pb_PromptOff pb_PromptOn pb_PromptAuto // Should Headers by used as automatic prompt buttons. Note: Embedded Prompt buttons are enabled with pbEmbeddedPrompts.
+    Property no_execute String Prompt_Button_Value '>>' // Text appended to headers to indicate prompts are available. Header prompts are enabled with Promtp_Button_mode.
+End_Class
+
+Class dbList Is a AbstractdbGrid ABSelection_List RowMixin DefineRowMixin
+    Set ObjectNameMask To "oDbList<count>"
+    Set ClassHelpName  To "dbList"
+    Set ClassCETV      To 9               // use TreeView Image #9 (1-based offset)
+    Set ClassPackage   To "dfSelLst.pkg"
+    Inherit
+    Property Boolean Auto_Server_State False // Use the server (DDOs and constraints) from the invoking object?
+    Property Boolean Auto_Index_State True // Automatically order the grid index based on index field of current column? When the column changes, the order changes.
+    Property Boolean Auto_Column_State True // When the list is invoked, attempt to start in "best" column based on file/field value of invoking object
+    Property No_Execute Boolean Move_Value_Out_State True // Upon selection, return selected value (or record) to invoking object?
+    Property Always_Generate Complex Size 70 140
+    Property No_Execute Boolean ScrollOnThumbTrackState True // Should scroll occur when the thumb is dragged? When false, it scrolls when the thumb is released. Only set it to false if the scroll takes a long time.
+    Property No_Execute Boolean ThumbScrollState True // Should thumb be sized proportionally to the scroll area? True=Proportional Scroll (normal windows), False=Scroll one line at a time.
+    Property No_Execute Boolean Batch_state False // Should list a "batch list" where the entire table is loaded first? If false, list is virutal (always refreshed from disk).
+    Property No_Execute Boolean Static_state False // If a batch list, should list be loaded just once (True) or each time the list is invoked (False)?
+    Property Mode  GridLine_Mode    Grid_Visible_Vert Grid_Visible_None Grid_Visible_Horz Grid_Visible_Vert Grid_Visible_Both // Should grid lines appear: NONE=No, HORZ=Horizontal Lines, VERT=Veritical Lines , BOTH=Horizontal and Vertical lines
+    Property Color CurrentCellColor clAqua
+    Property Color CurrentRowColor  clAqua
+End_Class

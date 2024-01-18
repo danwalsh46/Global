@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbCheckBox is a dbCheckBox
+    Set ClassPackage To "cGlblDbCheckBox.pkg"
+    Inherit
+End_Class

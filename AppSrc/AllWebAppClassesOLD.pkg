@@ -1,0 +1,41 @@
+//****************************************************************************//
+//                                                                            //
+// $File name  : AllWebClasses.pkg                                            //
+// $Author     : John Tuohy                                                   //
+//                                                                            //
+// Confidential Trade Secret.                                                 //
+// Copyright 1999 Data Access Corporation, Miami FL, USA                      //
+// All Rights reserved                                                        //
+// DataFlex is a registered trademark of Data Access Corporation.             //
+//                                                                            //
+// $Rev History                                                               //
+//   8/12/99 jjt - created                                                    //
+//                                                                            //
+// Note: This package can be precompiled by starting the compiler and         //
+//       selecting the pre-compile option. This will speed up all other       //
+//       compiles. However, if any changes are made in any of the files used  //
+//       in the precompile, you must remember to pre-compile again.           //
+//****************************************************************************//
+
+Use UI
+
+use WebAppBase.pkg          // standard windows classes
+use WebAppError.pkg         // WebApp error handler. Will create object and set error_object_id
+
+use set.pkg                 // set class
+Use DataDict.pkg            // DataDictionary class
+use gFormatNumbers.pkg      // some global functions for formatting numerics and currency
+Use HelpSystemConstants.pkg // constants used by help system (not used byt needed by cApplication)
+Use cApplication.pkg        // cApplication class
+Use cWebBusinessProcess.pkg
+Use cWebApp.pkg
+Use cWebReport.pkg
+
+use Flexml.pkg // this adds XML class support to server classes
+
+//  Set date attributes as needed. These are the setting you want if your database is
+//  properly Y2K ready. If using old data, you will need to change these within your program
+Set_Date_Attribute sysdate4_State to true
+Set_Date_Attribute Date4_State    to true
+Set_Date_Attribute epoch_value    to 30
+

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+Class cBitmapButton Is a button 
+    Set ClassPackage to bitbtn.pkg
+    Inherit
+    Property No_Execute Boolean pbAutoSize TRUE 
+End_Class

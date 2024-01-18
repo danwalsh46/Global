@@ -1,0 +1,41 @@
+//***************************************************************************
+//*
+//* Class:        cGlblPanel
+//* Package Name: cGlblPanel.pkg
+//*
+//***************************************************************************
+
+Use Dfpanel.pkg
+
+Class cGlblPanel is a Panel
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+        property boolean pbRequiredRecordCheck FALSE
+
+        // the base label property is concatenated with program
+        // supplied text to create a dynamic panel label
+        // in PPMS, the company name
+        property string  psBaseLabel ""
+
+        // Create child objects
+
+        // Set property values:
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+    Procedure Notify_Application_Activation Boolean bActivating
+        // overriding this procedure fixes the focus
+        // problem with VPE preview windows
+        If (pbRequiredRecordCheck(Self)) Begin
+            Procedure_Return
+        End
+        forward send Notify_Application_Activation bActivating
+    End_Procedure
+
+End_Class

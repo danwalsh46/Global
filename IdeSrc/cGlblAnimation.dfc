@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblAnimation is a cAnimation
+    Set ClassPackage To "cGlblAnimation.pkg"
+    Inherit
+End_Class

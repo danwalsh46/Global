@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblBusinessProcess is a BusinessProcess
+    Set ClassPackage To "cGlblBusinessProcess.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,76 @@
+//**********************************************************************************[v4]***
+// Copyright (c) 2006 Threshold Software
+// All rights reserved.
+//
+// DO NOT DISTRIBUTE THIS FILE OR ANY PART OF IT !
+//
+// $FileName    : cVDFD_RegisterPropertyHandle_Mixin.pkg
+// $ProjectName : VDFD Framework
+// $Authors     : Todd Forsberg
+// $Created     : 06.24.2006  16:41          
+//
+// Contents:
+//
+//
+// Properties:
+//
+//     
+// Methods:     
+//      
+//     
+// Required Files:
+//  
+//
+//*****************************************************************************************
+Use VdfBase.pkg
+
+{ ClassType=Mixin }
+Class cVDFD_RegisterPropertyHandle_Mixin is a Mixin
+
+    // Construct_Mixin: Mixin constructor.
+    Procedure Define_VDFD_RegisterPropertyHandle_Mixin
+        //Insert your Properties here.
+        
+        { Visibility=Private }
+        Property Handle Private_phmRegisterPropertyHandle
+        
+        // Create child objects
+        
+        // Set property values:
+        //VDFD_Showln "Define_VDFD_RegisterPropertyHandle_Mixin for: " (Name(Self))
+    End_Procedure
+
+    // Finish mixin construction
+    //Procedure End_Define_VDFD_RegisterPropertyHandle_Mixin
+    //  Forward Send End_Construct_Object
+    //End_Procedure
+  
+    Procedure Destroy_Object
+        //VDFD_Showln "Destroy_Object: " Self "  " (Name(Self))
+        Handle hProp
+        Get Private_phmRegisterPropertyHandle to hProp
+        If hProp Delegate Set hProp to 0
+        Forward Send Destroy_Object
+    End_Procedure
+  
+    Procedure Destroy
+        //VDFD_Showln "Destroy: " Self "  " (Name(Self))
+        Handle hProp
+        Get Private_phmRegisterPropertyHandle to hProp
+        If hProp Delegate Set hProp to 0
+        Forward Send Destroy
+    End_Procedure
+  
+    Procedure Set phmRegisterPropertyHandle Handle hProp
+        Handle hSelf
+        Set Private_phmRegisterPropertyHandle to hProp
+        If hProp Begin
+            Move Self to hSelf
+            Delegate Set hProp to hSelf
+        End
+    End_Procedure
+
+End_Class
+
+// End of File: cVDFD_RegisterPropertyHandle_Mixin.pkg
+

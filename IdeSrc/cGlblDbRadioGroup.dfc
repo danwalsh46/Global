@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbRadioGroup is a dbRadioGroup
+    Set ClassPackage To "cGlblDbRadioGroup.pkg"
+    Inherit
+End_Class

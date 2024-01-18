@@ -1,0 +1,218 @@
+// The vdbListModalPanel is basically just the normal dbModalPanel class with an extra
+// toolbar object added to the top of the modalpanel.
+// It is provided here as an example about how to add exra mouse navigation (a selectionlist
+// is modal, so the normal toolbar is disabled.)
+
+// **MVD
+//Use cSize_Mx       // resizing mixin as described in book "Mastering Visual Dataflex"
+                     // Uncomment all the MVD comments if you want to use it.
+
+Use vLocalToolbar.pkg
+
+Class vListLocalImageList is a cImageList
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set piMaxImages To 6
+    End_Procedure
+    Procedure OnCreate
+        Integer iVoid
+        Get AddTransparentImage "bgn.bmp"      clLtGray  To iVoid // 0
+        Get AddTransparentImage "FPrev.bmp"    clLtGray  To iVoid // 1
+        Get AddTransparentImage "prev.bmp"     clLtGray  To iVoid // 2
+        Get AddTransparentImage "next.bmp"     clLtGray  To iVoid // 3
+        Get AddTransparentImage "FNext.bmp"    clLtGray  To iVoid // 4
+        Get AddTransparentImage "end.bmp"      clLtGray  To iVoid // 5
+    End_Procedure
+//    Procedure Notify_Focus_Change Integer iFocus
+//        Handle hWindow hVoid
+//        Get Window_Handle To hWindow
+//        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+//        Forward Send Notify_Focus_Change iFocus
+//    End_Procedure // Notify_Focus_Change
+End_Class
+
+Class vListLocalFirstButton is a cToolbarButton
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psTooltip To "Beginning of file"
+        Set psStatusHelp To "Find the First record (Ctrl+Home)"
+        Set piImage To 0
+    End_Procedure
+    Procedure OnClick
+        Send DoSendToDeoFocus msg_Beginning_Of_Data
+    End_Procedure
+//    Procedure Notify_Focus_Change Integer iFocus
+//        Handle hWindow hVoid
+//        Get Window_Handle To hWindow
+//        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+//        Forward Send Notify_Focus_Change iFocus
+//    End_Procedure // Notify_Focus_Change
+End_Class
+
+Class vListLocalPageUpButton is a cToolbarButton
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psTooltip To 'Page Up'
+        Set psStatusHelp To 'Find the previous page (Page Up)'
+        Set piImage To 1
+    End_Procedure
+    Procedure OnClick
+        Integer iFocus
+        Get Focus of Desktop to iFocus
+        Send Key of iFocus kScroll_Back
+    End_Procedure
+//    Procedure Notify_Focus_Change Integer iFocus
+//        Handle hWindow hVoid
+//        Get Window_Handle To hWindow
+//        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+//        Forward Send Notify_Focus_Change iFocus
+//    End_Procedure // Notify_Focus_Change
+End_Class
+
+Class vListLocalPreviousButton is a cToolbarButton
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psTooltip To 'Find Previous'
+        Set psStatusHelp To 'Find the Previous record (F7)'
+        Set piImage To 2
+    End_Procedure
+    Procedure OnClick
+        Send DoSendToDeoFocus msg_up_row
+    End_Procedure
+//    Procedure Notify_Focus_Change Integer iFocus
+//        Handle hWindow hVoid
+//        Get Window_Handle To hWindow
+//        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+//        Forward Send Notify_Focus_Change iFocus
+//    End_Procedure // Notify_Focus_Change
+End_Class
+
+Class vListLocalNextButton is a cToolbarButton
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psTooltip To 'Find Next'
+        Set psStatusHelp To 'Find the Next record (F8)'
+        Set piImage To 3
+    End_Procedure
+    Procedure OnClick
+        Send DoSendToDeoFocus msg_Down_Row
+    End_Procedure
+//    Procedure Notify_Focus_Change Integer iFocus
+//        Handle hWindow hVoid
+//        Get Window_Handle To hWindow
+//        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+//        Forward Send Notify_Focus_Change iFocus
+//    End_Procedure // Notify_Focus_Change
+End_Class
+
+Class vListLocalPageDownButton is a cToolbarButton
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psTooltip To "Page Down"
+        Set psStatusHelp To 'Find the next page (Page Down)'
+        Set piImage To 4
+    End_Procedure
+    Procedure OnClick
+        Integer iFocus
+        Get Focus of Desktop to iFocus
+        Send Key of iFocus kScroll_Forward
+    End_Procedure
+//    Procedure Notify_Focus_Change Integer iFocus
+//        Handle hWindow hVoid
+//        Get Window_Handle To hWindow
+//        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+//        Forward Send Notify_Focus_Change iFocus
+//    End_Procedure // Notify_Focus_Change
+End_Class
+
+Class vListLocalLastButton is a cToolbarButton
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psTooltip To 'End of File'
+        Set psStatusHelp To 'Find the Last record (Ctrl+End)'
+        Set piImage To 5
+    End_Procedure
+    Procedure OnClick
+        Send DoSendToDeoFocus msg_End_Of_Data
+    End_Procedure
+//    Procedure Notify_Focus_Change Integer iFocus
+//        Handle hWindow hVoid
+//        Get Window_Handle To hWindow
+//        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+//        Forward Send Notify_Focus_Change iFocus
+//    End_Procedure // Notify_Focus_Change
+End_Class
+
+Class vListLocalToolBar is a vLocalToolBar
+
+    Procedure Construct_Object //Integer iImage
+        Forward Send Construct_Object //iImage
+
+        Object oImages is a vListLocalImageList
+        End_Object
+
+        Set phoImageList To (oImages(self))
+
+        Object oFirst is a vListLocalFirstButton
+        End_Object
+
+        Object oPageUp is a vListLocalPageUpButton
+        End_Object
+
+        Object oPrevious is a vListLocalPreviousButton
+        End_Object
+
+        Object oNext is a vListLocalNextButton
+        End_Object
+
+        Object oPageDown is a vListLocalPageDownButton
+        End_Object
+
+        Object oLast is a vListLocalLastButton
+        End_Object
+
+        set pbInMdiPanel to FALSE
+
+    End_Procedure // Construct_Object
+
+    Procedure Notify_Focus_Change Integer iFocus
+        Handle hWindow hVoid
+        Get Window_Handle To hWindow
+        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+        Forward Send Notify_Focus_Change iFocus
+    End_Procedure // Notify_Focus_Change
+
+End_Class // vListLocalToolBar
+
+
+
+Class vdbListModalPanel is a dbModalPanel
+
+    Procedure Construct_Object Integer iImage
+        Forward send Construct_Object iImage
+        // Local button bar
+        Object SelectionList_ToolBar is a vListLocalToolBar
+        End_Object // SelectionList_ToolBar
+    End_Procedure
+
+    Procedure Add_Focus Integer iBase_Object Returns Integer
+        Integer iRetVal
+        Forward Get MSG_Add_Focus iBase_Object to iRetVal
+        If (NOT(iRetVal)) begin
+            // Add the localtoolbar to the modalpanel
+            Set Focus_Mode of SelectionList_ToolBar to Focusable
+            Send Add_Focus of SelectionList_ToolBar self
+            Set Focus_Mode of SelectionList_ToolBar to NonFocusable
+            Set Location   of SelectionList_ToolBar To 0 0
+        end
+        Procedure_Return iRetVal
+    End_Procedure // Activate
+
+    Procedure Notify_Focus_Change Integer iFocus
+        Handle hWindow hVoid
+        Get Window_Handle To hWindow
+        If hWindow Move (InvalidateRect(hWindow,0,True)) To hVoid
+        Forward Send Notify_Focus_Change iFocus
+    End_Procedure // Notify_Focus_Change
+
+End_Class // vdbListModalpanel

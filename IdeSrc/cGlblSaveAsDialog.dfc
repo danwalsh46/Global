@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblSaveAsDialog is a SaveAsDialog
+    Set ClassPackage To "cGlblSaveAsDialog.pkg"
+    Inherit
+End_Class

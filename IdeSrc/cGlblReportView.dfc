@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblReportView is a ReportView
+    Set ClassPackage To "cGlblReportView.pkg"
+    Inherit
+End_Class

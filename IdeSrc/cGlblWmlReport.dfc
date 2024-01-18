@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblWmlReport is a cWmlReport
+    Set ClassPackage To "cGlblWmlReport.pkg"
+    Inherit
+End_Class

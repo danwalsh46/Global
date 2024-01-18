@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbView is a DbView
+    Set ClassPackage To "cGlblDbView.pkg"
+    Inherit
+End_Class

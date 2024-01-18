@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblTabPage is a TabPage
+    Set ClassPackage To "cGlblTabPage.pkg"
+    Inherit
+End_Class

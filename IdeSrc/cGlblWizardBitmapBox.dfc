@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblWizardBitmapBox is a Container3d
+    Set ClassPackage To "cGlblDbWizard.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,11 @@
+//AB/ CLASSDEF
+Class cppAnimatedBitmap Is a BitmapContainer
+    Set ClassPackage to "cppAnimatedBitmap.pkg"
+    Inherit
+    Property No_Execute Boolean pbAutoPlay True
+    Property No_Execute Boolean pbCenter False
+    Property No_Execute Boolean pbRepeat True
+    Property No_Execute Boolean pbTransparent True
+    Property No_Execute String psFileName ""
+    Property Mode Border_Style Border_None Border_None Border_Normal Border_StaticEdge
+End_Class

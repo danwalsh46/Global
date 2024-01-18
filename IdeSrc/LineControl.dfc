@@ -1,0 +1,17 @@
+//AB/ CLASSDEF
+Class LineControl Is A BaseMetaType AbLine ControlMixin DefineControlMixin
+    Set Control_Type     To ctBASE
+    Set Floating_Menu_Id To ControlFloater.obj
+    Set Type_Of_Drag     To TD_DRAG_CONTROL
+    Set ObjectNameMask   To "oLineControl<count>"
+    Set ClassHelpName    To "LineControl"
+    Set ClassCETV        To 17                // use TreeView Image #17 (1-based offset)
+    Set ClassPackage     To "DfLine.Pkg"
+
+    Property Boolean Horizontal_State True // Specifies whether the line is horizontal (true) or vertical (false). The size of a line must be set according to the setting of this property.
+    Property Mode Line_Style lnDIP lnDIP lnBUMP lnSINGLE // Line Display Style
+    Property integer Line_Thickness 1 // Pixel thickness of the line. This is used primarily with single lines (lnSingle) to create thicker dark lines. The Size of a line must be adjusted if the thickness is adjusted.
+    Property Always_Generate Complex Size 2 51  // Object Size (Complex: height, width)
+    Property Complex Location 0 0 // Object Location (Complex: Row, Column)
+    Property no_execute anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+End_Class

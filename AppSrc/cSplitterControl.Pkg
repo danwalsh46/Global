@@ -1,0 +1,680 @@
+Use Set.Pkg
+Use WinGdi.Pkg
+
+Define R2_NOT For 6
+#Replace GCW_HCURSOR        -12    
+
+Class cSplitterBaseControl Is A DfControl
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: Construct_Object
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:21
+   //
+   // Description
+   //    Creation of storage properties for finding the boundaries of the
+   //    splitter. They are filled from a method called DoSetMinMaxTrack which
+   //    is called from SplitterOnMouseDown. There is also a property defined
+   //    that contains the cursor to be loaded from ComCtl32.Dll. The focusmode
+   //    is set to non-focusable because we only want to find the splitterline
+   //    by moving the mouse cursor over it. The object of the splitter is set to
+   //    the same as it's parent to stay invisible to the user. The nested childs
+   //    object is present to store the objects that needs to be notified of a
+   //    splitter move.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   
+   Register_Procedure OnSplitterMouseDown
+   Register_Procedure OnSplitterMouseUp 
+   Register_Procedure OnSplitterMouseMove
+   Register_Procedure OnSplitterSetCursor
+   Procedure Construct_Object
+      Forward Send Construct_Object
+
+      Property Integer piMinTrack Public 0 // boundaries to where the splitter can be moved
+      Property Integer piMaxTrack Public 0
+      Property String psTrackCursor Public "#106"
+      Property Handle phCursorHandle    Public 0
+      Property Integer piLastRequestCanceled Public False
+
+      Set Focus_Mode To NonFocusable
+      Set Color To (Color (Parent (Self)))
+
+      Object oObjectsToNotify Is A Set
+      End_Object //  oObjectsToNotify
+   End_Procedure // Construct_Object
+   
+   Procedure onSplitterSetCursor Integer wParam Integer lParam
+      Local Integer iRet
+      If (phCursorHandle(Self)) Begin
+        Move (SetCursor(phCursorHandle(Self)))  To iRet
+      End
+   End_Procedure
+   
+   Procedure Notify Integer wParam Integer lParam
+   End_Procedure 
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoAddObjectToNotify
+   // $Author     : VO
+   // Created     : 03/02/00 @ 3:05
+   //
+   // Description
+   //    Use this method to store the object that needs to be notified of a
+   //    change in the location of the splitter
+   //
+   // $Rev History
+   //    03/02/00 VO Module header created
+   //****************************************************************************
+   Procedure DoAddObjectToNotify Integer hoControl
+      Send Add_Element To (oObjectsToNotify(Self)) hoControl
+   End_Procedure // DoAddObjectToNotify
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoNotify
+   // $Author     : VO
+   // Created     : 03/06/00 @ 5:24
+   //
+   // Description
+   //    When the splitter has moved and the mouse cursor has been lifted the
+   //    objects who did register theirselves with the splitter object needs to
+   //    be notified.
+   //
+   // $Rev History
+   //    03/06/00 VO Module header created
+   //****************************************************************************
+   Register_Procedure OnSplitterChange  // MK to make it compile anyay if used or not
+   Register_Procedure OnRequestSplitter
+   Procedure DoNotify Integer iTrack
+      Local Integer hoObjectsToNotify iItems iItem hoControl
+
+      Move (oObjectsToNotify(Self)) To hoObjectsToNotify
+      Move (Item_Count (hoObjectsToNotify) - 1) To iItems
+      For iItem From 0 To iItems
+         Get Integer_Value Of hoObjectsToNotify Item iItem To hoControl
+         If (hoControl > 0) Begin
+            Send OnSplitterChange To hoControl iTrack
+         End
+      End
+
+      Delegate Send OnResize
+   End_Procedure // DoNotify
+   
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoNotifyStart
+   // $Author     : BP
+   // Created     : 03/03/03 @ 20:24
+   //
+   // Description
+   //    When the splitting is requested (Mousedown) all connected Objects are
+   //    notified about the request. If one Object returns not 0 the request is
+   //    canceled and no splitting is done
+   //
+   // $Rev History
+   //    03/03/03 BP Module header created
+   //****************************************************************************   
+   
+   Procedure DoNotifyStart
+      Local Integer hoObjectsToNotify iItems iItem hoControl iRetVal
+
+      Move (oObjectsToNotify(Self)) To hoObjectsToNotify
+      Move (Item_Count (hoObjectsToNotify) - 1) To iItems
+      For iItem From 0 To iItems
+         Get Integer_Value Of hoObjectsToNotify Item iItem To hoControl
+         If (hoControl > 0) Begin
+            Get msg_OnRequestSplitter Of hoControl To iRetVal
+            If (iRetVal) Procedure_Return iRetVal
+         End
+      End    
+      Procedure_Return 0
+   End_Procedure
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoSetTrackCursor
+   // $Author     : VO
+   // Created     : 03/06/00 @ 6:11
+   //
+   // Description
+   //    This method is used to load a horizontal or vertical splitter cursor
+   //    and bind it to the first parameter classname specified by the
+   //    External_Class_Name instruction.
+   //
+   // $Rev History
+   //    03/06/00 VO Module header created
+   //****************************************************************************
+   Procedure DoSetTrackCursor
+      Local String sCursor
+      Local Integer iRetval
+      Local Handle hWnd hLib hCursor
+
+      Get Window_Handle To hWnd
+      If (hWnd <> 0) Begin
+         Move (LoadLibrary ("ComCtl32.Dll")) To hLib
+         If (hLib <> 0) Begin
+            Get psTrackCursor To sCursor
+            If (sCursor <> "") Begin
+               Move (LoadResourceCursor (hLib, sCursor)) To hCursor
+               If (hCursor <> 0) Begin
+                Set phCursorHandle  To hCursor 
+//                  Move (SetClassLong (hWnd, GCW_HCURSOR, hCursor)) To iRetval
+               End
+            End
+            Move (FreeLibrary (hLib)) To iRetval
+         End
+      End
+   End_Procedure // DoSetTrackCursor
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: Page
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:29
+   //
+   // Description
+   //    When the object is paged the cursor is loaded by calling DoSetTrackCursor
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure Page Integer iState
+      Forward Send Page iState
+
+      If (iState = 1) Begin
+         Send DoSetTrackCursor
+      End
+   End_Procedure // Page
+End_Class // cSplitterBaseControl
+
+Class cHorizontalSplitter Is A cSplitterBaseControl
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: Construct_Object
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:37
+   //
+   // Description
+   //    Creation of a storage property to hold the last Y-coordinate. The track
+   //    cursor is set to the horizontal trackcursor (#135). The classname is
+   //    different for the horizontal splitter to make it possible to load a
+   //    different cursor for the horizontal and the vertical splitter.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure Construct_Object
+      Forward Send Construct_Object
+
+      Property Integer piLastY Public 0
+
+      Set psTrackCursor To "#135"
+
+      Set External_Class_Name "cHorizontalSplitter" To "EDIT"
+
+      Set External_Message WM_LBUTTONDOWN   To OnSplitterMouseDown
+      Set External_Message WM_LBUTTONUP     To OnSplitterMouseUp
+      Set External_Message WM_MOUSEMOVE     To OnSplitterMouseMove
+      
+   End_Procedure // Construct_Object
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoDrawDrag
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:39
+   //
+   // Description
+   //    This method will drag a WINGDI rectangle to indicate the location of
+   //    the splitter. When the passed value of iTrack is 65536 the old splitter
+   //    will be removed (piLastY will probably not 65536) and a new splitter is
+   //    not drawn.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure DoDrawDrag Integer iTrack
+      Local Handle hDC hBrush hBrushOld hPen hPenOld hWnd
+      Local Integer iLastY iVoid iSplitterGuiLocation iXscreen iYScreen iSplitterGuiWidth
+      Local Integer iSplitterGuiSize iSplitterGuiLeftTopY iSplitterGuiLeftTopX iDragDistance
+      Local Pointer lpsPoint
+      Local String sPoint
+
+      Get piLastY To iLastY
+
+      Get GuiLocation To iSplitterGuiLocation
+      Get GuiSize To iSplitterGuiSize
+
+      Move (Low (iSplitterGuiSize)) To iSplitterGuiWidth
+      Move (Hi (iSplitterGuiLocation)) To iSplitterGuiLeftTopY
+      Move (Low (iSplitterGuiLocation)) To iSplitterGuiLeftTopX
+
+      ZeroType tPoint To sPoint
+      Put iSplitterGuiLeftTopY To sPoint At tPoint.y
+      Put iSplitterGuiLeftTopX To sPoint At tPoint.x
+      GetAddress Of sPoint To lpsPoint
+      Delegate Get Window_Handle To hWnd
+      Move (ClientToScreen (hWnd, lpsPoint)) To iVoid
+
+      GetBuff From sPoint At tPoint.x To iXscreen
+      GetBuff From sPoint At tPoint.y To iYScreen
+
+      Move (GetDC (0)) To hDC
+      Move (GetStockObject (DKGRAY_BRUSH)) To hBrush
+      Move (GetStockObject (NULL_PEN)) To hPen
+      Move (SetRop2 (hDC, R2_NOT)) To iVoid
+      Move (SelectObject (hDC, hPen)) To hPenOld
+
+      Move (iTrack + iYscreen) To iDragDistance
+
+      If (iLastY <> 65536) Begin
+         // erase last line
+         Move (Rectangle (hDC, iXScreen, iLastY, iXScreen + iSplitterGuiWidth, iLastY + 4)) To iVoid
+      End
+      If (iTrack <> 65536) Begin
+         Move (SelectObject (hDC, hBrush)) To hBrushOld
+         Move (Rectangle (hDC, iXScreen, iDragDistance, iXScreen + iSplitterGuiWidth, iDragDistance + 4)) To iVoid
+         Move (SelectObject (hDC, hBrushOld)) To iVoid
+      End
+
+      Move (SelectObject (hDC, hBrushOld)) To iVoid
+      Move (SelectObject (hDC, hPenOld)) To iVoid
+      Move (ReleaseDC (0, hDC)) To iVoid
+
+      Set piLastY To iDragDistance
+   End_Procedure // DoDragDraw
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoSetMinMaxTrack
+   // $Author     : VO
+   // Created     : 03/06/00 @ 5:51
+   //
+   // Description
+   //    This method will be called to set a default for minimum and maximum
+   //    area to drag the splitter in.
+   //
+   // $Rev History
+   //    03/06/00 VO Module header created
+   //****************************************************************************
+   Procedure DoSetMinMaxTrack
+      Local Integer iSplitterGuiRow iParentGuiHeight
+
+      Move (Hi (GuiLocation (Self))) To iSplitterGuiRow
+      Move (Hi (GuiSize (Parent (Self)))) To iParentGuiHeight
+      Set piMinTrack To ((iParentGuiHeight * 0.1) - iSplitterGuiRow)
+      Set piMaxTrack To ((iParentGuiHeight * 0.9) - iSplitterGuiRow)
+   End_Procedure // DoSetMinMaxTrack
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: OnSplitterMouseDown
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:43
+   //
+   // Description
+   //    When the mouse cursor is pressed while over the splitter object this
+   //    event is fired. The current move of already noticed (can be only within
+   //    the boundaries of the splitter height). The current boundaries of the
+   //    splitter are determined via DoSetMinMaxTrack (can be overruled at object
+   //    level) and the splitter is drawn in GDI mode.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure OnSplitterMouseDown Integer wParam Integer lParam
+      Local Integer iTrack iRet
+      Set piLastRequestCanceled To False     
+      Get Msg_DoNotifyStart To iRet
+      If (iRet) Begin
+          Set piLastRequestCanceled To True
+          Procedure_Return
+      End
+      Send Set_Mouse_Capture
+
+      Move (Hi (lParam)) To iTrack
+      If (iTrack > 32000) Begin
+         Move (iTrack - 65536) To iTrack
+      End
+
+      Send DoSetMinMaxTrack
+      Set piLastY To 65536
+      Send DoDrawDrag iTrack
+   End_Procedure // OnSplitterMouseDown
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: OnSplitterMouseUp
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:48
+   //
+   // Description
+   //    When the mouse cursor is lifted this event is fired. The current slitter
+   //    line is removed from the screen and the objects that want to be notified
+   //    of the change will be notified. The splitter itself needs to be moved
+   //    too.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure OnSplitterMouseUp Integer wParam Integer lParam
+      Local Integer iMinTrack iMaxTrack iTrack
+      If (piLastRequestCanceled(Self)) Procedure_Return
+      Send Release_Mouse_Capture
+
+      Send DoDrawDrag 65536 // Special value to erase last line
+
+      Move (Hi (lParam)) To iTrack
+      If (iTrack > 32000) Begin
+         Move (iTrack - 65536) To iTrack
+      End
+
+      Get piMinTrack To iMinTrack
+      Get piMaxTrack To iMaxTrack
+
+      Move (iMaxTrack Min (iMinTrack Max iTrack)) To iTrack
+
+      Send DoNotify iTrack
+      Send DoMoveSelf iTrack
+   End_Procedure // OnSplitterMouseUp
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoMoveSelf
+   // $Author     : VO
+   // Created     : 03/07/00 @ 8:36
+   //
+   // Description
+   //    This method is called when the splitter is moved and it will set the
+   //    location of the splitter to a different spot at the Y-axis.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure DoMoveSelf Integer iTrack
+      Local Integer iGuiLocation
+
+      Get GuiLocation To iGuiLocation
+      Set GuiLocation To (Hi (iGuiLocation) + iTrack) (Low (iGuiLocation))
+   End_Procedure // DoMoveSelf
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: OnSplitterMouseMove
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:53
+   //
+   // Description
+   //    When the splitter is moved over the screen the splitter line needs to be
+   //    (re)drawn at the new location. This needs to be done only when the
+   //    splitter is moved with the left mouse button pressed.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure OnSplitterMouseMove Integer wParam Integer lParam
+      Local Integer iMinTrack iMaxTrack iTrack
+      
+      Send OnSplitterSetCursor      
+      If (piLastRequestCanceled(Self)) Procedure_Return
+      If (wParam Iand MK_LBUTTON) Begin
+         Move (Hi (lParam)) To iTrack
+         If (iTrack > 32000) Begin
+            Move (iTrack - 65536) To iTrack
+         End
+
+         Get piMinTrack To iMinTrack
+         Get piMaxTrack To iMaxTrack
+
+         Move (iMaxTrack Min (iMinTrack Max iTrack)) To iTrack
+
+         Send DoDrawDrag iTrack
+      End
+   End_Procedure // OnSplitterMouseMove
+End_Class // cHorizontalSplitter
+
+Class cVerticalSplitter Is A cSplitterBaseControl
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: Construct_Object
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:42
+   //
+   // Description
+   //    Creation of a storage property to hold the last X-coordinate. The track
+   //    cursor is set to the vertical trackcursor (#106). The classname is
+   //    different for the vertical splitter to make it possible to load a
+   //    different cursor for the horizontal and the vertical splitter.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure Construct_Object
+      Forward Send Construct_Object
+
+      Property Integer piLastX Public 0
+
+      Set psTrackCursor To "#106"
+      Set External_Class_Name "cVerticalSplitter"   To "EDIT"
+      Set External_Message WM_LBUTTONDOWN           To OnSplitterMouseDown
+      Set External_Message WM_LBUTTONUP             To OnSplitterMouseUp
+      Set External_Message WM_MOUSEMOVE             To OnSplitterMouseMove
+   End_Procedure // Construct_Object
+
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoDrawDrag
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:43
+   //
+   // Description
+   //    This method will drag a WINGDI rectangle to indicate the location of
+   //    the splitter. When the passed value of iTrack is 65536 the old splitter
+   //    will be removed (piLastX will probably not 65536) and a new splitter is
+   //    not drawn.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure DoDrawDrag Integer iTrack
+      Local Handle hDC hBrush hBrushOld hPen hPenOld hWnd
+      Local Integer iLastX iVoid iSplitterGuiLocation iXscreen iYScreen iDragDistance
+      Local Integer iSplitterGuiSize iSplitterGuiHeight iSplitterGuiLeftTopY iSplitterGuiLeftTopX
+      Local Pointer lpsPoint
+      Local String sPoint
+
+      Get piLastX To iLastX
+
+      Get GuiLocation To iSplitterGuiLocation
+      Get GuiSize To iSplitterGuiSize
+
+      Move (Hi (iSplitterGuiSize)) To iSplitterGuiHeight
+      Move (Hi (iSplitterGuiLocation)) To iSplitterGuiLeftTopY
+      Move (Low (iSplitterGuiLocation)) To iSplitterGuiLeftTopX
+
+      ZeroType tPoint To sPoint
+      Put iSplitterGuiLeftTopY To sPoint At tPoint.y
+      Put iSplitterGuiLeftTopX To sPoint At tPoint.x
+      GetAddress Of sPoint To lpsPoint
+      Delegate Get Window_Handle To hWnd
+      Move (ClientToScreen (hWnd, lpsPoint)) To iVoid
+
+      GetBuff From sPoint At tPoint.x To iXscreen
+      GetBuff From sPoint At tPoint.y To iYScreen
+
+      Move (GetDC (0)) To hDC
+      Move (GetStockObject (DKGRAY_BRUSH)) To hBrush
+      Move (GetStockObject (NULL_PEN)) To hPen
+      Move (SetRop2 (hDC, R2_NOT)) To iVoid
+      Move (SelectObject (hDC, hPen)) To hPenOld
+
+      Move (iTrack + iXscreen) To iDragDistance
+
+      If (iLastX <> 65536) Begin
+         // erase last line
+         Move (Rectangle (hDC, iLastX, iYScreen + 1, iLastX + 4, iYScreen + iSplitterGuiHeight)) To iVoid
+      End
+      If (iTrack <> 65536) Begin
+         Move (SelectObject (hDC, hBrush)) To hBrushOld
+         Move (Rectangle (hDC, iDragDistance, iYScreen + 1, iDragDistance + 4, iYScreen + iSplitterGuiHeight)) To iVoid
+         Move (SelectObject (hDC, hBrushOld)) To iVoid
+      End
+      Move (SelectObject (hDC, hPenOld)) To iVoid
+      Move (ReleaseDC (0, hDC)) To iVoid
+
+      Set piLastX To iDragDistance
+   End_Procedure // DoDragDraw
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoSetMinMaxTrack
+   // $Author     : VO
+   // Created     : 03/06/00 @ 5:51
+   //
+   // Description
+   //    This method will be called to set a default for minimum and maximum
+   //    area to drag the splitter in.
+   //
+   // $Rev History
+   //    03/06/00 VO Module header created
+   //****************************************************************************
+   Procedure DoSetMinMaxTrack
+      Local Integer iSplitterGuiColumn iParentGuiWidth
+
+      Move (Low (GuiLocation (Self))) To iSplitterGuiColumn
+      Move (Low (GuiSize (Parent (Self)))) To iParentGuiWidth
+      Set piMinTrack To ((iParentGuiWidth * 0.1) - iSplitterGuiColumn)
+      Set piMaxTrack To ((iParentGuiWidth * 0.9) - iSplitterGuiColumn)
+   End_Procedure // DoSetMinMaxTrack
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: OnSplitterMouseDown
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:47
+   //
+   // Description
+   //    When the mouse cursor is pressed while over the splitter object this
+   //    event is fired. The current move of already noticed (can be only within
+   //    the boundaries of the splitter width). The current boundaries of the
+   //    splitter are determined via DoSetMinMaxTrack (can be overruled at object
+   //    level) and the splitter is drawn in GDI mode.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure OnSplitterMouseDown Integer wParam Integer lParam
+      Local Integer iTrack iRet
+      
+      Set piLastRequestCanceled To False
+      Get Msg_DoNotifyStart To iRet
+      If (iRet) Begin
+          Set piLastRequestCanceled To True
+          Procedure_Return      
+      End
+      Send Set_Mouse_Capture
+
+      Move (Low (lParam)) To iTrack
+      If (iTrack > 32000) Begin
+         Move (iTrack - 65536) To iTrack
+      End
+
+      Send DoSetMinMaxTrack
+      Set piLastX To 65536
+      Send DoDrawDrag iTrack
+   End_Procedure // OnSplitterMouseDown
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: OnSplitterMouseUp
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:48
+   //
+   // Description
+   //    When the mouse cursor is lifted this event is fired. The current slitter
+   //    line is removed from the screen and the objects that want to be notified
+   //    of the change will be notified. The splitter itself needs to be moved
+   //    too.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure OnSplitterMouseUp Integer wParam Integer lParam
+      Local Integer iMinTrack iMaxTrack iTrack
+      If (piLastRequestCanceled(Self)) Procedure_Return
+      Send Release_Mouse_Capture
+
+      Send DoDrawDrag 65536 // Special value to erase last line
+
+      Move (Low (lParam)) To iTrack
+      If (iTrack > 32000) Begin
+         Move (iTrack - 65536) To iTrack
+      End
+
+      Get piMinTrack To iMinTrack
+      Get piMaxTrack To iMaxTrack
+
+      Move (iMaxTrack Min (iMinTrack Max iTrack)) To iTrack
+
+      Send DoNotify iTrack
+      Send DoMoveSelf iTrack
+   End_Procedure // OnSplitterMouseUp
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: DoMoveSelf
+   // $Author     : VO
+   // Created     : 03/07/00 @ 8:36
+   //
+   // Description
+   //    This method is called when the splitter is moved and it will set the
+   //    location of the splitter to a different spot at the X-axis.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure DoMoveSelf Integer iTrack
+      Local Integer iGuiLocation
+
+      Get GuiLocation To iGuiLocation
+      Set GuiLocation To (Hi (iGuiLocation)) (Low (iGuiLocation) + iTrack)
+   End_Procedure // DoMoveSelf
+
+   //****************************************************************************
+   // $Module type: PROCEDURE
+   // $Module name: OnSplitterMouseMove
+   // $Author     : VO
+   // Created     : 03/07/00 @ 6:53
+   //
+   // Description
+   //    When the splitter is moved over the screen the splitter line needs to be
+   //    (re)drawn at the new location. This needs to be done only when the
+   //    splitter is moved with the left mouse button pressed.
+   //
+   // $Rev History
+   //    03/07/00 VO Module header created
+   //****************************************************************************
+   Procedure OnSplitterMouseMove Integer wParam Integer lParam
+      Local Integer iMinTrack iMaxTrack iTrack
+      Send OnSplitterSetCursor
+      If (piLastRequestCanceled(Self)) Procedure_Return
+      If (wParam Iand MK_LBUTTON) Begin
+         Move (Low (lParam)) To iTrack
+         If (iTrack > 32000) Begin
+            Move (iTrack - 65536) To iTrack
+         End
+
+         Get piMinTrack To iMinTrack
+         Get piMaxTrack To iMaxTrack
+
+         Move (iMaxTrack Min (iMinTrack Max iTrack)) To iTrack
+
+         Send DoDrawDrag iTrack
+      End
+   End_Procedure // OnSplitterMouseMove
+End_Class // cVerticalSplitter

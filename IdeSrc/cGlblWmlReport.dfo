@@ -1,0 +1,42 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+
+    Procedure OnPageTop
+        // begin the select group
+        Send WriteWML '<select name="recid" >'
+    End_Procedure // OnPageTop
+
+    Procedure OnBody
+
+        // Often yout want to output an Option "value", text pair as follows:
+
+        //   string sRecId // Record identifier (recnum)
+        //   string sText   // Value to be displayed on WAP device
+        //   Move YourFile.recnum to sRecId      // set up the recnum string
+        //   Move YourFile.SomeValue to sText  // set up the display text string
+        //   Send WriteWml ('<option value="' - sRecId - '">')
+        //   Send WriteWml sText
+        //   Send WriteWml '</option>'
+
+    End_Procedure // OnBody
+
+    Procedure OnPageBottom
+
+        string sIndex sLink
+
+        Get psHrefName to sLink // link to Zoom page
+        Get piOrdering to sIndex
+        // end the select group
+        Send WriteWml '</select><br/>'
+
+        // this could be used to link to more detail for any Option value.
+        //   Send WriteWml '<do type="accept" label="Show">'
+        //   Send WriteWml ('   <go href="' - sLink - '?RecId=$(recid)&amp;Index=' - sIndex - '"/>')
+        //    Send WriteWml '</do>'
+    End_Procedure // OnPageBottom
+
+    //AB-StoreEnd
+End_Object
+
+

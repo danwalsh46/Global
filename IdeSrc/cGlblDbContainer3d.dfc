@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbContainer3d is a dbContainer3d
+    Set ClassPackage To "cGlblDbContainer3d.pkg"
+    Inherit
+End_Class

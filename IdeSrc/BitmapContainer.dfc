@@ -1,0 +1,19 @@
+//AB/ CLASSDEF
+Class BitmapContainer is a Container3d ABBitmap BitmapMixin DefineBitmapMixin
+    Set Drop_Allowed     To False
+    Set Control_Type     To ctBase
+    Set Floating_Menu_Id To BitmapFloater.obj
+    Set ObjectNameMask   To "oBitmapContainer<count>"
+    Set ClassCETV        To 16                // use TreeView Image #16 (1-based offset)
+    Set ClassPackage     To "dfbitmap.pkg"
+
+    Inherit
+
+    Property Always_Generate Complex Size 80 80
+    Property Mode Bitmap_Style Bitmap_Actual Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center
+    Property String Initial_Folder "" // Initial folder for open file dialog if enabled (if Allow_Select_Bitmap_state is true)
+    Property No_Execute String Dialog_Caption "Select a bitmap file" // Caption title for open file dialog if enabled (if Allow_Select_Bitmap_state is true)
+    Property No_Execute Boolean allow_select_bitmap_state False // If true, users will be able to browse a list of the bitmap files in a directory and select one for display.
+    Property NO_VISIBLE NO_GENERATE Integer Help_Id
+End_Class
+

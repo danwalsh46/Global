@@ -1,0 +1,36 @@
+//AB/ CLASSDEF
+Class cWebBusinessProcess is a AbstractContainer Meta_cWebBusinessProcess Meta_cWebBusinessProcess_Mixin Define_Meta_cWebBusinessProcess_Mixin
+    Set Drop_Allowed     To TD_DRAG_NONVISUAL
+    Set Type_Of_Drag     To TD_DRAG_PANEL
+    Set ClassPackage     To "cWebBusinessProcess.pkg"
+    Set peClassLibrary   To clWebApp           // this class belongs to the Web Server Application class library only
+    Set ClassCETV        To 43                 // use TreeView Image #43
+    Set ObjectNameMask   To "oWBO"
+    Set ClassHelpName    To "cWebBusinessProcess"
+    Set Control_Type     To ctDataContainer
+    Set Floating_Menu_Id To EVCFloater.obj
+    Set Delete_Allowed   To False
+
+    Property No_Visible Pseudo      Complex Location     0 0      // don't show location, write out as comment
+    Property No_Visible Pseudo      Complex Size         40 44    // don't show size, write out as comment
+    Property No_Visible             String  Bitmap       "cWebBusinessProcess.bmp"  // show this bitmap on control
+    Property No_Visible             Integer Bitmap_Style Bitmap_Actual
+    Property No_Visible No_Generate Mode    Border_Style Border_Normal
+    Property No_Visible No_Generate Color   Color        clWhite
+    Property No_Visible No_Generate String  Main_DD
+    Property No_Visible             Boolean pbCanRegisterInterface True  // Support Register Interface Section
+
+    Property No_Execute Boolean pbAllErrorsToEventLog False // When true, all errors are placed in the event log. When false only explicit errors appear to the event log.
+    Property No_Execute Boolean pbAllErrorsToHtml     True  // When true, unexpected errors generated on request messages like request_save, are reported back to the HTML file.
+    Property No_Execute Boolean pbAllowClear          True  // Determines whether the WBO object will support the Clear operation.
+    Property No_Execute Boolean pbAllowDDUpdate       True  // If set to false it will disable DoReqestDDUpdate. This is used to increase security in WBOs.
+    Property No_Execute Boolean pbAllowDelete         True  // Determines whether the WBO object will support the Delete operation.
+    Property No_Execute Boolean pbAllowFind           True  // Determines whether the WBO object will support the Find operation.
+    Property No_Execute Boolean pbAllowSaveEdit       True  // Determines whether the WBO object will support an edit Save operation.
+    Property No_Execute Boolean pbAllowSaveNew        True  // Determines whether the WBO object will support a new Save operation.
+    Property No_Execute Boolean pbClearAfterSave      True  // Determines what happens after a save. If true, the DDOs will be cleared. If false, the DDOs will retain the newly saved data.
+    Property No_Execute Boolean pbReportErrors        True  // If set to false, suppresses the generation of errors from Request_Save, Request_Delete, Request_Clear or Request_Find operations.
+    Property No_Execute Boolean pbVerboseErrors       False // Determines how much information is presented when an HTML error is displayed.
+    Property No_Execute Mode    peNeighborHood        nhPublic nhPublic nhPrivate nhNo // If a neighborhood (nhPublic) all objects within may address each other with short name. nhPrivate=no short access at all. nhNo=not Neighborhood, check parent (rarely used).
+    Property No_Execute String  psDescription         ""    // The WebApp object uses the description when it gathers information about its WBOs.
+End_Class

@@ -1,0 +1,134 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDbGrid
+//* Package Name: cGlblDbGrid.pkg
+//*
+//***************************************************************************
+
+Use DFAllEnt.pkg
+Use Dftable.pkg
+
+Class cGlblDbGrid is a dbGrid
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+//        // The properties pbInRefreshView and pbAlreadyRefreshed are used for optimization of
+//        // RefreshView, to stop sending Refresh_Page more than one time during one RefreshView
+//        property boolean pbInRefreshView    FALSE
+//        property boolean pbAlreadyRefreshed FALSE
+
+        // Create child objects
+
+        // Set property values:
+        set Color               to clWhite
+        set TextColor           to clBlack
+        set peDisabledColor     to clWhite
+        set peDisabledTextColor to clBlack
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+    // Refresh the current records displayed in the grid.
+//    procedure DoRefreshCurrentPage integer iRowArg
+//        integer iFile iRec iRow hParentDD hServer iCount iIndex
+//        //
+//        if (Num_Arguments = 0) get Row (Top_Item(Self)) to iRow
+//        else move iRowArg to iRow
+//        get Record_Number iRow to iRec
+//        // Clearing the main_file was moved outside of the iRec block because,
+//        // if iRec = 0, the record buffer should be clear.
+//        move (Main_File(Server(Self))) to iFile
+//        clear iFile
+//        //
+//        if (iRec) begin
+//            set_field_value iFile 0 to iRec
+//            vfind iFile 0 EQ
+//            // If not found, clear the file and move 0 to iRec so that the next block will execute.
+//            // This avoids a Record_Not_Found error when the record for the first row has been deleted.
+//            if (NOT(FOUND)) begin
+//                clear iFile
+//                set_field_value iFile 0 to 0
+//            end
+//            // Do a relate to make sure that the correct Parent record
+//            // is in the buffer.
+//            relate iFile
+//        end
+//        // If the record number of the grid is 0, and this is a child
+//        // file, make sure that the record buffer of the parent files
+//        // agrees with the Current_Record of the Parent DD
+//        if (iRec = 0) begin
+//            get Server                           to hServer
+//            get Ordering                         to iIndex
+//            get Data_Set_Server_Count of hServer to iCount
+//            // Use Contrained_Find to find the first record that satisfies the constraints.
+//            // This is done for all files now, not just non-child files.
+//            if (hServer) begin
+//                send Rebuild_Constraints of hServer
+//                constrained_find FIRST iFile by iIndex
+//                if (NOT(FOUND)) clear iFile
+//            end
+//            while (iCount)
+//                decrement iCount
+//                get Data_Set_Server of hServer iCount to hParentDD
+//                if (hParentDD) begin
+//                    move (Main_File(hParentDD)) to iFile
+//                    get Current_Record of hParentDD to iRec
+//                    if (iRec) begin
+//                        clear iFile
+//                        set_field_value iFile 0 to iRec
+//                        vfind iFile 0 EQ
+//                        relate iFile
+//                    end
+//                    // If there is not a current record for the parent, clear
+//                    // its record buffer.  Otherwise, child records may display
+//                    // with a blank header.
+//                    else clear iFile
+//                end
+//            loop
+//        end
+//        send Refresh_Page iRow 0
+//    end_procedure // DoRefreshCurrentPage
+
+//    procedure DoRestoreTopRecord
+//        integer iRec iRow iFile
+//        //
+//        get Row (Top_Item(self)) to iRow
+//        get Record_Number iRow   to iRec
+//        if (iRec) begin
+//            move (Main_File(Server(self))) to iFile
+//            set_field_value iFile 0 to iRec
+//            vfind iFile 0 EQ
+//            if (FOUND) relate iFile
+//        end
+//    end_procedure
+
+    // This augmentation optimizes RefreshView, stopping Refresh_Page from being sent multiple times
+    // during on RefreshView.
+//    procedure Refresh_Page integer iRow integer iCol
+//        if (pbInRefreshView(self) AND pbAlreadyRefreshed(self)) procedure_return
+//        if (pbInRefreshView(self)) set pbAlreadyRefreshed to TRUE
+//        if (Num_Arguments = 1) forward send Refresh_Page iRow
+//        else                   forward send Refresh_Page iRow iCol
+//    end_procedure
+
+//  this augmentation is to eliminate the "blue" selection of an item
+//    Procedure key Integer iKeyValue Returns Integer
+//       Handle HWnd
+//       Integer iVoid iItem
+//       Boolean bchanged
+//       Get Current_Item to iItem
+//       If (iKeyValue=260 or iKeyValue=261) Set Item_Changed_State iItem to True //<-- --> let to move inside the form
+//       Get Item_Changed_State iItem to bchanged  //only the first key pressed before any change
+//       If ( (not (bchanged)) and (iKeyValue>31) and (iKeyValue<123)) Begin  // from " " to "z"
+//          Get form_Window_Handle iItem to hWnd   
+//          Move (SendMessage(hWnd,WM_KEYDOWN, VK_HOME, EXTKEY)) to iVoid  // VK_HOME goto beginning, VK_RIGHT goto end
+//       End   
+//       Forward Send Key iKeyValue
+//    End_Procedure
+
+End_Class // cGlblDbGrid

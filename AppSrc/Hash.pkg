@@ -1,0 +1,35 @@
+// Simple hash function
+// Does not work for the moment
+
+//unsigned int RSHash(string str)
+//{
+
+//   unsigned int b = 378551;
+//   unsigned int a = 63689;
+//   unsigned int hash = 0;
+
+//   for(unsigned int i = 0; i < str.length(); i++)
+//   {
+//      hash = hash*a+str[i];
+//      a = a*b;
+//   }
+
+//   return (hash & 0x7FFFFFFF);
+
+//};
+
+Function mRSHash Global String sStr returns UInteger
+    UInteger uiA uiB uiHash
+    Integer i
+    Send Ignore_Error to error_info_object 4382 
+    Move 378551 To uiB
+    Move 63689  To uiA
+    For i from 1 To (Length(sStr))
+        Move ((uiHash*uiA)+Ascii(Mid(sStr, 1, i))) To uiHash
+        Move (uiA*uiB) To uiA
+    Loop
+    Send Trap_Error to error_info_object 4382 
+    Function_Return (uiHash iAnd $7FFFFFFF)
+End_Function
+
+

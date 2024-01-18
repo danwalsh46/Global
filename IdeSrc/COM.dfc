@@ -1,0 +1,39 @@
+//AB/ CLASSDEF
+Class cComActiveXControl is a AbstractControl cIdeComActiveXControl ComDesignControlMixin DefineComDesignControlMixin
+    Set ObjectNameMask To "oComActiveXControl<count>"
+    Set ClassHelpName To "cComActiveXControl"
+    Set ClassPackage to "FlexCom20.pkg"
+    inherit
+    Property No_Generate No_Visible NO_EXECUTE Complex Color
+    Property No_Generate No_Visible NO_EXECUTE Complex TextColor
+    Property Always_Generate Complex Size 100 100  // Object Size (Complex: height, width)
+    Property No_Generate No_Visible String Label // Text/Label associated with this Control
+
+    Set Floating_Menu_Id To ComControlFloater
+End_Class
+
+Class cComDbActiveXControl is a AbstractControl cIdeComActiveXControl ComDesignControlMixin DefineComDesignControlMixin
+    Set ObjectNameMask To "oComDbActiveXControl<count>"
+    Set ClassHelpName To "cComDbActiveXControl"
+    Set ClassPackage to "cComDbActiveXControl.pkg"
+    Set Entry_Item_Object to True
+    Set Control_Type To ctDataAware
+    inherit
+    Property No_Generate No_Visible NO_EXECUTE Complex Color
+    Property No_Generate No_Visible NO_EXECUTE Complex TextColor
+    Property Always_Generate Complex Size 100 100  // Object Size (Complex: height, width)
+    Property No_Generate No_Visible String Label // Text/Label associated with this Control
+
+    Set Floating_Menu_Id To ComControlFloater
+End_Class
+
+Class cComDocumentObject is a AbstractControl cIdeComDocumentObject ComDocumentObjectMixin DefineComDocumentObjectMixin
+    Set ObjectNameMask To "oComDocumentObject<count>"
+    Set ClassHelpName To "cComDocumentObject"
+    Set ClassPackage to "FlexCom20.pkg"
+    inherit
+    Property No_Generate No_Visible NO_EXECUTE Complex Color
+    Property No_Generate No_Visible NO_EXECUTE Complex TextColor
+    Property Always_Generate Complex Size 100 100  // Object Size (Complex: height, width)
+    Property No_Generate No_Visible String Label // Text/Label associated with this Control
+End_Class

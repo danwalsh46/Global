@@ -1,0 +1,29 @@
+//AB/ CLASSDEF
+Class cWebService is a AbstractContainer Meta_cWebBusinessProcess Meta_cWebBusinessProcess_Mixin Define_Meta_cWebBusinessProcess_Mixin
+    Set Drop_Allowed     To TD_DRAG_NONVISUAL
+    Set Type_Of_Drag     To TD_DRAG_PANEL
+    Set ClassPackage     To "cWebService.pkg"
+    Set peClassLibrary   To clWebApp           // this class belongs to the Web Server Application class library only
+    Set ClassCETV        To 43                 // use TreeView Image #43
+    Set ObjectNameMask   To "oWso"
+    Set ClassHelpName    To "cWebService"
+    Set Control_Type     To ctDataContainer
+    Set Floating_Menu_Id To EVCFloater.obj
+    Set Delete_Allowed   To False
+
+    Property No_Visible Pseudo      Complex Location     0 0      // don't show location, write out as comment
+    Property No_Visible Pseudo      Complex Size         40 44    // don't show size, write out as comment
+    Property No_Visible             String  Bitmap       "cWebService.bmp"  // show this bitmap on control
+    Property No_Visible             Integer Bitmap_Style Bitmap_Actual
+    Property No_Visible No_Generate Mode    Border_Style Border_Normal
+    Property No_Visible No_Generate Color   Color        clWhite
+    Property No_Visible No_Generate String  Main_DD
+    Property No_Visible             Boolean pbCanRegisterInterface True  // Support Register Interface Section
+
+    Property Always_Generate No_Execute string psServiceName "tempService" // The name of Web Service and the same name as the .wso file. This is often the object name without the prefixed "o". e.g. oCustService would be CustService
+    Property Always_Generate No_Execute string psServiceURI "http://tempuri.org/" // Namespace URI for service
+    Property No_Execute Boolean pbDocumentStyle True // Sets the soap body style. True=Document, False=RPC. Normally, you should see document style.
+    Property Always_Generate No_Execute string psServiceTitle "Visual DataFlex Web Service" // Short title describing the service
+    Property No_Execute Mode   peNeighborHood nhPublic nhPublic nhPrivate nhNo // If a neighborhood (nhPublic) all objects within may address each other with short name. nhPrivate=no short access at all. nhNo=not Neighborhood, check parent (rarely used).
+    Property No_Execute String psDescription  ""    // The WebApp object uses the description when it gathers information about its WBOs.
+End_Class

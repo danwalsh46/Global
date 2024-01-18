@@ -1,0 +1,3289 @@
+//****************************************************************************//
+//                                                                            //
+// File Name: Vpe3Prnt.Pkg                                                    //
+// Purpose:   To convert Winprint reports to VPE.                             //
+// Version:   2.1                                                             //
+// Author:    Carl Schaer, Peter Bosch, Matt Davidian                         //
+//            713-270-4000                                                    //
+//            carls@hcss.com                                                  //
+//                                                                            //
+//****************************************************************************//
+
+// The following constants, procedures, and functions from DF_Print are not supported yet.
+//
+//    //*** Header position on page
+//    #REPLACE HDR_RIGHT   2
+//
+//    //*** Header frame types
+//    #REPLACE HDR_FRMSIZE 2
+//
+//    //*** Headers
+//    #REPLACE DFPageTotal       7
+//    #REPLACE DFPageFooter      8
+
+// DFWriteToPage
+// DFWritelnToPage
+// DFWritePosToPage
+// DFWritelnPosToPage
+// DFWriteHeaderTypeToPage
+// DFWriteBMPToPage
+// DFSetDFColor
+// DFSetJMode
+// DFWriteEllip
+// DFWriteEllipToPage
+// DFWriteRectToPage
+// DFCreateDiagram
+// DFDiagram_Item
+// DFLockDiagram
+// DFDrawDiagram
+// DFDrawDiagramToPage
+// DFDiagramLabel
+// DFDiagramXLabel
+// DFDiagramYLabel
+// DFWriteXYLine
+// DFClearPrinter
+// DFGetCurrentDriver
+// DFGetCurrentDevice
+// DFGetCurrentPort
+// DFGetPrintDialogFlags
+// DFGetUserDefinedLength
+// DFGetUserDefinedWidth
+// DFSetUserDefinedPapersize
+// DFGetCurrentDiagram
+// DFSetCurrentDiagram
+// DFSetDiagramList
+// DFGetDiagramList
+// DFClearDiagramList
+// DFGetCurrentColor
+
+// ***********************************************************************
+
+//CHS 11/26/01  In DFWriteLine, pNextVTop is reset to 0 when DFGR_SETPOS is used so that it will be set again
+//              by the next item.  Without this, the next DFWriteLn used the position of the last text item
+//              before the DFWriteLine rather than the position of the DFWriteLine.
+//PB  09/04/01  Corrected a DFLineCheck bug.  The following code
+//
+//                  DFFontSize 2
+//                  DFWriteLn "xxxxx"
+//                  DFFontSize 10
+//                  DFLineCheck 5
+//                  DFWriteLn "yyyyy"
+//
+//               used the FontSize 2 rather than 10 for the linecheck.
+//
+//PB  08/30/01  Added support for setting the character set.
+//PB  07/13/01  Added code in DFNewPage to preserve the bin selected through DFSelectPrinter.  The bin is
+//              saved and restored after the SetDevice in DFNewPage.
+//CHS 7/2/01    Added code to parse out individual lines of text strings.  This is to alleviate problems
+//              with overlapping text if a text strings causes more than one page break.  The code made the
+//              assumption that there would only be one page break, and this caused subsequent items to
+//              write on the wrong page.
+//CHS 6/12/01   Added the property pVpePicFlags for the parameters in VpePicture in DFWriteBmp.
+//CHS 5/9/01    Corrected a problem with notes doing a page break.  The function VpeRenderWrite was
+//              not showing that a page break would occur because Auto Break was turned off on the last item
+//              by the code of 12/16/00.  The fix is to turn Auto Break on before the VpeRenderWrite.
+//CHS 5/7/01    Changed the setting of pOrientation in Procedure DFPrintFlags.  The previous code
+//              included the flags DF_DISABLEPRINTTOFILE, DF_HIDEPRINTTOFILE, DF_PRINTTOFILE in pOrientation,
+//              causing the landscape setting to fail if any of these flags were set.
+//PB  5/2/01    Fixed a bug in DFLineCheck with text fields that wrapped over multiple lines.
+//CHS 3/31/01   Fixed a bug in DFWritelnPos when FONT_RIGHT and the maximum length parameter were used.
+//CHS 3/19/01   If font sizes of numbers are adjusted, sTxtParm is right trimmed in DFVpeWrite.  Otherwise the
+//              right spaces are counted as part of the length of the string.  This could cause the font of
+//              numbers to be reduced unnecessarily.
+//CHS 3/19/01   Added a condition to Set pNewLine in Procedure DFVpeWrite so that FlushVpeHeader does not change
+//              pNewLine.  Without this, the FlushVpeBuffer in DFWriteLine caused page breaks to fail when
+//              DFWriteLine was used in the body section.
+// PB 03/06/01  Added code for skipping a half space in tables and lists.
+//CHS 3/2/01    Made changes for PRINT_TO_PRINTER_NO_DIALOG.
+//CHS 2/1/01    Fixed a bug affecting the printing of filled subheaders.
+//              In VpePrintHeader, pFrameTop is used instead of the locally saved VTOP for setting the top of the header
+//              on the second pass.  The problem was that when the header was first printed, VTOP could be changed by
+//              either skipping to the top margin, skipping a half space, or starting a new page.  This resulted in the
+//              text of the header not matching the filled frame.
+//              In VpePrintHeader of cPageTop, the code resetting the top margin was moved before the code to skip to
+//              the top margin.  This corrected the first case of the subheader bug, but not the other two cases.
+//PB  01/22/01  The check on pCheckNewPage in DFLineCheck was removed.  With the changes to the logic of pCheckNewPage
+//              on 4/13/00, pCheckNewPage was generally False when DFLineCheck was sent, so DFLineCheck no longer worked.
+//CHS 12/16/00   Fixed a problem with Page_Bottom starting a new page with the 7/27/00 release of VPE.
+//PB  12/6/00   Added a line of code in DFStartList that was left out.
+//PB  11/25/00  Fixed a bug when PageBottom printed a long text.
+//CHS 10/30/00  Added a line of code in DFVpeWrite to put the actual VPE position for the right margin in iX2 if nX2 = VRIGHTMARGIN.
+//              Without this, the negative value of iX2 (VRIHGTMARGIN = -5) caused a logic error in the calculation of iTextWidth,
+//              causing the bug corrected by md below.
+//md  10/19/00  Corrected a bug in which the first item of a line was not printing correctly if it was right justified,
+//              and the last item on the previous line was not.
+//CHS 09/28/00  Corrected a problem with table output.
+//PB  08/21/00  Added support for #subpagecount# and #zerosubpagecount#
+//CHS 08/20/00  Added support for DFPrinterBinFirstPage
+//PB  08/17/00  Added support for DFSetNumberOfCopies
+//CHS 08/14/00  Rewrote VpeCheckPrintDialogFlag, DFPrintFlags, and DFSetSpecPrintFlag, replacing pPrintFlags with
+//              the four properties pOrientation, pPaper, pBin, and pResolution.  Changing any one of these properties
+//              in DFSetSpecPrintFlag will now overwrite its previous value.
+//CHS 07/28/00  Added support for paper bins.
+//CHS 07/26/00  Added support for all paper sizes.
+//CHS 07/25/00  Added support for DFSelectPrinter.  Only the device name parameter is used, since the equivalent
+//              VPE function has only the device name parameter.
+//CHS 07/15/00  Changed the setting of margins so that margins can be set before DFNewPage is sent.
+//CHS 07/13/00  Added support for FONT_WRAP and FONT_NOWRAP for wrapping or not wrapping text.
+// 6/23/00,md, added code to ComputeNewFrameHeight to get a temporary document handle to comute frame
+//               height, needed for PageBottom header type on first page
+// 6/23/00,md,  Added a new procedure, SetPrinterSetupFile, to support multiple printer setup files
+//              (e.g. separate printers for checks, invoices, forms, etc.)
+// 06/23/00,md, Added an optional parameter to DFPrintSetup to do alternate printer setup files
+//              (e.g. for picking the printer for an alternate print setup
+//              file)
+// 6/23/00,md,  Added a line to DFWriteRect to handle DFGR_CURRLINE on StartY parameter
+// 6/23/00,md,  Added a new procedure and command, DFWRTIERECTREL, to write a rectangle relative to
+//              the current line.
+//CHS 06/15/00  Items on the right side of the page now print or wrap at the right margin in the body, but
+//              still print to the end of the page in headers to correspond to Winprint output.
+//CHS 06/05/00  Added code for printing BMPs in headers.
+//CHS 06/03/00  Added a line in VpeColor to convert signed dWord variables to unsigned dWord variables.
+//PB  05/18/00  Added code for lists.
+//PB  05/12/00  Added code for tables.
+//CHS 4/23/00   Added propertied pCaption and pVpeDocFlags for the preview caption and for flags used in
+//              opening the VPE document (VpeOpenDoc).
+//CHS 4/23/00   Fixed a bug that caused DFVOffset not to work in headers.
+//CHS 4/22/00   Changed the code for subheaders and subtotals to add support for HDR_WRAP and HDR_NOWRAP.
+//CHS 04/17/00  Made a change to the calculation of the second coordinate for the VpeWrite call in DFVpeWrite.
+//              If a DFVpeWrite was followed by FlushVpeBuffer, the second coordinate was based on the 200 passed by
+//              FlushVpeBuffer, resulting in a large coordinate that caused the item not to print on some print drivers,
+//              even though it showed on the preview.  This was fixed by using the page width for the second coordinate.
+//CHS 4/13/00  The logic for setting pCheckNewPage was changed.  The code for setting this at the end of
+//             DFVpeWrite is skipped if DFVpeWrite was called by FlushVpeBuffer. Class cSubheader, on
+//             which oSubheader and cTotal are based, was added. This sets pCheckNewPage True before
+//             printing the header to make sure that a check is done to see if the header will fit in the
+//             current page before printing the header.
+//             VpeResetPosition now resets VBOTTOM as well as VTOP.  This is needed when
+//CHS 4/13/00  DFWriteln writing to the current line is the first thing in a header, since this uses
+//             VBOTTOM rather than VTOP.
+//             Added properties pVLicense1 and pVLicense2 for the VPE license.
+//CHS 01/24/00 The item parameters pText, pX1 , pX2, pDec, pAttr, and pNewLine are reinitialized in DFClearDoc.
+//             With the change made to the pCheckNewPage code on 1/17, if a report was cancelled before it was finished,
+//             pNewLine was left true, and the next report would print out a header and skip to the next page before printing
+//             the report.
+//CHS 01/19/00 Added support for DFReportFooter.
+//CHS 01/17/00 If the first item of a line is blank, the check for starting a new line was
+//             not done, but pCheckNewPage was set false until the next line begins.  This was
+//             fixed by not setting pCheckNewPage False until a nonblank item is encountered.
+//CHS 01/08/00 Added DFPageHeader2
+//CHS 01/08/00 Set pCurrentFontName and pCurrentFontSize after VPESelectFont
+//             in ComputeNewFrameHeight.  Without this the last item before the
+//             header would be printed with the header font, since SelectVpeFont
+//             would not detect a font change.
+//CHS 11/09/99 DFVpeWrite had a bug if the print command for a number was not sequential.
+//             If the coordinate of the previous print command was after the coordinate of the number,
+//             the number was printing at the right margin.  This was corrected by setting the left
+//             coordinate of the number to 0, which could result in a number overlapping other text.
+//CHS 10/30/99 Made changes to DFVpeWrite to render text that is followed by a number so that
+//             the width of the text can be used to set the left coordinate of the number.  The
+//             rendering code for numbers will then fit the number so that it does not overlap the text.
+//CHS 10/9/99  Added code so that DFWriteLine prints from the top of
+//             the current header rather than the absolute position on the page.
+//             This is the way Winprint works.
+//CHS 9/29/99  Made a change in DFWriteLn so that headers using HDR_CENTER
+//             would be centered.  This was needed in the VDF sample reports.
+//             Added BarCode procedures from Peter Brooks.
+
+// ***********************************************************************
+
+
+Use Prnt_Dlg.Pkg
+Use VPE3
+Use Round
+Use OpenFile
+Use DFAllRpt
+
+//#REPLACE DFPAGEHEADER2 11   //CHS 01/08/00
+
+//#REPLACE VDEFERRED -11   //Added for internal use in translating Winprint commands to VPE.
+
+//Define DFPAGEHEADER2 for 11
+
+Define VDEFERRED for -11
+
+Define FONT_WRAP   for 256   //CHS 07/13/00
+Define FONT_NOWRAP for 512   //CHS 07/13/00
+
+// Classes for storing headers.
+
+// General header class.
+Class cHeader Is A Array
+
+   Procedure Construct_Object
+      Forward Send Construct_Object
+      Property Integer pFrame      Public HDR_NOFRAME
+      Property dWord   pColor      Public clBlack
+      Property Integer pWeight     Public 1
+      Property dWord   pFColor     Public clBlack
+      Property Integer pFill       Public DFGR_TRAN
+      Property Integer pLines      Public 0
+      Property Integer pHeight     Public 0
+      Property Integer pLineHeight Public 0
+      Property Integer pPrinting   Public False
+   End_Procedure  // Construct_Object
+
+
+   // 6/23/00,md, added code to get a temporary document handle to comute frame
+   //               height, needed for PageBottom header type on first page
+//CHS 01/19/00   Procedure ComputeNewFrameHeight String sFontName Integer iFontSize Integer iNewLine
+//PB 08/30/01   Procedure ComputeNewFrameHeight String sFontName Integer iFontSize Integer iNewLine String sTxt //CHS 01/19/00
+   Procedure ComputeNewFrameHeight String sFontName Integer iFontSize Integer iNewLine String sTxt dWord dCharSet //PB 08/30/01
+      Local Handle hDoc
+      Local Integer iHeight iRetVal
+      If (sFontName <> "" And iFontSize <> 0) Begin
+         Delegate Get phDoc to hDoc
+         if (hDoc=0) Move (VpeOpenDoc(0, 0, VPE_FIXED_MESSAGES)) to hDoc  // 6/23/00,md
+         If hDoc Begin
+            Move (VpeSelectFont(hDoc, sFontName, iFontSize)) to iRetVal
+            If (dCharSet >= 0) Move (VpeSetCharset(hDoc, dCharset)) to iRetVal    //PB 08/30/01
+            Delegate Set pCurrentFontName to sFontName    //CHS 01/08/00
+            Delegate Set pCurrentFontSize to iFontSize    //CHS 01/08/00
+            Delegate Set pCurrentCharSet  to dCharSet     //PB 08/30/01
+//CHS 01/19/00            Move (VpeRenderWrite(hDoc, 0, 0, VFREE, VFREE, " ")) to iRetVal
+            // The actual text is used to get the height in case it is multiline.
+            If (sTxt = "") Move " " to sTxt                                    //CHS 01/19/00
+            Move (VpeRenderWrite(hDoc, 0, 0, VFREE, VFREE, sTxt)) to iRetVal   //CHS 01/19/00
+            Move (VpeGet(hDoc, VRENDERHEIGHT)) to iHeight
+            Delegate Set pLineHeight to iHeight   //CHS 4/22/00
+            If (iHeight > pLineHeight(Self)) Set pLineHeight to iHeight
+            If iNewLine Begin
+               Set pHeight to (pHeight(Self) + pLineHeight(Self))
+               Set pLineHeight to 0
+            End
+         End
+         Delegate Get phDoc to iRetVal                          // 6/23/00,md
+         if (iRetVal=0) Move (VpeCloseDoc(hDoc)) to iRetVal     // 6/23/00,md
+      End
+   End_Procedure   // ComputeNewFrameHeight
+
+
+   Procedure AddHeaderItem String sTxt Number nX1 Number nX2 Integer iAttr Integer iDec Integer iNewLine
+      Local Integer iItem iFontSize
+      Local String  sFontName
+      Local Number nVertOffset
+      Local dWord  dCharSet       //PB 08/30/01
+      Delegate Get DFCurrent_Font to sFontName
+      Delegate Get DFCurrent_FontSize to iFontSize
+      Delegate Get pVertOffset to nVertOffset
+      Delegate Get pCharSet    to dCharSet       //PB 08/30/01
+      Get Item_Count to iItem
+      Set Value Item iItem       to sTxt
+      Set Value Item (iItem + 1) to nX1
+      Set Value Item (iItem + 2) to nX2
+      Set Value Item (iItem + 3) to iAttr
+      Set Value Item (iItem + 4) to iDec
+      Set Value Item (iItem + 5) to iNewLine
+      Set Value Item (iItem + 6) to sFontName
+      Set Value Item (iItem + 7) to iFontSize
+      Set Value Item (iItem + 8) to nVertOffset
+      Set Value Item (iItem + 9) to dCharSet          //PB 08/30/01
+//CHS 01/19/00      Send ComputeNewFrameHeight sFontName iFontSize iNewLine
+//PB 08/30/01      Send ComputeNewFrameHeight sFontName iFontSize iNewLine sTxt   //CHS 01/19/00
+      Send ComputeNewFrameHeight sFontName iFontSize iNewLine sTxt dCharSet   //PB 08/30/01
+   End_Procedure  // AddHeaderItem
+
+
+   Procedure AddHeaderLine Number nStartX Number nStartY Number nLength;
+                           Integer iHorVert Dword dwColor Number nWeight Integer iUCp
+      Local Integer iItem iFontSize
+      Local String  sFontName
+      Delegate Get DFCurrent_Font to sFontName
+      Delegate Get DFCurrent_FontSize to iFontSize
+      Get Item_Count to iItem
+      Set Value Item iItem       to "#DFWriteLine#"  // This assumes that this exact text will never be printed for real.
+      Set Value Item (iItem + 1) to nStartX
+      Set Value Item (iItem + 2) to nStartY
+      Set Value Item (iItem + 3) to nLength
+      Set Value Item (iItem + 4) to iHorVert
+      Set Value Item (iItem + 5) to dwColor
+      Set Value Item (iItem + 6) to nWeight
+      Set Value Item (iItem + 7) to iUCp
+      Set Value Item (iItem + 8) to ""
+      Set Value Item (iItem + 9) to ""          // PB 08/30/01
+   End_Procedure  // AddHeaderLine
+
+   Procedure AddHeaderBmp String sFileName Number nStartX Number nStartY Number nHeight Number nWidth Integer iUCp  //CHS 06/05/00
+      Local Integer iItem iFrameHeight iVpeStartY iVpeHeight iOldFrameHeight
+      Get Item_Count to iItem
+      Set Value Item iItem       to "#DFWriteBmp#"  // This assumes that this exact text will never be printed for real.
+      Set Value Item (iItem + 1) to sFileName
+      Set Value Item (iItem + 2) to nStartX
+      Set Value Item (iItem + 3) to nStartY
+      Set Value Item (iItem + 4) to nHeight
+      Set Value Item (iItem + 5) to nWidth
+      Set Value Item (iItem + 6) to iUCp
+      Set Value Item (iItem + 7) to ""
+      Set Value Item (iItem + 8) to ""
+      Set Value Item (iItem + 9) to ""          // PB 08/30/01
+      // Compute new frame height
+      Delegate Get VpeScale nHeight to iVpeHeight
+      Get pHeight to iOldFrameHeight
+      If (nStartY = DFGR_CURRLINE) Move (iOldFrameHeight + iVpeHeight) to iFrameHeight
+      Else Begin
+         Delegate Get VpeScale nStartY to iVpeStartY
+         Move (iVpeStartY + iVpeHeight) to iFrameHeight
+      End
+      If (iFrameHeight > iOldFrameHeight) Set pHeight to iFrameHeight
+   End_Procedure  // AddHeaderBmp
+
+   Procedure VpePrintHeader
+      Local Integer iItems iArrayItem iItem iAttr iDec iNewLine iUCp iFontSize iSaveFontSize iHorVert
+      Local String sTxt sFontName sSaveFontName
+      Local String sFileName   //CHS 06/05/00
+      Local Number nX1 nX2 nStartX nStartY nLength nWeight
+      Local Integer iFrame iWeight iFill iLines iSaveVTop iHeight iWriteLinePos iFrameTop
+      Local Integer iFrameBottom iVTop    //CHS 06/05/00
+      Local Number nVertOffset nSaveVertOffset
+      Local dWord   dwColor dwFColor
+      Local Number nHeight nWidth   //CHS 06/05/00
+      Local dWord  dCharSet dSaveCharSet        //PB 03/30/01
+      // pPrinting prevents a header from being printed twice.  This can happen for subheaders
+      // that start printing at the end of a page, since this will send PrintHeaders which prints
+      // the subheaders.
+      If (pPrinting(Self)) Procedure_Return
+      Delegate Set pSkipHalfSpace To False
+      Set pPrinting To True
+      // Save the font before printing the header.
+      Delegate Get DFCurrent_Font to sSaveFontName
+      Delegate Get DFCurrent_FontSize to iSaveFontSize
+      Delegate Get pCharSet to dSaveCharSet  //PB 08/30/01
+      Delegate Get pVertOffset to nSaveVertOffset
+      Delegate Send FlushVpeBuffer
+      // Save VTOP after printing the last item so that the header can be reprinted after filling the frame.
+      Delegate Get DFVpeGet VTOP to iSaveVTop
+      Delegate Get pWriteLinePos to iWriteLinePos  //CHS 10/9/99
+      Delegate Set pWriteLinePos to iSaveVTop      //CHS 10/9/99
+      Get pLines to iLines
+      Get pHeight to iHeight
+      Delegate Send InitializePrintingHeader iLines iHeight
+//PB 08/30/01      Move (Item_Count(Self)/9) to iItems
+      Move (Item_Count(Self)/10) to iItems
+      For iItem From 1 to iItems
+//PB 08/30/01         Move (9 * (iItem - 1)) to iArrayItem
+         Move (10 * (iItem - 1)) to iArrayItem
+         Get Value Item iArrayItem to sTxt
+         If (sTxt = "#DFWriteLine#") Begin
+            Get Value Item (iArrayItem + 1) to nStartX
+            Get Value Item (iArrayItem + 2) to nStartY
+            Get Value Item (iArrayItem + 3) to nLength
+            Get Value Item (iArrayItem + 4) to iHorVert
+            Get Value Item (iArrayItem + 5) to dwColor
+            Get Value Item (iArrayItem + 6) to nWeight
+            Get Value Item (iArrayItem + 7) to iUCp
+            Delegate Send DFWriteLine nStartX nStartY nLength iHorVert dwColor nWeight iUCp
+         End
+         Else If (sTxt = "#DFWriteBmp#") Begin  //CHS 06/05/00
+            Get Value Item (iArrayItem + 1) to sFileName
+            Get Value Item (iArrayItem + 2) to nStartX
+            Get Value Item (iArrayItem + 3) to nStartY
+            Get Value Item (iArrayItem + 4) to nHeight
+            Get Value Item (iArrayItem + 5) to nWidth
+            Get Value Item (iArrayItem + 6) to iUCp
+            Delegate Send DFWriteBmp sFileName nStartX nStartY nHeight nWidth iUCp
+         End
+         Else Begin
+            Get Value Item (iArrayItem + 1) to nX1
+            Get Value Item (iArrayItem + 2) to nX2
+            Get Value Item (iArrayItem + 3) to iAttr
+            Get Value Item (iArrayItem + 4) to iDec
+            Get Value Item (iArrayItem + 5) to iNewLine
+            Get Value Item (iArrayItem + 6) to sFontName
+            Get Value Item (iArrayItem + 7) to iFontSize
+            Get Value Item (iArrayItem + 8) to nVertOffset
+            Get Value Item (iArrayItem + 9) to dCharSet      //PB 08/30/01
+            Delegate Set DFCurrent_FontSize to iFontsize
+            Delegate Set DFCurrent_Font to sFontname
+            Delegate Set pCharSet       to dCharSet          //PB 08/30/01
+            Delegate Set pVertOffset to nVertOffset
+            Delegate Send DFVpeWrite sTxt nX1 nX2 iAttr iDec iNewLine
+         End
+      Loop
+      Delegate Send FlushVpeBuffer
+      Get pFrame  to iFrame
+      Get pColor  to dwColor
+      Get pWeight to iWeight
+      Get pFColor to dwFColor
+      Get pFill   to iFill
+      Delegate Send DFHeaderFrame iFrame dwColor iWeight dwFColor iFill
+      // If the frame is filled, the header has been erased, so it must be printed again.
+      // A better way would be to print the frame first, but we do not have the coordinates
+      // to print the frame until the text has been printed.
+      If iFill Begin
+         Set pFill To False                    // Turn the fill off so the text will show.
+//CHS 2/1/01         Delegate Send DFVpeSet VTOP iSaveVTop // Reset VTop.
+         // Use pFrameTop instead of iSaveVTop because VTOP may have been changed
+         // to position the header.
+         Delegate Get pFrameTop to iFrameTop                        //CHS 2/1/01
+         Delegate Send DFVpeSet VTOP iFrameTop // Reset VTop.       //CHS 2/1/01
+         Delegate Set pNextVTop to 0           // Reset pNextVTop.
+         Set pPrinting To False
+         Send VpePrintHeader                   // Reprint the header.
+         Set pFill To True                     // Turn the fill back on.
+      End
+      // Restore the Font
+      Delegate Set DFCurrent_Font to sSaveFontName
+      Delegate Set DFCurrent_FontSize to iSaveFontSize
+      Delegate Set PCharSet to dSaveCharSet     //PB 08/30/01
+      Delegate Set pVertOffset to nSaveVertOffset
+      Delegate Set pPrintingHeader To False
+      Set pPrinting To False
+      Delegate Set pWriteLinePos to iWriteLinePos   //CHS 10/9/99
+      Delegate Get pFrameBottom to iFrameBottom                                                         //CHS 06/05/00
+      Delegate Get DFVpeGet VTOP to iVTop                                                               //CHS 06/05/00
+      If (iFrameBottom > iVTOP) Delegate Send VpeResetPosition iFrameBottom iFrameBottom iFrameBottom   //CHS 06/05/00
+   End_Procedure  // VpePrintHeader
+
+
+   Procedure SetHeaderFrameType Integer iFrame dWord dwColor Integer iWeight dWord dwFColor Integer iFill
+      Set pFrame  to iFrame
+      Set pColor  to dwColor
+      If (iWeight = 0) Move 1 to iWeight
+      Set pWeight to iWeight
+      Set pFColor to dwFColor
+      Set pFill   to iFill
+   End_Procedure  // SetHeaderFrameType                                                       i
+
+
+   Procedure Delete_Data
+      Forward Send Delete_Data
+      Set pFrame  to HDR_NOFRAME
+      Set pColor  to clBlack
+      Set pWeight to 1
+      Set pFColor to clBlack
+      Set pFill   to DFGR_TRAN
+      Set pHeight to 0
+      Set pLineHeight to 0
+   End_Procedure  // Delete_Data
+
+End_Class  // cHeader
+
+
+Class cPageTop Is A cHeader
+
+   Procedure VpePrintHeader
+      Local Integer iVTopMargin iTop
+      // Do not do anything if there are no items.
+      If (Item_Count(Current_Object)) Begin
+         // Set VTOPMARGIN to pTop.  VTOPMARGIN is used by DFWriteBmp
+         Delegate Get DFVpeGet VTOPMARGIN to iVTopMargin   //CHS 06/05/00
+         Delegate Get pTop to iTop                         //CHS 06/05/00
+         Delegate Send DFVpeSet VTOPMARGIN iTop            //CHS 06/05/00
+         Delegate Send VpeSkipToTop
+         Forward Send VpePrintHeader
+         // Reset VTOPMARGIN.
+         If (Not(pFill(Self))) Delegate Send DFVpeSet VTOPMARGIN iVTopMargin   //CHS 2/1/01
+         // Skip to the top margin.
+         // If the header is being filled, wait until the next pass.
+         If (Not(pFill(Self))) Delegate Send VpeSkipToTopMargin
+//CHS 2/1/01         // Reset VTOPMARGIN.
+//CHS 2/1/01         If (Not(pFill(Self))) Delegate Send DFVpeSet VTOPMARGIN iVTopMargin   //CHS 06/05/00
+      End
+   End_Procedure  // VpePrintHeader
+
+
+   Procedure Delete_Data
+      Forward Send Delete_Data
+      Set pLines to 1  // Initialize to 1 to account for the space after the heading.
+   End_Procedure  // Delete_Data
+
+End_Class  // cPageTop
+
+
+// cMidHeader is for headers that are neither at the top or the bottom.
+Class cMidHeader Is A cHeader
+
+   Procedure VpePrintHeader
+      // Do not do anything if there are no items.
+      If (Item_Count(Self)) Begin
+         Forward Send VpePrintHeader
+         // Set pSkipHalfSpace true so that the body underneath the header will
+         // start a half space below the header, unless pPrinting is true, which
+         // means that VpePrintHeader has been sent recursively and we need to wait
+         // to set pSkipHalfSpace True.
+         If (Not(pPrinting(Self))) Delegate Set pSkipHalfSpace To True
+      End
+   End_Procedure  // VpePrintHeader
+
+
+   Procedure Delete_Data
+      Forward Send Delete_Data
+      Set pLines to 1  // Initialize to 1 to account for the space after the heading.
+   End_Procedure  // Delete_Data
+
+End_Class  // cPageHeader
+
+
+// This is somewhat of a misnomer because it is used for both subheaders
+// and totals.  This class sets pCheckNewPage to True so that a check is
+// done to see if a new page needs to be started before printing the header.
+Class cSubheader Is A cMidHeader    //CHS 04/13/00
+   Procedure Construct_Object       //CHS 4/22/00
+      Forward Send Construct_Object
+      Property Integer pHeaderWrap Public HDR_NOWRAP
+      Property Integer pHeaderNr   Public -1
+   End_Procedure
+   Procedure VpePrintHeader
+      Delegate Set pCheckNewPage to True
+      Forward Send VpePrintHeader
+   End_Procedure
+End_Class
+
+//CHS 04/13/00 Class cTotal Is A cMidHeader
+Class cTotal Is A cSubHeader
+
+   Procedure VpePrintHeader
+      Local Integer iWrapping   //CHS 4/22/00
+      Forward Send VpePrintHeader
+//CHS 4/22/00      Delegate Send ClearSubheaders
+      Delegate Get pWrapping to iWrapping                                        //CHS 4/22/00
+      If (iWrapping = 0) Begin                                                   //CHS 4/22/00
+         If (pHeaderNr(Self) >=0) Begin                                          //CHS 4/22/00
+            Delegate Send ClearSubheader (pHeaderNr(Self))                       //CHS 4/22/00
+         End                                                                     //CHS 4/22/00
+         Else Begin                                                              //CHS 4/22/00
+            Delegate Send ClearSubheaders                                        //CHS 4/22/00
+            Delegate Send ClearSubtotals                                         //CHS 4/22/00
+         End                                                                     //CHS 4/22/00
+      End                                                                        //CHS 4/22/00
+   End_Procedure
+
+End_Class  // cTotal
+
+
+Class cPageBottom Is A cHeader
+
+   Procedure VpePrintHeader
+      Local Integer iVTop iNextVTop iSkipHalfSpace iSelf iVBottom
+      Move Self to iSelf
+      // Do not do anything if there are no items.
+      If (Item_Count(iSelf)) Begin
+         Delegate Get DFVpeGet VTOP to iVTop
+         Delegate Get DFVpeGet VBOTTOM to iVBottom   //CHS 04/13/00
+         Delegate Get pNextVTop to iNextVTop
+         Delegate Get pSkipHalfSpace to iSkipHalfSpace
+         Delegate Send VpeSkipToBottom (pHeight(iSelf))
+         Delegate Set pPrintingPageBottom  to True              //PB 11/25/00
+         Forward  Send VpePrintHeader
+         Delegate Set pPrintingPageBottom  to False             //PB 11/25/00
+//CHS 04/13/00         Delegate Send VpeResetPosition iVTop iNextVTop
+         Delegate Send VpeResetPosition iVTop iNextVTop iVBottom   //CHS 04/13/00
+         Delegate Set pSkipHalfSpace to iSkipHalfSpace  // Reset pSkipHalfSpace to its previous state.
+      End
+   End_Procedure  // VpePrintHeader
+
+End_Class  // cPageBottom
+
+
+Class cFooter Is A cHeader   //CHS 01/19/00
+
+   Procedure VpePrintHeader
+      Local Integer iVTop iNextVTop iSkipHalfSpace iSelf iVBottom
+      Move Self to iSelf
+      // Do not do anything if there are no items.
+      If (Item_Count(iSelf)) Begin
+         Delegate Get DFVpeGet VTOP to iVTop
+         Delegate Get DFVpeGet VBOTTOM to iVBottom   //CHS 04/10/00
+         Delegate Get pNextVTop to iNextVTop
+         Delegate Send VpeSkipToBottomMargin (pHeight(iSelf))
+         Forward  Send VpePrintHeader
+//CHS 04/13/00         Delegate Send VpeResetPosition iVTop iNextVTop
+         Delegate Send VpeResetPosition iVTop iNextVTop iVBottom   //CHS 04/13/00
+      End
+   End_Procedure  // VpePrintHeader
+
+End_Class
+
+// Contains all of the headers.
+Class cHeaders Is A DFObject
+   Procedure Construct_Object
+      Forward Send Construct_Object
+
+      Property Integer pWrapping Public False   //CHS 4/22/00
+
+      Object oPageTop Is A cPageTop
+      End_Object
+
+      Object oReportHeader Is A cMidHeader
+      End_Object
+
+      Object oPageHeader Is A cMidHeader
+      End_Object
+
+      Object oPageHeader2 Is A cMidHeader   //CHS 01/08/00
+      End_Object
+
+      Object oPageTitle Is A cMidHeader
+      End_Object
+
+//CHS 4/22/00      Object oSubheader Is A cSubheader   //CHS 04/13/00 cMidHeader
+//CHS 4/22/00      End_Object
+
+//CHS 4/22/00      Object oSubTotal Is A cTotal
+//CHS 4/22/00      End_Object
+
+      Object oSubheaders Is A Array   //CHS 4/22/00
+      End_Object                      //CHS 4/22/00
+      Send CreateSubheaders           //CHS 4/22/00
+
+      Object oSubTotals Is A Array    //CHS 4/22/00
+      End_Object                      //CHS 4/22/00
+      Send CreateSubTotals            //CHS 4/22/00
+
+
+      Object oTotal is a cTotal
+      End_Object
+
+//      Object oPageTotal Is A cHeader
+//      End_Object
+
+//      Object oPageFooter Is A cHeader
+//      End_Object
+
+      Object oReportFooter Is A cFooter   //CHS 01/19/00
+      End_Object
+
+      Object oPageBottom Is A cPageBottom
+      End_Object
+
+   End_Procedure  //Construct_Object
+
+   Procedure CreateSubHeaders   //CHS 4/22/00
+      Local Integer iObj iItem iSubheaders
+      Move (oSubheaders(Self)) to iSubheaders
+      For iItem From 0 to 19
+         Object oSubheader Is A cSubHeader
+            Move Self to iObj
+            Set Value of iSubheaders Item iItem to iObj
+            Set pHeaderNr to iItem
+         End_Object
+      Loop
+   End_Procedure  // CreateSubHeaders
+
+
+   Procedure CreateSubTotals   //CHS 4/22/00
+      Local Integer iObj iItem iSubTotals
+      Move (oSubTotals(Self)) to iSubTotals
+      For iItem From 0 to 19
+         Object oSubTotal Is A cTotal
+            Move Self to iObj
+            Set Value of iSubTotals Item iItem to iObj
+            Set pHeaderNr to iItem
+         End_Object
+      Loop
+   End_Procedure  // CreateSubTotals
+
+
+//CHS 4/22/00   Function HeaderObject Integer iHeaderType Returns Integer
+   Function HeaderObject Integer iHeaderNr Integer iHeaderType Returns Integer   //CHS 4/22/00
+      If (iHeaderType = DFPageTop)      Function_Return (oPageTop(Self))
+      If (iHeaderType = DFReportHeader) Function_Return (oReportHeader(Self))
+      If (iHeaderType = DFPageHeader)   Function_Return (oPageHeader(Self))
+      If (iHeaderType = DFPageHeader2)  Function_Return (oPageHeader2(Self))   //CHS 01/08/00
+      If (iHeaderType = DFPageTitle)    Function_Return (oPageTitle(Self))
+      If (iHeaderType = DFPageBottom)   Function_Return (oPageBottom(Self))
+//CHS 4/22/00      If (iHeaderType = DFSubHeader)    Function_Return (oSubheader(Self))
+      If (iHeaderType = DFSubHeader)  Function_Return (Value(oSubheaders(Self), iHeaderNr - 1))   //CHS 4/22/00
+      If (iHeaderType = DFTotal)        Function_Return (oTotal(Self))
+//CHS 4/22/00      If (iHeaderType = DFSubTotal)     Function_Return (oSubtotal(Self))
+      If (iHeaderType = DFSubTotal)   Function_Return (Value(oSubtotals(Self), iHeaderNr - 1))    //CHS 4/22/00
+      If (iHeaderType = DFReportFooter) Function_Return (oReportFooter(Self))   //CHS 01/19/00
+      Function_Return 0
+   End_Function  // HeaderObject
+
+
+//CHS 4/22/00   Function CurrentHeader Returns Integer
+//CHS 4/22/00      Local Integer iHeaderObj iHeaderType
+//CHS 4/22/00      Delegate Get DFCurrent_HeaderType to iHeaderType
+//CHS 4/22/00      Move (HeaderObject(Self, iHeaderType)) to iHeaderObj
+//CHS 4/22/00      Function_Return iHeaderObj
+//CHS 4/22/00   End_Function  // CurrentHeader
+
+
+   Function CurrentHeader Returns Integer   //CHS 4/22/00
+      Local Integer iHeaderObj iHeaderNr iHeaderType
+      Delegate Get DFCurrent_HeaderNr   to iHeaderNr
+      Delegate Get DFCurrent_HeaderType to iHeaderType
+      Move (HeaderObject(Self, iHeaderNr, iHeaderType)) to iHeaderObj
+      Function_Return iHeaderObj
+   End_Function  // CurrentHeader
+
+
+   Procedure AddHeaderItem String sTxt Number nX1 Number nX2 Integer iAttr Integer iDec Integer iNewLine
+      Local Integer iHeaderObj
+      Get CurrentHeader to iHeaderObj
+      If iHeaderObj Send AddHeaderItem to iHeaderObj sTxt nX1 nX2 iAttr iDec iNewLine
+   End_Procedure  // AddHeaderItem
+
+
+   Procedure AddHeaderLine Number nStartX Number nStartY Number nLength;
+                           Integer iHorVert Dword dwColor Number nWeight Integer iUCp
+      Local Integer iHeaderObj
+      Get CurrentHeader to iHeaderObj
+      If iHeaderObj Send AddHeaderLine to iHeaderObj nStartX nStartY nLength iHorVert dwColor nWeight iUCp
+   End_Procedure  // AddHeaderLine
+
+   Procedure AddHeaderBmp String sFileName Number nStartX Number nStartY Number nHeight Number nWidth Integer iUCp   //CHS 06/05/00
+      Local Integer iHeaderObj
+      Get CurrentHeader to iHeaderObj
+      If iHeaderObj Send AddHeaderBmp to iHeaderObj sFileName nStartX nStartY nHeight nWidth iUCp
+   End_Procedure
+
+   Procedure HeaderLineCheck Integer iLines
+      Local Integer iHeaderObj
+      Get CurrentHeader to iHeaderObj
+      Set pLines of iHeaderObj to (pLines(iHeaderObj) + iLines)
+   End_Procedure  // HeaderLineCheck
+
+
+   Procedure VpePrintHeaders
+      Local Integer iPage iItem iSubHeader iSubTotal
+      Delegate Get DFCurrent_Page to iPage
+      Send VpePrintHeader to (oPageTop(Self))
+      If (iPage = 1) Send VpePrintHeader to (oReportHeader(Self))
+      Send VpePrintHeader to (oPageHeader(Self))
+      If (iPage <> 1) Send VpePrintHeader to (oPageHeader2(Self))   //CHS 01/08/00
+      Send VpePrintHeader to (oPageTitle(Self))
+      Send VpePrintHeader to (oPageBottom(Self))
+//CHS 4/22/00      Send VpePrintHeader to (oSubHeader(Self))
+      Set pWrapping to True                                                          //CHS 4/22/00
+      For iItem From 0 to 19                                                         //CHS 4/22/00
+         Get Value of (oSubheaders(Self)) Item iItem to iSubHeader                   //CHS 4/22/00
+         If (pHeaderWrap(iSubHeader) = HDR_WRAP) Send VpePrintHeader to iSubHeader   //CHS 4/22/00
+         Get Value of (oSubtotals(Self)) Item iItem to iSubTotal                     //CHS 4/22/00
+         If (pHeaderWrap(iSubTotal) = HDR_WRAP) Send VpePrintHeader to iSubTotal     //CHS 4/22/00
+      Loop                                                                           //CHS 4/22/00
+      Set pWrapping to False                                                         //CHS 4/22/00
+   End_Procedure  // VpePrintHeaders
+
+
+//CHS 4/22/00   Procedure VpePrintHeader Integer iHeaderType
+//CHS 4/22/00      Local Integer iHeaderObj
+//CHS 4/22/00      Move (HeaderObject(Self, iHeaderType)) to iHeaderObj
+//CHS 4/22/00      If iHeaderObj Send VpePrintHeader to iHeaderObj
+//CHS 4/22/00   End_Procedure  // VpePrintHeader
+
+   Procedure VpePrintHeader Integer iHeaderNr Integer iHeaderType   //CHS 4/22/00
+      Local Integer iHeaderObj
+      Move (HeaderObject(Self, iHeaderNr, iHeaderType)) to iHeaderObj
+      If iHeaderObj Send VpePrintHeader to iHeaderObj
+   End_Procedure  // VpePrintHeader
+
+
+   Procedure SetHeaderFrameType Integer iFrame Integer dwColor Integer iWeight Integer dwFColor Integer iFill
+      Local Integer iHeaderObj
+      Get CurrentHeader to iHeaderObj
+      If iHeaderObj Send SetHeaderFrameType to iHeaderObj iFrame dwColor iWeight dwFColor iFill
+   End_Procedure  // SetHeaderFrameType
+
+
+   Procedure SetHeaderWrap Integer iHeaderWrap   //CHS 4/22/00
+      Local Integer iHeaderObj
+      Get CurrentHeader to iHeaderObj
+      If iHeaderObj Set pHeaderWrap of iHeaderObj to iHeaderWrap
+   End_Procedure
+
+
+//CHS 4/22/00   Procedure Delete_Data Integer iHeaderType
+//CHS 4/22/00      Local Integer iHeaderObj
+//CHS 4/22/00      Move (HeaderObject(Self, iHeaderType)) to iHeaderObj
+//CHS 4/22/00      If iHeaderObj Send Delete_Data to iHeaderObj
+//CHS 4/22/00   End_Procedure  // Delete_Data
+
+   Procedure Delete_Data Integer iHeaderNr Integer iHeaderType   //CHS 4/22/00
+      Local Integer iHeaderObj
+      Move (HeaderObject(Self, iHeaderNr, iHeaderType)) to iHeaderObj
+      If iHeaderObj Send Delete_Data to iHeaderObj
+   End_Procedure  // Delete_Data
+
+   Procedure ClearSubheaders   //CHS 4/22/00
+      Local Integer iItem iSubheaders
+      Move (oSubheaders(Self)) to iSubheaders
+      For iItem From 0 to 19
+         Send Delete_Data to (Value(iSubheaders, iItem))
+      Loop
+   End_Procedure
+
+   Procedure ClearSubheader Integer iHeaderNr
+      Send Delete_Data to (Value(oSubheaders(Self), iHeaderNr))
+   End_Procedure
+
+
+   Procedure ClearSubtotals   //CHS 4/22/00
+      Local Integer iItem iSubtotals
+      Move (oSubtotals(Self)) to iSubtotals
+      For iItem From 0 to 19
+         Send Delete_Data to (Value(iSubtotals, iItem))
+      Loop
+   End_Procedure
+
+
+   Procedure ClearHeaders
+      Send Delete_Data to (oPageTop(Self))
+      Send Delete_Data to (oReportHeader(Self))
+      Send Delete_Data to (oPageHeader(Self))
+      Send Delete_Data to (oPageHeader2(Self))   //CHS 01/08/00
+      Send Delete_Data to (oPageTitle(Self))
+      Send Delete_Data to (oTotal(Self))
+      Send Delete_Data to (oPageBottom(Self))
+      Send Delete_Data to (oReportFooter(Self))   //CHS 01/19/00
+//CHS 4/22/00      Send Delete_Data to (oSubHeader(Self))
+//CHS 4/22/00      Send Delete_Data to (oSubTotal(Self))
+      Send ClearSubheaders   //CHS 4/22/00
+      Send ClearSubtotals    //CHS 4/22/00
+   End_Procedure  // ClearHeaders
+
+
+//CHS 4/22/00   Procedure ClearSubheaders
+//CHS 4/22/00      Send Delete_Data to (oSubheader(Self))
+//CHS 4/22/00   End_Procedure
+
+End_Class  // cHeaders
+
+
+Class cAsciiFileOffsets Is A Array
+
+   Procedure SetOffset Integer iLocation Integer iChars
+      Local Integer iNextItem
+      Get Item_Count to iNextItem
+      Set Value Item iNextItem to iLocation
+      Set Value Item (iNextItem + 1) to iChars
+   End_Procedure
+
+   Function OffsetLocation Integer iItem Returns Integer
+      Function_Return (Value(Self, 2*iItem))
+   End_Function
+
+   Function OffsetChars Integer iItem Returns Integer
+      Function_Return (Value(Self, 2*iItem + 1))
+   End_Function
+
+   Function CumulativeOffset Integer iLoc Integer iAlign Returns Integer
+      Local Integer iItem iMaxItem iCumulativeOffset iOffsetLocation
+      Move (Item_Count(Self)/2 - 1) to iMaxItem
+      For iItem From 0 to iMaxItem
+         Get OffsetLocation iItem to iOffsetLocation
+         // The check on iAlign takes care of the case when a left aligned item
+         // is followed by a right aligned item, so that the left and right coordinates
+         // of both items are the same.  In that case the second (right aligned) item
+         // should have the offset applied, but the first (left aligned) item should not.
+         If (iOffsetLocation < iLoc Or (iOffsetLocation = iLoc And iAlign = ALIGN_RIGHT)) ;
+            Add (OffsetChars(Self,iItem)) to iCumulativeOffset
+      Loop
+      Function_Return iCumulativeOffset
+   End_Function
+
+   Function TotalOffset Returns Integer
+      Local Integer iItem iMaxItem iTotalOffset
+      Move (Item_Count(Self)/2 - 1) to iMaxItem
+      For iItem From 0 to iMaxItem
+         Add (OffsetChars(Self,iItem)) to iTotalOffset
+      Loop
+      Function_Return iTotalOffset
+   End_Function
+
+End_Class  // cAsciiFileOffsets
+
+
+// Translate Winprint messages into VPE messages.
+Class Vpe_Printer is a DF_Printer
+    Procedure Construct_Object
+       Forward Send Construct_Object
+       // Public properties.
+       Property String  pSetupFile          Public "C:\Vpe.Prs"         // Location of VPE print setup file.
+       Property String  pProcessString      Public "Processing"         // Text for status bar when processing begins.
+       Property String  pFinishString       Public "Finished"           // Text for status bar after processing ends.
+       Property Integer pAdjustFontSize     Public True                 // Adjust the font size for numbers if they
+                                                                        // the number would be cut off otherwise.
+       Property Integer pAsciiChannel       Public 7                    // Channel for Ascii Output.
+       Property Integer pNoteLength         Public 100                  // Minimum length of string considered a "note" for which
+                                                                        // line wrapping is used.
+       Property String  pVLicense1          Public "VPE-X2360-4147"     // VPE license.
+       Property String  pVLicense2          Public "N3HE-SOTC"          // VPE license.
+       Property String  pCaption            Public "Print Preview"      // Caption for the print preview
+       Property Integer pVpeDocFlags        Public VPE_FIXED_MESSAGES   // Flags used in VpeOpenDoc.
+       Property Integer pVpePicFlags        Public 0                    // Flags used by VpePicture in DFWriteBmp
+
+
+       // Internal properties.
+       Property dWord   phDoc               Public 0             // VPE document handle.
+       Property Integer pColumns            Public 0             // No of columns passed through DFNew_Page
+       Property String  pText               Public ""            // Text to be printed.
+       Property Number  pX1                 Public 0             // Left x coordinate (Winprint scale)
+       Property Number  pX2                 Public 0             // Right x coordinate (Winprint scale)
+       Property Integer pDec                Public -1            // Decimals
+       Property Integer pAttr               Public 0             // Attributes
+       Property Integer pNewLine            Public 0             // 1 = Start a new line
+       Property String  pLastFontName       Public ""
+       Property String  pLastFontSize       Public 0
+       Property dWord   pLastCharSet        Public -1        //PB 08/30/01
+       Property String  pCurrentFontName    Public ""
+       Property Integer pCurrentFontSize    Public 0
+       Property dWord   pCurrentCharSet     Public -1        //PB 08/30/01
+       Property dWord   pCharSet            Public -1        //PB 08/30/01
+       Property Integer pLineHeight         Public 0
+       Property Integer pPlace              Public 0
+       Property Integer pCheckNewPage       Public True
+       Property Integer pWindowHandle       Public 0
+       Property String  pLine               Public (Repeat(" ", 132))
+//CHS 08/14/00       Property Integer pPrintFlags         Public 0
+       Property Integer pOrientation        Public 0         //CHS 08/14/00
+       Property Integer pPaper              Public 0         //CHS 08/14/00
+       Property Integer pBin                Public 0         //CHS 08/14/00
+       Property Integer pResolution         Public 0         //CHS 08/14/00
+       Property Integer pWritetoAscii       Public False
+       Property String  pFile_Location      Public ""
+       Property Integer pNextVTop           Public 0
+       Property Integer pTop                Public 50
+       Property Integer pBottom             Public 0
+       Property Integer pPrintingHeader     Public False
+       Property Integer pPrintingPageBottom Public False   //PB 11/25/00
+       Property Integer pFrameTop           Public 0
+       Property Integer pFrameBottom        Public 0
+       Property Integer pSetupInitialized   Public False
+       Property Integer pFirstItem          Public True
+       Property Integer pSkipHalfSpace      Public False
+       Property Integer pPreviewOnOpen      Public True
+       Property Number  pVertOffset         Public 0
+       Property Number  pPrevVertOffset     Public 0
+       Property Integer pWriteLinePos       Public 0       //CHS 10/9/99
+       Property Integer pTable              Public 0       //PB  5/12/00
+       Property Integer pTableCell          Public 0       //PB  5/12/00
+       Property Integer pList               Public 0       //PB  5/15/00
+       Property Integer pListCell           Public 0       //PB  5/15/00
+       Property Integer pUpdatePos          Public 0       //PB  5/26/00
+       Property Integer pPrevUpdatePos      Public 0       //PB  5/26/00
+       Property Integer pPrevListStart      Public 9999999 //PB  5/18/00
+       Property Integer pPrevListStop       Public 0       //PB  5/18/00
+       Property Number  pTableHeight        Public 0       //PB  5/18/00
+       Property Number  pPrevTableHeight    Public 0       //PB  5/18/00
+       Property DWord   pTableColor         Public 0       //PB  5/12/00
+       Property DWord   pPrevTableColor     Public 0       //PB  5/12/00
+       Property DWord   pFrameColor         Public 0       //PB  5/12/00
+       Property DWord   pPrevFrameColor     Public 0       //PB  5/12/00
+       Property Integer pFrameSize          Public 0       //PB  5/18/00
+       Property Integer pPrevFrameSize      Public 0       //PB  5/18/00
+       Property Number  pLeftMargin         Public 0       //PB  5/18/00
+       Property Number  pRightMargin        Public 0       //PB  5/18/00
+       Property Number  pTopMargin          Public 0       //PB  5/18/00
+       Property Number  pBottomMargin       Public 0       //PB  5/18/00
+       Property Number  pHeaderMargin       Public 0       //PB  5/18/00
+       Property Number  pFooterMargin       Public 0       //PB  5/18/00
+       Property Integer pResetPage          Public 0       //CHS 07/13/00
+       Property String  pDevice             Public ""      //CHS 07/25/00
+       Property Integer pNumberOfCopies     Public 0       //PB  08/17/00
+       Property Integer pBinFirstPage       Public 0       //CHS 08/20/00
+       Property Integer pSubPageCount       Public 0       //PB  08/21/00
+
+       Object oHeaders Is A cHeaders
+       End_Object
+
+       Object oAsciiFileOffsets Is A cAsciiFileOffsets
+       End_Object
+
+       // Used for reading the Ascii file back to apply offsets.
+       Object oTempArray Is A Array
+       End_Object
+
+    End_Procedure  // Construct_Object
+
+    //  ******* New functions and procedures. ****************
+
+    // Winprint stores the colors shifted over by 2 bytes.
+    // Dividing by 256 ($000000FF) converts the Winprint colors
+    // to the standard RGB colors.
+    Function VpeColor DWord dwColor Returns dWord
+       Move (dwColor/256) to dwColor
+       If (dwColor < 0) Move (dwColor + (2^24)) to dwColor  // Convert to unsigned 32 bit integer.   //CHS 06/03/00
+       Function_Return dwColor
+    End_Function  // VpeColor
+
+
+    Function VpeScale Number nPos Returns Integer
+       Local Integer iVpeScale
+       If (DFCurrent_Metrics(Self) = "INCH") Move (2.54 * nPos) to nPos
+       Move (100 * nPos) to iVpeScale
+       Function_Return iVpeScale
+    End_Function  // VpeScale
+
+
+    Function VpeToWinprint Number nVal Returns Number
+       Move (nVal/100.0) to nVal
+       If (DFCurrent_Metrics(Self) = "INCH") Move (nVal/2.54) to nVal
+       Function_Return nVal
+    End_Function  // VpeToWinprint
+
+
+//PB 08/30/01    Procedure SelectVpeFont String sFontName Integer iFontSize
+    Procedure SelectVpeFont String sFontName Integer iFontSize dWord dCharSet    //PB 08/30/01
+       Local Handle hDoc
+       Local Integer iRetVal iVtop iVbottom iFontChanged
+       Get phDoc to hDoc
+       // Do not select the font until the document has been opened.
+       If hDoc Begin
+          Move (sFontName <> pCurrentFontName(Self) Or iFontSize <> pCurrentFontSize(Self)) ;
+            to iFontChanged
+          // Do not select the font if one of the parameters is blank or the font has not changed since the last time.
+          If (sFontName <> "" And iFontSize <> 0 And iFontChanged) Move (VpeSelectFont(hDoc, sFontName, iFontSize)) to iRetVal
+//PB 09/04/01  If (dCharSet >= 0) Move (VpeSetCharset(hDoc, dCharset)) to iRetVal    //PB 08/30/01
+          If (dCharSet >= 0 And dCharSet <> pCurrentCharSet(Self)) Begin   //PB 09/04/01
+            Move (VpeSetCharset(hDoc, dCharset)) to iRetVal
+             Set pCurrentCharSet to dCharSet
+           End
+          // If the font has changed or pLineHeight has not been set, calculate pLineHeight.
+          // In some reports the font is not set explicitly, so pLineHeight has to be computed even if the font is not set explicitly.
+          If (iFontChanged or pLineHeight(Self) = 0) Begin
+             // This can be rewritten using rendering.
+             // Save VTOP
+             Move (VpeGet(hDoc, VTOP)) to iVTop
+             // Select the Font
+             // Write to a space that should be blank.
+             Move (VpeWrite(hDoc, 0, 10, 100, VFree, " ")) to iRetVal
+             Set pLineHeight to (VpeGet(hDoc, VBOTTOM) - VpeGet(hDoc, VTOP))
+             // Restore VTOP
+             Move (VpeSet(hDoc, VTOP, iVTop)) to iRetval
+             // Compute the new VBOTTOM.
+             Move ((pLineHeight(Self)) + iVTop) to iVBottom
+             Move (VpeSet(hDoc, VBOTTOM, iVBottom)) to iRetval
+             // Store the current font
+             Set pCurrentFontName to sFontName
+             Set pCurrentFontSize to iFontSize
+          End
+       End
+    End_Procedure  // SelectVpeFont
+
+
+    Function SetupAsciiOutput Returns Integer
+      Local String sFile_Loc
+      If (Not(pWriteToAscii(Self))) Begin
+         Get TESaveFileDialog "Text" "" "Report" to sFile_Loc
+         If (sFile_Loc eq "") Function_Return 1
+         Direct_Output Channel (pAsciiChannel(Self)) sFile_Loc
+         // Direct_Output moves 55 to Pageend, and this caused formfeeds on the Ascii
+         // output on some legacy reports that still used the Report macro.
+         // Move 0 to PageEnd caused a GPF on VDFs that we use Runprogram Wait.
+         // 20,000 is about the max that Pageend can be without causing a GPF.
+         Move 20000 to PageEnd
+         Set pWritetoAscii To True
+         Set pFile_Location to sFile_Loc
+         Send Delete_Data to (oAsciiFileOffsets(Self))
+      End
+      Function_Return 0
+    End_Function  // SetupAsciiOutput
+
+
+    Function ColumnWidth Returns Number
+       Local Handle hDoc
+       Local Number nLeftMargin nRightMargin nColumnWidth
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeGet(hDoc, VLEFTMARGIN))  to nLeftMargin
+          Move (VpeGet(hDoc, VRIGHTMARGIN)) to nRightMargin
+          Move ((nRightMargin - nLeftMargin)/pColumns(Self)) to nColumnWidth  // Divide by 100 to convert .1mm (VPE scale) to cm (Winprint scale)
+          Move (VpeToWinprint(Self, nColumnWidth)) to nColumnWidth
+          Function_Return nColumnWidth
+       End
+    End_Function  // ColumnWidth
+
+
+//CHS 08/14/00     Function VpeCheckPrintDialogFlag Integer PDFlag Returns Integer
+///CHS 07/15/00        Local Integer iRetVal
+////CHS 07/15/00        If (PDFlag = DF_PORTRAIT) Begin
+////CHS 07/15/00           If (Mod(pPrintFlags(Self), 10) iAnd DF_PORTRAIT) Move 1 to iRetVal
+////CHS 07/15/00        End
+////CHS 07/15/00        If (PDFlag = DF_LANDSCAPE) Begin
+////CHS 07/15/00           If (Mod(pPrintFlags(Self), 10) iAnd DF_LANDSCAPE) Move 1 to iRetVal
+////CHS 07/15/00        End
+////CHS 07/15/00        If (PDFlag = DF_PAPER_LETTER) Begin
+////CHS 07/15/00           If (Mod(pPrintFlags(Self), 500)/10 = DF_PAPER_LETTER/10) Move 1 to iRetVal
+////CHS 07/15/00        End
+////CHS 07/15/00        If (PDFlag = DF_PAPER_LEGAL) Begin
+////CHS 07/15/00           If (Mod(pPrintFlags(Self), 500)/10 = DF_PAPER_LEGAL/10) Move 1 to iRetVal
+////CHS 07/15/00        End
+////CHS 07/15/00        Function_Return iRetVal
+//        If (PDFlag < 10) Begin                                                     //CHS 08/10/00
+//           Function_Return ((Mod(pPrintFlags(Self), 10) iAnd PDFlag) = PDFlag)     //CHS 08/10/00
+//        End                                                                        //CHS 08/10/00
+//        If (PDFlag < 500) Begin                                                    //CHS 08/10/00
+//           Function_Return (Mod(pPrintFlags(Self), 500)/10 = PDFlag/10)            //CHS 08/10/00
+//        End                                                                        //CHS 08/10/00
+//        If (PDFlag < 10000) Begin                                                  //CHS 08/10/00
+//           Function_Return (Mod(pPrintFlags(Self), 10000)/500 = PDFlag/500)        //CHS 08/10/00
+//        End                                                                        //CHS 08/10/00
+//        If (PDFlag < 100000) Begin                                                 //CHS 08/10/00
+//           Function_Return (Mod(pPrintFlags(Self), 100000)/10000 = PDFlag/10000)   //CHS 08/10/00
+//        End                                                                        //CHS 08/10/00
+//     End_Function  // VpeCheckPrintDialogFlag
+
+     Function VpeCheckPrintDialogFlag Integer PDFlag Returns Integer   //CHS 08/14/00
+        If (PDFlag < 10)     Function_Return (pOrientation(Self) = PDFlag)
+        If (PDFlag < 500)    Function_Return (pPaper(Self) = PDFlag)
+        If (PDFlag < 10000)  Function_Return (pBin(Self) = PDFlag)
+        If (PDFlag < 100000) Function_Return (pResolution(Self) = PDFlag)
+     End_Function  // VpeCheckPrintDialogFlag
+
+
+    Procedure CloseAsciiOutput
+       Close_Output Channel (pAsciiChannel(Self))
+       Set pWriteToAscii To False
+       Set pFile_Location to ""
+    End_Procedure
+
+
+    Procedure DFPrintToAscii
+       Local Integer iReportType iRetVal Mode
+       Local string sFile_Loc sMessage sWord_path
+       Send FlushVpeBuffer
+       Get pFile_Location to sFile_Loc
+       Send CloseAsciiOutput
+       Move ("Report printed to " + sFile_Loc + "\nView this report now?") to sMessage
+       If (Message_Box(sMessage, "Print to File", MB_YESNO, MB_ICONEXCLAMATION) = MBR_YES) Begin
+          Get_Profile_String "APPLICATION_LINKS" ('WordPath') to sWord_Path
+          If (sWord_Path = "" Or Not(Get_File_Exists(sWord_Path))) Move "Notepad" to sWord_Path
+          Runprogram Background sWord_Path (uppercase(sFile_Loc))
+       End
+       Send CloseDoc
+    End_Procedure  // DFPrint_to_file
+
+
+    Procedure NewVpePage
+       Local Handle hDoc
+       Local Integer iLeftMargin iRightMargin iTopMargin iBottomMargin iRetVal iSaveCheckNewPage iBin
+       Local Integer iSubPage         //PB 08/21/00
+       Get phDoc to hDoc
+       If hDoc Begin
+          Send FlushVpeBuffer
+          // Can we use a default rectangle here?
+          Move (VpeGet(hDoc, VLEFTMARGIN))   to iLeftMargin
+          Move (VpeGet(hDoc, VRIGHTMARGIN))  to iRightMargin
+          Move (VpeGet(hDoc, VTOPMARGIN))    to iTopMargin
+          Move (VpeGet(hDoc, VBOTTOMMARGIN)) to iBottomMargin
+          Move (VpePageBreak(hdoc)) to iRetval
+          Set DFCurrent_Page to (VpeGetCurrentPage(hDoc))
+          Move (VpeSet(hDoc, VLEFTMARGIN, iLeftMargin))     to iRetVal
+          Move (VpeSet(hDoc, VRIGHTMARGIN, iRightMargin))   to iRetVAl
+          Move (VpeSet(hDoc, VTOPMARGIN, iTopMargin))       to iRetVal
+          Move (VpeSet(hDoc, VBOTTOMMARGIN, iBottomMargin)) to iRetVal
+          Move (VpeSet(hDoc, VTOP, iTopMargin))             to iRetVal
+          If (pBinFirstPage(Self) <> 0 And VpeGetCurrentPage(hDoc) = 1) Get pBinFirstPage to iBin   //CHS 08/20/00
+          Else Move (VpeGetDevPaperBin(hDoc)) to iBin                                               //CHS 08/20/00
+          Move (VpeSetPaperBin(hDoc, iBin)) to iRetVal                                              //CHS 08/20/00
+          Get pSubPageCount to iSubPage         // PB 08/21/00
+          Add 1 to iSubPage                     // PB 08/21/00
+          Set pSubPageCount to iSubPage         // PB 08/21/00
+          If (pWriteToAscii(Self)) Begin
+             Writeln Channel (pAsciiChannel(Self)) ""
+             Writeln Channel (pAsciiChannel(Self)) ""
+          End
+          Set pNextVTop to 0
+          Send VpePrintHeaders to (oHeaders(Self))
+       End
+    End_Procedure  // NewVpePage
+
+
+    Procedure InsertOffsetInFile Integer iLoc Integer iOffset
+       Local String sFile sLine sBlanks sChar
+       Local Integer iChannel iItem iMaxItem iTempArray iPos
+       Get pFile_Location to sFile
+       Get pAsciiChannel to iChannel
+       Move (oTempArray(Self)) to iTempArray
+       Close_Output Channel iChannel
+       // Read the file into an array, applying the offset.
+       Move (Repeat(" ", iOffset)) to sBlanks
+       Direct_Input Channel iChannel sFile
+       Repeat
+          Readln sLine
+          [~Seqeof] Begin
+             // Find the first blank before iLoc, and insert blanks.
+             Move iLoc to iPos
+             Repeat
+                Decrement iPos
+                Move (Mid(sLine, 1, iPos)) to sChar
+             Until (sChar = " " Or iPos = 1)
+             // If iPos = 0, check to see if this is a line.
+             // If so, insert line characters rather than blanks.
+             If (iPos = 1 And Left(sLine, 5) = "_____") Move (Repeat("_", iOffset)) to sBlanks
+             Else Move (Repeat(" ", iOffset)) to sBlanks
+             Move (Insert(sBlanks, sLine, iPos)) to sLine
+             Set Value Of iTempArray Item iItem to sLine
+             Increment iItem
+          End
+       Until [Seqeof]
+       // Write the lines back out.
+       Direct_Output Channel iChannel sFile
+       Move (iItem - 1) to iMaxItem
+       For iItem From 0 to iMaxItem
+          Writeln Channel iChannel (Value(iTempArray, iItem))
+       Loop
+       Send Delete_Data to iTempArray
+    End_Procedure   // InsertOffsetInFile
+
+
+    Procedure WriteToAscii Integer iX1 Integer iX2 String sText Integer iAlign Integer iNewLine
+       Local String sLine sTemp1 sTemp2
+       Local Integer iVpeLength iVpeLeftMargin iVpeRightMargin iBlanks iChars
+       Local Integer iOffset iAsciiFileOffsets iLength iAllocatedLength
+       Local Handle hDoc
+       If (pWriteToAscii(Self)) Begin
+          Get pLine to sLine
+          Get phDoc to hDoc
+          If hDoc Begin
+             Move (VpeGet(hDoc, VLEFTMARGIN))  to iVpeLeftMargin
+             Move (VpeGet(hDoc, VRIGHTMARGIN)) to iVpeRightMargin
+             Move (iVpeRightMargin - iVpeLeftMargin) to iVpeLength
+             If (iVpeLength < 2160) Move 132 to iChars
+             Else If (iVpeLength < 2795) Move 160 to iChars
+             Else Move 220 to iChars
+             If (sText <> "") Begin
+                Move (Trim(sText)) to sText
+                If (iX1 = VLEFTMARGIN)  Move iVpeLeftMargin  to iX1
+                If (iX2 = VRIGHTMARGIN) Move iVpeRightMargin to iX2
+                Move ((iX1 - iVpeLeftMargin) * iChars/iVpeLength + 0.5) to iX1
+                Move ((iX2 - iVpeLeftMargin) * iChars/iVpeLength + 0.5) to iX2
+                If (iX1 > iChars - 1) Move (iChars - 1) to iX1
+                If (iX2 > iChars) Move iChars to iX2
+
+                // Add any offsets that were needed to fit in large numbers in previous lines,
+                // or earlier in this line.
+                Move (oAsciiFileOffsets(Self)) to iAsciiFileOffsets
+                Add (CumulativeOffset(iAsciiFileOffsets, iX1, iAlign)) to iX1
+                Add (CumulativeOffset(iAsciiFileOffsets, iX2, iAlign)) to iX2
+
+
+                // Also need to check Align_Center, except we only use it in the page footer
+                // which we are not printing.
+
+                // If ALIGN_RIGHT (which is true for numbers), make sure that the text will
+                // fit in.  If not, increase the size of the line to fit the text in, and
+                // store the offset to be applied to future lines.
+                If (iAlign = ALIGN_RIGHT) Begin
+                   // Add 1 to the length of the number to make sure that there is at least one blank before the number.
+                   Move (Mid(sLine, Length(sText) + 1, iX2 - Length(sText) - 1)) to sTemp1
+                   // If sTemp1 is the text that sText overwrites.  If it is not blank, an offset
+                   // will have to be added
+                   If (sTemp1 <> "") Begin
+                      // iBlanks is the number of blanks at the right of the overwritten text.
+                      Repeat
+                         Increment iBlanks
+                         Move (Right(sTemp1,iBlanks)) to sTemp2
+                      Until (sTemp2 <> "")
+                      Move (Length(sText) - iBlanks + 2) to iOffset
+                      Send InsertOffsetInFile iX2 iOffset
+                      Send SetOffset to iAsciiFileOffsets iX1 iOffset
+                      Move (sLine + Repeat(" ", iOffset)) to sLine
+                      Move (iX2 + iOffset) to iX2
+                   End
+                   Move (iX2 - 1 - Length(sText)) to iX1
+                End
+                // If the text is left justified and the length of the text is less
+                // than its allocated length, change iX2 to just accomodate the
+                // length of the text to prevent overwriting other text with blanks
+                // when the items are not in sequential order.
+                // If the text is longer than its allocated length, truncate the text.
+                Else Begin
+                   Move (iX2 - iX1 - 1) to iAllocatedLength
+                   Move (Length(sText)) to iLength
+                   If (iLength < iAllocatedLength) Move (iX1 + iLength + 1) to iX2
+                   Else Move (Left(sText, iAllocatedLength)) to sText
+                End
+
+                Left sLine to sTemp1 iX1
+                Right sLine to sTemp2 (Length(sLine) - iX2)
+                Move (sTemp1 + sText + " " + sTemp2) to sLine
+             End
+             If iNewLine Begin
+                Writeln Channel (pAsciiChannel(Self)) sLine
+                Set pLine to (Repeat(" ", iChars + TotalOffset(oAsciiFileOffsets(Self))))
+             End
+             Else Set pLine to sLine
+          End
+       End
+    End_Procedure  // WriteToAscii
+
+
+    Procedure InitializePrintingHeader Integer iLines Integer iHeaderHeight
+       Send VpeHeaderLineCheck iLines iHeaderHeight
+       Set pPrintingHeader To True
+       Set pFrameTop    to 0
+       Set pFrameBottom to 0
+    End_Procedure  // InitializePrintingHeader
+
+
+    Procedure FlushVpeBuffer
+       Send DFVpeWrite " " 200 200 0 -1 0
+    End_Procedure  // FlushVpeBuffer
+
+
+//CHS 4/23/00    Procedure DFVOffset Integer iVOffset
+//CHS 4/23/00       Set pVertOffset to iVOffset
+//CHS 4/23/00    End_Procedure  // DFVOffset
+
+    Procedure DFVOffset Number nVOffset   //CHS 4/23/00
+       Set pVertOffset to nVOffset
+    End_Procedure  // DFVOffset
+
+    Procedure DFVpeWrite String sTxtParm Number nX1Parm Number nX2Parm Integer iAttrParm Integer iDecParm Integer iNewLineParm
+       Local Integer iRetVal iFontSize iFirstItem iWidth iAllocatedWidth
+       Local Integer iTable iList iFSize iX1L iX2L iY2L iListStart iListStop  iListHeight        // PB 5/18/00
+       Local DWord iTColor iFColor
+       Local Integer iUpdatePos                                                                                  // PB 5/26/00
+       Local Number  nHeight                                                                                     // PB 5/18/00
+       Local Integer iVertOffset iVTop iVTopMargin iTextWidth
+       Local Handle  hDoc
+       Local String sText sFontName
+       Local Integer ix1 ix2 iy1 iy2 iPage1 iPage2 iLeft iAttr iNewLine iAlign iDec iLeftMargin iRightMargin iTopMargin iBottomMargin
+       Local Integer iVBottom iCenter
+       Local Number nX1 nX2 nTemp
+       Local Integer iNewLinePos iNewLineParm2   //CHS 7/2/01
+       Local String sTxtParm2                    //CHS 7/2/01
+       Local dWord  dCHarSet                     //PB 08/30/01
+
+       // Parse out individual lines of text fields by looking for CR characters (Character(10))
+       // Each line will be sent recursively at the end of this procedure.
+       // This is to get around a bug caused by long text strings causing multiple page breaks.
+       Move (Pos(Character(10), sTxtParm)) to iNewLinePos                                    //CHS 7/2/01
+       If (iNewLinePos) Begin                                                                //CHS 7/2/01
+          Move (Right(sTxtParm, Length(sTxtParm) - iNewLinePos)) to sTxtParm2                //CHS 7/2/01
+          Move (Left(sTxtParm, iNewLinePos - 1)) to sTxtParm                                 //CHS 7/2/01
+          Move iNewLineParm to iNewLineParm2                                                 //CHS 7/2/01
+          Move 1 to iNewLineParm                                                             //CHS 7/2/01
+       End                                                                                   //CHS 7/2/01
+
+
+       If (pAdjustFontSize(Self)) Move (RTrim(sTxtParm)) to sTxtParm   //CHS 3/19/01
+
+       If (sTxtParm Contains "#zerosubpagecount#") Begin                     //PB 08/21/00
+         Set pSubPageCount to 0
+         Procedure_Return
+       End
+
+       // Numbers printed to Pos 0 are left justified in Winprint.  Change it to a string here to do this.
+       If (nX1Parm = 0 And iDecParm >= 0) Begin
+          Move (RoundNumberToString(Self, Number(sTxtParm), iDecParm)) to sTxtParm
+          Move -1 to iDecParm
+       End
+
+       If (DFCurrent_HeaderType(Self) <> -1) Begin
+          If (pPlace(Self) = HDR_CENTER) Move (iAttrParm iOr FONT_CENTER) to iAttrParm
+//CHS 4/23/00          If (iNewLineParm = 0) Set pVertOffset to 0  // Reset the vertical offset for the new line.
+          Send AddHeaderItem to (oHeaders(Self)) sTxtParm nX1Parm nX2Parm iAttrParm iDecParm iNewLineParm
+          If (iNewLineParm) Set pVertOffset to 0  //CHS 4/23/00 // Reset the vertical offset for the new line.
+       End
+
+       Else Begin
+          Get pFirstItem to iFirstItem
+          // This will be the first item of the first page after the headers.
+          If (iFirstItem) Begin
+             Set pFirstItem To False
+             Set pCheckNewPage To False
+             Send VpePrintHeaders to (oHeaders(Self))
+             Set pCheckNewPage To True
+          End
+          // Get the parameters that were passed the last time.
+          Get pText    to sText
+          Get pX1      to nX1
+          Get pX2      to nX2
+          Get pDec     to iDec
+          Get pAttr    to iAttr
+          Get pNewLine to iNewLine
+          Get pTableCell       to iTable     // PB 5/12/00
+          Get pListCell        to iList      // PB 5/15/00
+          Get pPrevListStart   to iListStart // PB 5/15/00
+          Get pPrevListStop    to iListStop  // PB 5/15/00
+          Get pPrevUpdatePos   to iUpdatePos // PB 5/26/00
+          Get pPrevTableHeight to nHeight    // PB 5/12/00
+          Get pPrevTableColor  to iTColor    // PB 5/12/00
+          Get pPrevFrameColor  to iFColor    // PB 5/12/00
+          Get pPrevFrameSize   to iFSize     // PB 5/12/00
+          // no tables allowed in Header Sections with DFBeginHeader ... DFEndHeader or for FlushVpeBuffer
+          If (pPrintingHeader(Self) or (sText = " " and nX1 = 200 and nX2 = 200)) Begin   // PB 5/18/00
+            Move 0 to iTable
+            Move 0 to iList
+          End
+          // If the position is not specified in DFWrite and FONT_CENTER is used, append the new text
+          // to the text of the last item so that the whole text will be centered.
+          // This has a bug if for instance just the first item is bold.  With this code both items are bold.
+          If (nX1Parm = 0 And nX2 = VDEFERRED And iNewLine = 0 And (iAttrParm iAnd FONT_CENTER)) Begin
+             Set pText    to (sText + sTxtParm)
+             Set pX2      to nX2Parm
+             Set pAttr    to (iAttr iOr iAttrParm)
+             Set pNewLine to iNewLineParm
+             Set pTableCell       to (pTable(Self))       // PB 5/12/00
+             Set pListCell        to (pList(Self))        // PB 5/15/00
+             Set pPrevUpdatePos   to (pUpdatePos(Self))   // PB 5/26/00
+             Set pPrevTableHeight to (pTableHeight(Self)) // PB 5/12/00
+             Set pPrevTableColor  to (pTableColor(Self))  // PB 5/12/00
+             Set pPrevFrameColor  to (pFrameColor(Self))  // PB 5/12/00
+             Set pPrevFrameSize   to (pFrameSize(Self))   // PB 5/12/00
+             Procedure_Return
+          End
+
+          Get phDoc to hDoc
+          If (hDoc = 0) Procedure_Return  // If no VPE doc do nothing.
+          Get VPE3_OemToChar sText To sText
+          // Get the font that was in effect when the last write was issued.
+          Get pLastFontName to sFontName
+          Get pLastFontSize to iFontSize
+          Get pLastCharSet  to dCharSet    //PC 08/30/01
+
+          // Process sText
+          If (sText Contains "#pagecount#") Move (Replace("#pagecount#", sText, VpeGetCurrentPage(hDoc))) to sText
+          If (sText Contains "#subpagecount#") Move (Replace("#subpagecount#", sText, pSubpageCount(Self)))  to sText
+          // Note: VPE can't handle NULL strings:
+          If ((Length(sText)) = 0) Move " " to sText
+
+          Move (VpeGet(hDoc, VLEFTMARGIN)) To iLeft
+          If ((nX1 >= 0) OR (nX1 < -9)) Move (VpeScale(Self, nX1) + iLeft) to iX1
+          Else Move nX1 to iX1
+          If ((nx2 >= 0) OR (nx2 < VDEFERRED)) Move (VpeScale(Self, nx2) + iLeft) to ix2
+          // If the right position was deferred, set it as the left position of the next text (nX1parm) - the column separation.)
+          Else If (nX2 = VDEFERRED) Begin
+             If (iAttr iAnd FONT_CENTER) Begin
+                // Center the text around iX1, not worrying about overlapping or going beyond the margin.
+                Move iX1 to iCenter
+                Move iLeft to iX1
+                Move ((2*iCenter) - iX1) to iX2
+             End
+//CHS 4/17/00             Else Move (VpeScale(Self, nX1Parm) + iLeft) to iX2
+             // nX1Parm = 200 is from FlushVpeBuffer.  In that case use the page width for
+             // the right coordinate when printing headers. Otherwise the item may show on
+             // the preview but not on the hard copy because the iX2 is too large.
+//CHS 6/12/00             Else If (nX1Parm = 200) Move (VpeGetPageWidth(hDoc)) to iX2   //CHS 04/17/00
+             Else If (nX1Parm = 200) ;
+                Move (If(pPrintingHeader(Self), VpeGetPageWidth(hDoc), VpeGet(hDoc,VRIGHTMARGIN))) to iX2   //CHS 6/12/00
+             Else Move (VpeScale(Self, nX1Parm) + iLeft) to iX2            //CHS 04/17/00
+          End
+          Else If (nX2 = VRIGHTMARGIN) Move (VpeGet(hDoc, VRIGHTMARGIN)) to iX2   //CHS 10/30/00
+          Else Move nx2 to ix2
+          // This condition will occur if the Winprint commands are not sequential, left to right.
+          // In that case, set the boundaries to print from the left of the page (FONT_RIGHT) or to the end of the page.
+          If (iX2 >= 0 And iX2 <= iX1) Begin
+             If (iAttr iAnd FONT_RIGHT) Begin
+                Move iX1 to iX2
+                Move 0 to iX1
+             End
+             // If the text is centered, use the right margin to center.
+             Else If (iAttr iAnd FONT_CENTER) Move (VpeGet(hDoc, VRIGHTMARGIN)) to iX2
+             // Otherwise allow the text to be printed beyond the margin.
+//CHS 6/12/00n             Else Move (VpeGetPageWidth(hDoc)) to iX2
+             Else ;
+                Move (If(pPrintingHeader(Self), VpeGetPageWidth(hDoc), VpeGet(hDoc,VRIGHTMARGIN))) to iX2   //CHS 6/12/00
+          End
+          // Tables: not wider than the right margin or less then the left margin
+          If (iTable or iList) Begin                                            // PB 5/15/00
+            Move ((VpeGet(hDoc, VRIGHTMARGIN)) Min (iX2)) to iX2
+            Move ((VpeGet(hDoc, VLEFTMARGIN))  Max (iX1)) to iX1                // PB 5/26/00
+          End
+
+          // First set the font.
+          Send SelectVpeFont sFontName iFontSize dCharSet    //PB 08/30/01
+
+          // If the length of sText > pNoteLength or there is a carriage return in sText, it is assumed to be a text string,
+          // so VFREE is used to print out multiple lines.
+//CHS 07/13/00          If (Length(sText) > pNoteLength(Self) Or sText Contains Character(13)) Move VFREE to iY2
+//PB 11/25/00   //If (iAttr iAnd FONT_WRAP Or Length(sText) > pNoteLength(Self) Or sText Contains Character(13)) Move VFREE to iY2   //CHS 07/13/00
+          If (iAttr iAnd FONT_WRAP Or Length(sText) > pNoteLength(Self) Or sText Contains Character(13)) Begin
+            If (pPrintingPageBottom(Self)) Begin                   //PB 25/11/00  never start a new page in PageBottom
+              Move (VpeRenderWrite(hDoc, ix1, 0, ix2, VFREE, sText)) to iRetVal   //PB 25/11/00
+              Move (-(VpeGet(hDoc, VRENDERHEIGHT))) to iY2                        //PB 25/11/00
+            End                                                                   //PB 25/11/00
+            Else Move VFREE to iY2                                                //PB 25/11/00
+          End                                                                     //PB 25/11/00
+          // Otherwise, print only one line.
+          Else Move (-pLineHeight(Self)) to iY2
+          If (iAttr iAnd FONT_NOWRAP) Move (-pLineHeight(Self)) to iY2   //CHS 07/13/00
+          // Tables: VFREE or a given value
+          If (iTable or iList) Begin                                     // PB 5/15/00
+            If (nHeight = VFREE) Move VFREE to iY2                                             // PB 11/09/00
+//            Else Move (VpeGet(hDoc, VTOP) + VpeScale(Self,nHeight)) to iY2                   // PB 03/06/01
+            Else Begin                                                                         // PB 03/06/01
+              Move (VpeGet(hDoc, VTOP) + VpeScale(Self,nHeight)) to iY2                        // PB 03/06/01
+              If (pSkipHalfSpace(Self)) Move (iY2 + (pLineHeight(Self)/2)) to iY2              // PB 03/06/01
+            End                                                                                // PB 03/06/01
+          End
+
+          // Make sure that Auto Break is on here.  Otherwise VpeRenderWrite not show that a break will occur.
+          Move (VpeSetAutoBreak(hDoc, AUTO_BREAK_ON)) to iRetVal   //CHS 5/9/01
+          // If printing this item will go past the bottom margin, start a new page.
+          If (iTable or iList) Move (VpeRenderWriteBox(hDoc, ix1, VTOP, ix2, iY2, sText))    to iRetVal   // PB 5/17/00
+                          Else Move (VpeRenderWrite(hDoc, ix1, VTOP, ix2, iY2, sText))       to iRetVal   // PB 5/17/00
+          If ((sText <> "" And pCheckNewPage(Self) And VpeGet(hDoc, VTOP) + pLineHeight(Self) > VpeGet(hDoc, VBOTTOMMARGIN)) Or ;
+             (iY2 = VFREE And iRetVal <> 0) ) Begin                                   //CHS 9/22/99       // PB 5/17/00
+             // DFNew_Page sends DFVpeWrite to flush the last item out if DFNew_Page is sent explicitly by the report.
+             // Since DFNew_Page is also sent here within DFVpeWrite, set the property pCheckNewPage to false so that an
+             // endless loop of DFNew_Page messages is not created.
+             Set pCheckNewPage To False
+             Move (VpeGetCurrentPage(hDoc)) to iPage1
+             // Clear the properties for the last item so that it will not be printed by the
+             // DfVpeWrite in NewVpePage, which is sent by DFNew_Page.
+             Set pText    to " "
+             Set pX1      to 0
+             Set pX2      to 0
+             Set pDec     to -1
+             Set pAttr    to 0
+             Set pNewLine to 0
+             Set pTableCell       to 0        // PB 5/12/00
+             Set pListCell        to 0        // PB 5/15/00
+             Set pPrevListStart   to 9999999  // PB 5/15/00
+             Set pPrevListStop    to 0        // PB 5/15/00
+             Set pPrevUpdatePos   to 0        // PB 5/26/00
+             Set pPrevTableHeight to 0        // PB 5/12/00
+             Set pPrevTableColor  to 0        // PB 5/12/00
+             Set pPrevFrameColor  to 0        // PB 5/12/00
+             Set pPrevFrameSize   to 0        // PB 5/12/00
+             Send NewVpePage
+             Set pCheckNewPage To True
+//CHS 09/28/00             If (iY2 = VFREE) Begin
+             // When printing a table or a list, do not go back to the previous page.
+             If (iY2 = VFREE And iTable = 0 And iList = 0) Begin   //CHS 09/28/00
+                // If the header prints past the top margin, reset the top margin of the new page.
+                // This is needed for notes that print across a page break.
+                Move (VpeGet(hDoc, VTOPMARGIN)) to iVTopMargin
+                Move (VpeGet(hDoc, VTOP)) to iVTop
+                If (iVTop > iVTopMargin) Move (VpeSet(hDoc, VTOPMARGIN, iVTop)) to iRetVal
+                Move (VpeGoToPage(hDoc, iPage1)) to iRetVal
+                Set pSkipHalfSpace to False   //CHS 07/13/00
+                Set pResetPage to iPage1      //CHS 07/13/00
+             End
+             Send SelectVpeFont sFontName iFontSize dCharSet  //PB 08/30/01 // Reset the font in case it changed in the headers.
+          End
+
+          // Do the actual printing.
+          If (iAttr iAnd FONT_RIGHT Or iDec >= 0) Move ALIGN_RIGHT to iAlign
+          Else If ((iAttr iAnd FONT_CENTER) Or (pPlace(Self) = HDR_CENTER)) Move ALIGN_CENTER to iAlign
+          Else Move ALIGN_LEFT_CUT to iAlign
+          Move (VpeSetAlign(hDoc, iAlign)) to iRetVal
+          Move (VpeSetBold(hDoc, (iAttr iAnd FONT_BOLD)))        to iRetval
+          Move (VpeSetItalic(hDoc, (iAttr iAnd FONT_ITALIC)))    to iRetval
+          Move (VpeSetUnderlined(hDoc, (iAttr iAnd FONT_UNDER))) to iRetVal
+          Move (VpeSetStrikeOut(hDoc, (iAttr iAnd FONT_STRIKE))) to iRetVal
+          Move (VpeSetTextColor(hDoc, VpeColor(Self, iAttr iAnd RGB_WHITE)))  to iRetVal  // Set the background color.
+          // If iX1 >= 20000 we are in FlushVpeBuffer, so there is no need to do the write.  (It would be way off the page anyway.)
+          // Also, the various parameters should not be set.
+          If (iX1 < 20000) Begin
+             If (pSkipHalfSpace(Self)) Send VpeHalfSpace
+             // It would seem that we could use the expression (VpeGet(hDoc, VTOP) + pPrevVertOffset(Self)) in VpeWrite,
+             // but for some reason using an explicit Y1 in VpeWrite seems to cause an AutoBreak.
+             If (pPrevVertOffset(Self)) Begin
+                Get VpeScale (pPrevVertOffset(Self)) to iVertOffset
+                Move (VpeGet(hDoc, VTOP)) to iVTop
+                Move (VpeSet(hDoc, VTOP, iVTop + iVertOffset)) to iRetVal
+             End
+             // Adjust the font size of numbers so that the whole number prints, if necessary
+             If (iDec >=0 And pAdjustFontSize(Self)) Begin
+                // Subtract 5 to ensure at least a 0.5 mm separation between items.
+                Move (iX2 - iX1 - 5) to iAllocatedWidth
+                If (iAllocatedWidth > 0) Begin
+                   Repeat
+                      If (iTable or iList) Move (VpeRenderWriteBox(hDoc, iX1, 0, VFREE, VFREE, sText)) to iRetVal    // PB 5/17/00
+                                      Else Move (VpeRenderWrite(hDoc, iX1, 0, VFREE, VFREE, sText))    to iRetVal
+                      Move (VpeGet(hDoc, VRENDERWIDTH)) to iWidth
+                      If (iWidth > iAllocatedWidth) Begin
+                         Decrement iFontSize
+                         Send SelectVpeFont sFontName iFontSize dCharSet   //PB 08/30/01
+                      End
+                   Until (iWidth <= iAllocatedWidth Or iFontSize = 0)
+                End
+             End
+             // For text, if the next item is a number, store the actual size of the text so it can be used to
+             // allocate the space for the number so that the number does not overlap the text.
+             Else If ((iAttrParm iAnd FONT_RIGHT or iDecParm >= 0) And pAdjustFontSize(Self)) Begin   //CHS 10/30/99
+                If (iTable or iList) Move (VpeRenderWriteBox(hDoc, iX1, 0, VFREE, VFREE, sText)) to iRetVal       // PB 5/17/00
+                                Else Move (VpeRenderWrite(hDoc, iX1, 0, VFREE, VFREE, sText))    to iRetVal       // PB 5/17/00
+                // Use the minimum of the width of the full text or the width of the rectangle (iX2 - iX1).
+                Move ((VpeGet(hDoc, VRENDERWIDTH)) Min (iX2 - iX1)) to iTextWidth
+             End
+             //If (iY2 = VFREE) Showln ("iX1:" * String(iX1) * "iX2:" * String(iX2) * "VRIGHTMARGIN:" * String(VpeGet(hDoc, VRIGHTMARGIN)))
+             If (iY2 = VFREE) Move (VpeSetAutoBreak(hDoc, AUTO_BREAK_ON)) to iRetVal         //CHS 12/16/00
+             Else             Move (VpeSetAutoBreak(hDoc, AUTO_BREAK_NO_LIMITS)) to iRetVal  //CHS 12/16/00
+             If (iTable or iList) Begin                       // PB 5/15/00
+               If iTable ;
+               Move (VpeSetPen(hDoc, iFSize, PS_SOLID, VPEColor(Self, iFColor))) to iRetVal     // Set the frame color
+               Else ;
+               Move (VpeSetPen(hDoc, iFsize, PS_SOLID, VPEColor(Self, iTColor))) to iRetVal     // Frame color = background color
+               Move (VpeSetTransparentMode(hDoc, 0)) to iRetVal                                 // Turn off transparent mode.
+               Move (VpeSetBkgColor(hDoc, VPEColor(Self, iTColor))) to iRetVal                  // Set the background color.
+               Move (VpeWriteBox(hDoc, ix1, VTOP, ix2, iY2, sText)) To iRetVal
+               Move (VpeSetPen(hDoc, iFSize, PS_SOLID, VPEColor(Self, iFColor))) to iRetVal    // Set the frame color
+               If (iList = 99) Begin                     // First row: draw the top line                 // PB 5/15/00
+                 Move (VpeLine(hDoc, ix1, VTOP, ix2, VTOP)) To iRetVal
+               End
+               If iList Begin                                 // PB 5/15/00
+                 Move (VpeRenderWriteBox(hDoc, iX1, VTOP, iX2, iY2, sText)) To iRetVal
+                 Move (VpeGet(hDoc, VRENDERHEIGHT)) to iListHeight
+                 Move (VpeGet(hDoc, VTOP) + iListHeight) to iY2L
+                 Move (VpeLine(hDoc, iX1, VTOP, iX1, iY2L)) to iRetVal
+                 Move (VpeLine(hDoc, iX2, VTOP, iX2, iY2L)) to iRetVal
+                 Set pPrevListStart to (iListStart Min iX1)
+                 Set pPrevListStop  to (iListStop  Max iX2)
+                 Get pPrevListStart to iX1L
+                 Get pPrevListStop  to iX2L
+                 If (pList(Self) = False) Begin          // Last row: draw the bottom line              // PB 5/15/00
+                   Move (VpeLine(hDoc, iX1L, iY2L, iX2L, iY2L)) To iRetVal
+                 End
+               End
+               Move (VpeSetTransparentMode(hDoc, 1)) to iRetVal                            // Turn transparent mode back on.
+               Move (VpeSetBkgColor(hDoc, clWhite))  to iRetVal                            // Set the background color to white.
+               Move (VpeSetPen(hDoc, 1, PS_SOLID, RGB_BLACK)) to iRetVal                   // Reset the pen to the default.
+             end
+             Else begin   //CHS 06/05/00
+                If (pResetPage(Self)) Move (VpeGoToPage(hDoc, pResetPage(Self))) to iRetVal   //CHS 07/13/00
+                Move (VpeWrite(hDoc, ix1, VTOP, ix2, iY2, sText)) To iRetVal
+             end
+             If (iList = 99 and iNewLine and pList(Self) <> False) Begin                           // PB 5/15/00
+               Set pList to True
+             End
+             // If iVTopMargin is nonzero, there was a auto page break.  Reset the top margin since it is used in NewVpePage.
+             If iVTopMargin Move (VpeSet(hDoc, VTOPMARGIN, iVTopMargin)) to iRetVal
+             If iVTop Move (VpeSet(hDoc, VTOP, iVTop)) to iRetVal
+             If (VpeGet(hDoc, VTOP) < VpeGet(hDoc, VBOTTOMMARGIN)) Send WriteToAscii iX1 iX2 sText iAlign iNewLine
+             // If headers are being printed, set the top and the bottom of the header frame if the text is not blank.
+             Move (VpeGet(hDoc, VBOTTOM)) to iVBottom
+             If (pPrintingHeader(Self)) Begin
+                If (pFrameTop(Self) = 0) Set pFrameTop to (VpeGet(hDoc, VTOP))
+                If (pFrameBottom(Self) < iVBottom) Set pFrameBottom to iVBottom
+             End
+             If ((iTable or iList) and iUpdatePos = 0)                                             // PB 5/26/00
+             Else Begin
+//CHS 07/13/00              If (iVBottom > pNextVTop(Self)) Set pNextVTop to iVBottom
+              If (iVBottom > pNextVTop(Self) And (pResetPage(Self) = 0 Or (VpeGetCurrentPage(hDoc) = pResetPage(Self) + 1)) ) Set pNextVTop to iVBottom   //CHS 07/13/00
+              If (iNewLine) Begin
+                  If (pResetPage(Self)) Begin   //CHS 07/13/00
+                     Move (VpeGoToPage(hDoc, pResetPage(Self) + 1)) to iRetVal
+                     Set pResetPage to 0
+                  End
+                  Move (VpeSet(hDoc, VTOP, pNextVTop(Self))) to iRetVal
+                  Move (VpeSet(hDoc, VLEFT, iLeft))  To iRetVal
+                  Move (VpeSet(hDoc, VRIGHT, iLeft)) To iRetVal
+              End
+            End
+          End
+          // Store the passed parameters for the next call.
+          If (iDecParm >= 0) Get RoundNumberToString (Number(sTxtParm)) iDecParm to sTxtParm  // add commas.
+          // VPE uses "[" and "]" for embedded characters.  Since we do not use these, replace "[" with "[[" to actually print the bracket.
+          If (pWritetoAscii(Self) = 0 And Left(sTxtParm,1) = "[") Move ("[" + sTxtParm) to sTxtParm
+          Set pText to sTxtParm
+          // If the second parameter is deferred and FONT_RIGHT is specified or the decimals is nonnegative
+          // the passed parameter is the right coordinate if it is nonzero.  Get the left parameter
+          // from the last item printed, adding the column separation.
+          If ((iAttrParm iAnd FONT_RIGHT or iDecParm >= 0) And (nX2Parm = VDEFERRED)) Begin
+             // If the last item attribute included FONT_RIGHT or the item is aligned to the right because it is a number (iDec >=0),
+             // use the right coordinate + separation as the left coordinate.
+             If (iAttr iAnd FONT_RIGHT Or iDec >= 0) Move (VpeGet(hDoc, VRIGHT) - iLeft) to nTemp
+//CHS 10/30/99             // Otherwise use the left coordinate of the last item.  This could result in overlap.
+//CHS 10/30/99             // A better method would be to use the actual size of the last item.
+//CHS 10/30/99             Else Move (VpeGet(hDoc, VLEFT) - iLeft) to nTemp
+             Else Begin   //CHS 10/30/99
+                // Add the width of the string just printed to set the left coordinate of the next number.
+                Move (VpeGet(hDoc, VLEFT) + iTextWidth - iLeft) to nTemp
+                // If the computed left coordinate > the right coordinate, reset the left coordinate to the last left coordinate.
+                If (VpeToWinprint(Self, nTemp) >= nX1Parm) Subtract iTextWidth From nTemp
+                // If the last write was a newline, use the left margin as the left coordinate // MD 10/19/00
+                If (iNewLine) move 0 to nTemp    // MD 10/19/00
+             End
+             Set pX1 to (VpeToWinprint(Self, nTemp))
+             Set pX2 to nX1Parm
+             // With tables make sure that the next cell starts at the end of the previous   // PB 5/12/00
+             If (iTable or iList) Set pX1 to nX2                     // PB 5/15/00
+             // pX1 can be Gt pX2 if the Winprint commands are not sequential.
+             // In that case, set pX1 to 0, so the number will print right justified at pX2, but the left coordinate will be 0.
+             // This could result in a number overlapping text.
+             If (pX1(Self) > pX2(Self)) Set pX1 to 0   //CHS 11/09/99
+          End
+          // If the position is not specified use the right position of the last item as the left
+          // position of the new line, unless iX1 >= 20000 (FlushVpeBuffer was sent), or FONT_CENTER is specified
+          Else If (nX1Parm = 0 And iNewLine = 0 And iX1 < 20000 And (iAttrParm iAnd FONT_CENTER) = 0) Begin
+             // If the last item is not aligned to the right, render the last item
+             // to get its width so the next item can be positioned after the last item.
+             If (iAlign <> ALIGN_RIGHT) Begin
+                // Use 0 for the vertical position so there will not be any page break.
+                // VPE does not return the width if a page break occurs with the virtual write.
+                If (iTable or iList) Move (VpeRenderWriteBox(hDoc, iX1, 0, VFREE, VFREE, sText)) to iRetVal      // PB 5/17/00
+                                Else Move (VpeRenderWrite(hDoc, iX1, 0, VFREE, VFREE, sText))    to iRetVal      // PB 5/17/00
+                Move (VpeGet(hDoc, VRENDERWIDTH)) to iWidth
+                Move (VpeToWinprint(Self,iX1 + iWidth - VpeGet(hDoc, VLEFTMARGIN))) to nX2
+             End
+             Set pX1 to nX2
+             Set pX2 to nX2Parm
+          End
+          Else Begin
+             Set pX1 to nX1Parm
+             Set pX2 to nX2Parm
+          End
+          Set pAttr    to iAttrParm
+          Set pDec     to iDecParm
+//CHS 3/19/01          Set pNewLine to iNewLineParm
+          // nX1Parm = 200 comes from FlushVpeBuffer.  Do not reset pNewLine in this case.
+          If (nX1Parm <> 200) Set pNewLine to iNewLineParm   //CHS 3/19/01
+          Set pTableCell       to (pTable(Self))       // PB 5/12/00
+          Set pListCell        to (pList(Self))        // PB 5/15/00
+          Set pPrevUpdatePos   to (pUpdatePos(Self))   // PB 5/26/00
+          Set pPrevTableHeight to (pTableHeight(Self)) // PB 5/12/00
+          Set pPrevTableColor  to (pTableColor(Self))  // PB 5/12/00
+          Set pPrevFrameColor  to (pFrameColor(Self))  // PB 5/12/00
+          Set pPrevFrameSize   to (pFrameSize(Self))   // PB 5/12/00
+          Set pLastFontName to (DFCurrent_Font(Self))
+          Set pLastFontSize to (DFCurrent_FontSize(Self))
+          Set pLastCharSet  to (pCharSet(Self))        //PB 08/30/01
+          Set pPrevVertOffset to (pVertOffset(Self))
+          If iNewLine Set pVertOffset to 0
+          // Only check for a page break when printing the first item of the line, so that a larger
+          // font in the middle of the line will not cause a break in the middle of the line.
+          // To really do this right, the whole line should be stored and analyzed for the largest font.
+//CHS 04/13/00          If (Not(pPrintingHeader(Self))) Set pCheckNewPage to iNewLine
+          If (Not(pPrintingHeader(Self)) And (nX1Parm <> 200)) Begin   //CHS 04/13/00
+             // When a new line starts set pCheckNewPage true to check if the new line should start a new page.
+             If iNewLine Set pCheckNewPage to True
+             // If sText = "", the page check has not been done, so do not set pCheckNewPage to False yet.
+             Else If (sText <> "") Set pCheckNewPage to False
+          End
+       End
+       // Send the remaining text after the CR.
+       If (sTxtParm2 <> "") Send DFVpeWrite sTxtParm2 nX1Parm nX2Parm iAttrParm iDecParm iNewLineParm2   //CHS 7/2/01
+    End_Procedure  // DFVpeWrite
+
+
+    // Move down one half space.  This is done at the end of the page header to separate the header
+    // from the text below it.
+    Procedure VpeHalfSpace
+       Local Handle hDoc
+       Local Integer iHalfSpace iRetVal
+       // If DFCurrent_HeaderType = DFSubHeader, a subheader printed at the end of a page has caused
+       // a page break.  In that case, we do not want a half space since only part of the subheader
+       // has been stored, and a half space would result in a space in the middle of the subheader.
+       If (DFCurrent_HeaderType(Self) = DFSubHeader) Procedure_Return
+       // Reposition VTOP and VBOTTOM down one half of the line height.
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (pLineHeight(Self)/2) to iHalfSpace
+          Move (VpeSet(hDoc, VTOP,    VpeGet(hDoc, VTOP) + iHalfSpace))    to iRetVal
+          Move (VpeSet(hDoc, VBOTTOM, VpeGet(hDoc, VBOTTOM) + iHalfSpace)) to iRetVal
+          Set pSkipHalfSpace To False
+       End
+    End_Procedure  // VpeHalfSpace
+
+
+    Procedure VpeSkipToTopMargin
+       Local Handle hDoc
+       Local Integer iRetVal iVTop iVBottom iVTopMargin  iHalfSpace
+       Send FlushVpeBuffer
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeGet(hDoc, VTOP)) to iVTop
+          Move (VpeGet(hDoc, VTOPMARGIN)) to iVTopMargin
+          // Skip to the top margin if the header has not printed beyond the top margin
+          If (iVTopMargin > iVTop) Begin
+             Move (VpeGet(hDoc, VBOTTOM)) to iVBottom
+             Move (VpeSet(hDoc, VTOP, iVTopMargin)) to iRetVal
+             Move (VpeSet(hDoc, VBOTTOM, iVBottom + (iVTopMargin - iVTop))) to iRetVal
+          End
+          Else Set pSkipHalfSpace To True
+       End
+    End_Procedure  // VpeSkipToTopMargin
+
+
+    Procedure VpeSkipToTop
+       Local Handle  hDoc
+       Local Integer iBottomMargin iRetVal
+       Send FlushVpeBuffer
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeSet(hDoc, VTOP, pTop(Self))) to iRetVal
+          Move (VpeSet(hDoc, VBOTTOM, pLineHeight(Self))) to iRetVal
+          Set pNextVTop to 0
+       End
+    End_Procedure  // VpeSkipToTop
+
+
+    Procedure VpeSkipToBottom Integer iHeight
+       Local Handle  hDoc
+       Local Integer iRetVal iFrameTop
+       Send FlushVpeBuffer
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (pBottom(Self) - iHeight) to iFrameTop
+          Move (VpeSet(hDoc, VTOP, iFrameTop)) to iRetval
+          // Reset the bottom margin if the frame starts above the bottom margin.
+          If (iFrameTop < VpeGet(hDoc, VBOTTOMMARGIN)) ;
+             Move (VpeSet(hDoc, VBOTTOMMARGIN, iFrameTop)) to iRetVal
+       End
+    End_Procedure  // VpeSkipToBottom
+
+
+    // This is used to position the ReportFooter
+    Procedure VpeSkipToBottomMargin  Integer iHeight //CHS 01/19/00
+       Local Handle  hDoc
+       Local Integer iRetVal iFrameTop
+       Send FlushVpeBuffer
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeGet(hDoc, VBOTTOMMARGIN) - iHeight) to iFrameTop
+          // If the report footer would overlap existing text,
+          // start a new page, and then skip to the bottom.
+          If (iFrameTop < VpeGet(hDoc, VTOP)) Begin
+             // But if the report footer does not fit between the top and
+             // the bottom margins, do not start the new page, since this
+             // would cause endless recursion. (The printing would continue
+             // where it left off.)
+             If (iFrameTop > VpeGet(hDoc, VTOPMARGIN)) Begin
+                Send NewVpePage
+                Send VpeSkipToBottomMargin iHeight
+             End
+          End
+          // Set VTOP so that the report footer will print from the bottom margin up.
+          Else Begin
+             Move (VpeSet(hDoc, VTOP, iFrameTop)) to iRetVal
+          End
+       End
+    End_Procedure  // VpeSkipToBottom
+
+
+//CHS 04/10/00    Procedure VpeResetPosition Integer iVTop Integer iNextVTop
+    Procedure VpeResetPosition Integer iVTop Integer iNextVTop Integer iVBottom   //CHS 04/13/00
+       Local Handle  hDoc
+       Local Integer iRetVal
+       Send FlushVpeBuffer
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeSet(hDoc, VTOP, iVTop)) to iRetVal
+          Set pNextVTop to iNextVTop
+          Move (VpeSet(hDoc, VBOTTOM, iVBottom)) to iRetVal   //CHS 04/13/00
+       End
+    End_Procedure  // VpeResetPosition
+
+
+    Function DFVpeGet Integer iProperty Returns Integer
+       Local Integer iRetVal
+       Local Handle hDoc
+       Get phDoc to hDoc
+       If hDoc Move (VpeGet(hDoc, iProperty)) to iRetVal
+       Function_Return iRetVal
+    End_Function  // DFVpeGet
+
+
+    Procedure DFVpeSet Integer iProperty Integer iValue
+       Local Integer iRetVal
+       Local Handle hDoc
+       Get phDoc to hDoc
+       If hDoc Move (VpeSet(hDoc, iProperty, iValue)) to iRetVal
+    End_Procedure  // DFVpeSet
+
+
+    Procedure DFVpeBox Integer iX1 Integer iY1 Integer iX2 Integer iY2 dWord dwColor Integer iWeight dWord dwFColor Integer iFill
+       Local Handle hDoc
+       Local Integer iRetVal
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeSetPen(hDoc, iWeight, PS_SOLID, dwColor)) to iRetVal
+          If iFill Begin
+             Move (VpeSetTransparentMode(hDoc, 0)) to iRetVal  // Turn off transparent mode.
+             Move (VpeSetBkgColor(hDoc, dwFColor)) to iRetVal  // Set the background color.
+          End
+          Move (VpeBox(hDoc, iX1, iY1, iX2, iY2)) to iRetVal
+          If iFill Begin
+             Move (VpeSetTransparentMode(hDoc, 1)) to iRetVal  // Turn transparent mode back on.
+             Move (VpeSetBkgColor(hDoc, clWhite))  to iRetVal  // Set the background color to white.
+          End
+          Move (VpeSetPen(hDoc, 1, PS_SOLID, RGB_BLACK)) to iRetVal  // Reset the pen to the default.
+       End
+    End_Procedure
+
+
+    Procedure DFHeaderFrame Integer iFrame dWord dwColor Integer iWeight dWord dwFColor Integer iFill
+       Local Integer iRetVal iX1 iX2
+       Local Handle hDoc
+       Get phDoc to hDoc
+       If hDoc Begin
+          If (iFrame <> HDR_NOFRAME) Begin
+             If (iFrame = HDR_MARGINS) Begin
+                Move (VpeGet(hDoc, VLEFTMARGIN)) to iX1
+                Move (VpeGet(hDoc, VRIGHTMARGIN)) to iX2
+             End
+             Send DFVpeBox iX1 (pFrameTop(Self)) iX2 (pFrameBottom(Self)) dwColor iWeight dwFColor iFill
+          End
+          Move (VpeSet(hDoc, VTOP, VpeGet(hDoc,VBOTTOM))) to iRetVal  // Set the top to the new bottom
+          Move (VpeSet(hDoc, VBOTTOM, VpeGet(hDoc,VTOP) + pLineHeight(Self))) to iRetVal // Add pLineHeight and set the bottom.
+       End
+    End_Procedure  // DFHeaderFrame
+
+
+    Procedure CloseDoc
+       Local Handle hDoc
+       Local Integer iRetVal
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeCloseDoc(hDoc)) to iRetVal
+          Set phDoc to 0
+       End
+    End_Procedure   // CloseDoc
+
+
+    // Check if the preview has been cancelled.
+    // If so, close the document, since VpeEnableAutoDelete has been set so that
+    // the document does not close when the preview closes to avoid a GPF.
+    Function IsReportCancelled Returns Integer
+       Local Handle hDoc
+       Local Integer iRetVal
+       Get phDoc to hDoc
+       If (hDoc And pPreviewOnOpen(Self) And VpeIsPreviewVisible(hDoc) = 0) Begin
+          Send CloseDoc
+          Move RPT_CANCEL to iRetVal
+       End
+       Function_Return iRetVal
+    End_Function
+
+
+    // 6/23/00,md, new procedure, to support multiple printer setup files
+    //              (e.g. separate printers for checks, invoices, forms, etc.)
+    Procedure SetPrinterSetupFile string sSetupFile
+       Local Handle  hDoc
+       Local Integer iRetVal
+
+       If (pSetupInitialized(Self) = 0) Begin
+          Set pSetupFile to sSetupFile
+          Move (VpeOpenDoc(0, 0, VPE_FIXED_MESSAGES)) to hDoc
+          If hDoc Begin
+             If (VpeReadPrinterSetup(hDoc, sSetupFile)) Set pSetupInitialized To True
+             Else Send Stop_Box ("Error reading the printer setup file" * sSetupFile) "Print Setup"
+             Move (VpeCloseDoc(hDoc)) to iRetVal
+          End
+       End
+    End_Procedure  // InitializePrinterSetup
+
+    Procedure InitializePrinterSetup
+       Local Handle  hDoc
+       Local String sSetupFile
+       Local Integer iRetVal
+       If (pSetupInitialized(Self) = 0) Begin
+          Get pSetupFile to sSetupFile
+          Move (VpeOpenDoc(0, 0, VPE_FIXED_MESSAGES)) to hDoc
+          If hDoc Begin
+             If (VpeWritePrinterSetup(hDoc, sSetupFile)) Set pSetupInitialized To True
+             Else Send Stop_Box ("Error writing the printer setup file" * sSetupFile) "Print Setup"
+             Move (VpeCloseDoc(hDoc)) to iRetVal
+          End
+       End
+    End_Procedure  // InitializePrinterSetup
+
+
+    Procedure Update_Status String sVal
+       Local Integer iRetVal
+       Local Handle hDoc
+       Get phDoc to hDoc
+       If (hDoc And IsReportCancelled(Self) <> RPT_CANCEL) ;
+          Move (VpeWriteStatusbar(hDoc, VPE3_OemToChar(sVal))) to iRetVal
+    End_Procedure  // Update_Status
+
+
+    Procedure VpeHeaderLineCheck Integer iLines Integer iHeaderHeight
+       Local Handle hDoc
+       Get phDoc to hDoc
+       If (hDoc And pCheckNewPage(Self) And ;
+           (VpeGet(hDoc, VTOP) + iHeaderHeight + (iLines * pLineHeight(Self)) > VpeGet(hDoc, VBOTTOMMARGIN)) ) Begin
+          Set pCheckNewPage To False
+          Send NewVpePage
+          Set pCheckNewPage To True
+       End
+    End_Procedure  // VpeHeaderLineCheck
+
+    //CHS 07/28/00  Added support for paper bins.
+    //CHS 07/26/00  Added support for more paper sizes.
+    Procedure SetPrinterFlags
+       Local Integer iReportType iRetVal
+       Local Handle  hDoc
+       Local String sSetupFile
+       Send InitializePrinterSetup
+       Get pSetupFile to sSetupFile
+       Move (VpeOpenDoc(0, 0, VPE_FIXED_MESSAGES)) to hDoc
+       If hDoc Begin
+          If (VpeCheckPrintDialogFlag(Self, DF_PORTRAIT))                 Move (VpeSetDevOrientation(hDoc, VORIENT_PORTRAIT))          to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_LANDSCAPE))                Move (VpeSetDevOrientation(hDoc, VORIENT_LANDSCAPE))         to iRetVal
+          // Paper sizes
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_LETTER))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_LETTER))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_LETTERSMALL))        Move (VpeSetDevPaperFormat(hDoc, VPAPER_LETTERSMALL))        to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_TABLOID))            Move (VpeSetDevPaperFormat(hDoc, VPAPER_TABLOID))            to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_LEDGER))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_LEDGER))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_LEGAL))              Move (VpeSetDevPaperFormat(hDoc, VPAPER_LEGAL))              to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_STATEMENT))          Move (VpeSetDevPaperFormat(hDoc, VPAPER_STATEMENT))          to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_EXECUTIVE))          Move (VpeSetDevPaperFormat(hDoc, VPAPER_EXECUTIVE))          to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_A3))                 Move (VpeSetDevPaperFormat(hDoc, VPAPER_A3))                 to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_A4))                 Move (VpeSetDevPaperFormat(hDoc, VPAPER_A4))                 to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_A4SMALL))            Move (VpeSetDevPaperFormat(hDoc, VPAPER_A4SMALL))            to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_A5))                 Move (VpeSetDevPaperFormat(hDoc, VPAPER_A5))                 to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_B4))                 Move (VpeSetDevPaperFormat(hDoc, VPAPER_B4))                 to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_B5))                 Move (VpeSetDevPaperFormat(hDoc, VPAPER_B5))                 to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_FOLIO))              Move (VpeSetDevPaperFormat(hDoc, VPAPER_FOLIO))              to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_QUARTO))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_QUARTO))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_10X14))              Move (VpeSetDevPaperFormat(hDoc, VPAPER_10X14))              to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_11X17))              Move (VpeSetDevPaperFormat(hDoc, VPAPER_11X17))              to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_NOTE))               Move (VpeSetDevPaperFormat(hDoc, VPAPER_NOTE))               to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_9))              Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_9))              to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_10))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_10))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_11))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_11))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_12))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_12))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_14))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_14))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_CSHEET))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_CSHEET))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_DSHEET))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_DSHEET))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ESHEET))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ESHEET))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_DL))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_DL))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_C3))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_C3))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_C4))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_C4))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_C5))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_C5))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_C6))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_C6))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_C65))            Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_C65))            to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_B4))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_B4))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_B5))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_B5))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_B6))             Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_B6))             to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_ITALY))          Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_ITALY))          to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_MONARCH))        Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_MONARCH))        to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_ENV_PERSONAL))       Move (VpeSetDevPaperFormat(hDoc, VPAPER_ENV_PERSONAL))       to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_FANFOLD_US))         Move (VpeSetDevPaperFormat(hDoc, VPAPER_FANFOLD_US))         to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_FANFOLD_STD_GERMAN)) Move (VpeSetDevPaperFormat(hDoc, VPAPER_FANFOLD_STD_GERMAN)) to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_FANFOLD_LGL_GERMAN)) Move (VpeSetDevPaperFormat(hDoc, VPAPER_FANFOLD_LGL_GERMAN)) to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_PAPER_USER))               Move (VpeSetDevPaperFormat(hDoc, VPAPER_USER_DEFINED))       to iRetVal
+          // Paper Bin
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_AUTO))                 Move (VpeSetDevPaperBin(hDoc, VBIN_AUTO))                    to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_LOWER))                Move (VpeSetDevPaperBin(hDoc, VBIN_LOWER))                   to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_CASSETTE))             Move (VpeSetDevPaperBin(hDoc, VBIN_CASSETTE))                to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_MANUAL))               Move (VpeSetDevPaperBin(hDoc, VBIN_MANUAL))                  to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_ENVELOPE))             Move (VpeSetDevPaperBin(hDoc, VBIN_ENVELOPE))                to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_MIDDLE))               Move (VpeSetDevPaperBin(hDoc, VBIN_MIDDLE))                  to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_ENVMANUAL))            Move (VpeSetDevPaperBin(hDoc, VBIN_ENVMANUAL))               to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_ONLYONE))              Move (VpeSetDevPaperBin(hDoc, VBIN_ONLYONE))                 to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_SMALLFMT))             Move (VpeSetDevPaperBin(hDoc, VBIN_SMALLFMT))                to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_LARGECAPACITY))        Move (VpeSetDevPaperBin(hDoc, VBIN_LARGECAPACITY))           to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_TRACTOR))              Move (VpeSetDevPaperBin(hDoc, VBIN_TRACTOR))                 to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_LARGEFMT))             Move (VpeSetDevPaperBin(hDoc, VBIN_LARGEFMT))                to iRetVal
+          If (VpeCheckPrintDialogFlag(Self, DF_BIN_UPPER))                Move (VpeSetDevPaperBin(hDoc, VBIN_UPPER))                   to iRetVal
+          // Write the setup file.
+          Move (VpeWritePrinterSetup(hDoc, sSetupFile)) to iRetVal
+          Move (VpeCloseDoc(hDoc)) to iRetVal
+       End
+    End_Procedure  // SetPrinterFlags
+
+
+    // Return the Page Width in the Winprint scale.
+    Function DFPageWidth Returns Number    //CHS 9/21/99
+        Local Number nDFPageWidth
+        Local Handle hDoc
+        Get phDoc to hDoc
+        If hDoc Begin
+           Move (VpeGetPageWidth(hDoc) - VpeGet(hDoc, VLEFTMARGIN)) to nDFPageWidth
+           Get VpeToWinprint nDFPageWidth to nDFPageWidth
+        End
+        Function_Return nDFPageWidth
+    End_Function
+
+    // ****************************************************************
+    // BarCode procedures from Peter Brooks.
+
+    Procedure VpeBarcode integer x1 integer y1 integer x2 integer y2 integer code_type string string_code
+       Local Handle hDoc
+       Local Integer  iRetVal
+       Get phDoc to hDoc
+       If hDoc Begin
+          //void VpeBarcode(long hDoc, int x, int y, int x2, int y2, int code_type, LPCSTR code, LPCSTR add_code)
+          Move (VpeBarCode(hDoc, x1, y1, x2, y2, code_type, string_code, "")) to iRetVal //force it to be BCT_EAN13 = 1
+       End
+    End_Procedure
+
+    Procedure VpeSetBarcodeParms integer x1 integer y1
+       Local Handle hDoc
+       Local Integer  iRetVal
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeSetBarcodeParms(hDoc, x1, y1)) to iRetVal
+       End
+    End_Procedure
+
+    // Send VpeSetPenSize  to WinprintID 0  // Make sure the barcode does not have a frame
+    // Dword hDoc  Integer pen_size Returns Integer
+    Procedure VpeSetPenSize integer x1
+       Local Handle hDoc
+       Local Integer  iRetVal
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeSetPenSize(hDoc, x1)) to iRetVal
+       End
+    End_Procedure
+
+
+    //an example how to execute these commands
+    // DFBeginHeader DFSubHeader 1
+    //      Send VpeSetBarcodeParms to WinprintID 2 2 // stop the description from appearing from top or bottom of barcode
+    //      Send VpeBarcode         to WinprintID 700 360 1750 560 6 "ABC123" "NULL" // 6=BCT_CODE39
+
+    // ******************************************************************
+
+    // ***********  Augmentation and Cancellation of DF_Printer procedures and functions. ******************
+
+    // Cancelled
+    Procedure DFZeroCounters
+    End_Procedure  //DFZeroCounters
+
+
+    Function DFNewPage Integer Columns Returns Integer
+       Local Integer iRetVal iReportType iPage iBin iBinSave   //PB 07/13/01
+       Local Integer iSubPage           // PB 08/21/00
+       Local Handle hDoc
+       Local String sTitle sSetupFile
+       Set pColumns to Columns
+       If Not (phDoc(Self)) Begin
+          Send InitializePrinterSetup
+          Get pSetupFile to sSetupFile
+//CHS 4/23/00          Move "Print Preview" to sTitle
+//CHS 4/23/00          Move (VpeOpenDoc(pWindowHandle(Self), sTitle, VPE_FIXED_MESSAGES)) to hDoc
+          Move (VpeOpenDoc(pWindowHandle(Self), pCaption(Self), pVpeDocFlags(Self))) to hDoc
+          If (pVLicense1(Self) <> "" And pVLicense2(Self) <> "") ;
+             Move (VpeLicense(hDoc, pVLicense1(Self), pVLicense2(Self))) to iRetVal
+          // Do not delete the document if the preview is cancelled.  Otherwise a GPF would result.
+          // Instead, WinReport has been modified to check if the preview has been cancelled as part
+          // of Handle_Report_Line.
+          Move (VpeEnableAutoDelete(hDoc, False)) to iRetVal
+          //DW 08/17/02 needed for VPEx32.dll v3.20.0.2 +
+	  Move (VpeSetPrintOptions(hDoc, PRINT_ALL + 16)) to iRetVal
+	  Move (VpeSetupPrinter(hdoc, sSetupFile, PRINTDLG_NEVER)) to iRetVal
+          Move (VpeSetPageFormat(hDoc,VpeGetDevPaperFormat(hDoc))) to iRetVal
+          Move (VpeSetPageOrientation(hDoc, VpeGetDevOrientation(hDoc))) to iRetVal
+//CHS 08/20/00          Move (VpeSetPaperBin(hDoc, VpeGetDevPaperBin(hDoc))) to iRetVal   //CHS 07/28/00
+          If (pBinFirstPage(Self) <> 0 And VpeGetCurrentPage(hDoc) = 1) Get pBinFirstPage to iBin   //CHS 08/20/00
+          Else Move (VpeGetDevPaperBin(hDoc)) to iBin                                               //CHS 08/20/00
+          Move (VpeGetDevPaperBin(hDoc)) to iBinSave //PB  07/13/01
+          Move (VpeSetPaperBin(hDoc, iBin)) to iRetVal                                              //CHS 08/20/00
+          Move (VpeDefineKey(hDoc, VKEY_CLOSE, VK_ESCAPE, 0, 0)) to iRetVal  // Allow the Escape key to close the preview.
+          If (pDevice(Self) <> "") Move (VpeSetDevice(hDoc, pDevice(Self))) to iRetVal   //CHS 07/25/00
+          If (pDevice(Self) <> "") Move (VpeSetDevPaperBin(hDoc, iBinSave)) to iRetVal                     //PB 07/13/01
+          If (pNumberOfCopies(Self) <> 0) Move (VpeSetDevCopies(hDoc, pNumberOfCopies(Self))) to iRetVal   //PB 08/17/00
+          Set phDoc to hDoc
+          Set DFCurrent_Page to 1
+          Get pSubPageCount to iSubPage         // PB 08/21/00
+          Add 1 to iSubPage                     // PB 08/21/00
+          Set pSubPageCount to iSubPage         // PB 08/21/00
+          // In some code setting the font is done before DFNewPage, and in some it is after DFNewPage,
+          // so the actual selection has to be done here and in the font procedures to cover both cases.
+          Send SelectVpeFont (DFCurrent_Font(Self)) (DFCurrent_FontSize(Self)) (pCharSet(Self))   //PB 08/30/01
+          // Set the default margins.
+//          If (DFCurrent_Metrics(Self) = "INCH") Begin
+//             Send DFSetMargins 1 1 1 1
+//             Send DFSetTopBottom 0.1969 0.3937
+//          End
+//          Else Begin
+//             Send DFSetMargins 2.53 2.53 2.53  2.53
+//             Send DFSetTopBottom 0.5 1
+//          End
+//CHS 07/15/00          If (pTopMargin(Self) = 0) Begin                          // PB 5/18/00
+//CHS 07/15/00             If (DFCurrent_Metrics(Self) = "INCH") Begin
+//CHS 07/15/00                Send DFSetMargins 1 1 1 1
+//CHS 07/15/00                Send DFSetTopBottom 0.276 0.276
+//CHS 07/15/00             End
+//CHS 07/15/00             Else Begin
+//CHS 07/15/00                Send DFSetMargins 2.54 2.54 2.54 2.54
+//CHS 07/15/00                Send DFSetTopBottom 0.7 0.7
+//CHS 07/15/00             End
+//CHS 07/15/00          End
+//CHS 07/15/00          Else Begin                                               // PB 5/18/00
+//CHS 07/15/00            Send DFSetMargins (pLeftMargin(Self)) (pTopMargin(Self)) (pRightMargin(Self)) (pBottomMargin(Self))
+//CHS 07/15/00            Send DFSetTopBottom (pHeaderMargin(Self)) (pFooterMargin(Self))
+//CHS 07/15/00          End
+          If (DFCurrent_Metrics(Self) = "INCH") Begin                                                           //CHS 07/15/00
+             If (pLeftMargin(Self)   = 0) Set pLeftMargin   to 1                                                //CHS 07/15/00
+             If (pRightMargin(Self)  = 0) Set pRightMargin  to 1                                                //CHS 07/15/00
+             If (pTopMargin(Self)    = 0) Set pTopMargin    to 1                                                //CHS 07/15/00
+             If (pBottomMargin(Self) = 0) Set pBottomMargin to 1                                                //CHS 07/15/00
+             If (pHeaderMargin(Self) = 0) Set pHeaderMargin to 0.276                                            //CHS 07/15/00
+             If (pFooterMargin(Self) = 0) Set pFooterMargin to 0.276                                            //CHS 07/15/00
+          End                                                                                                   //CHS 07/15/00
+          Else Begin                                                                                            //CHS 07/15/00
+             If (pLeftMargin(Self)   = 0) Set pLeftMargin   to 2.54                                             //CHS 07/15/00
+             If (pRightMargin(Self)  = 0) Set pRightMargin  to 2.54                                             //CHS 07/15/00
+             If (pTopMargin(Self)    = 0) Set pTopMargin    to 2.54                                             //CHS 07/15/00
+             If (pBottomMargin(Self) = 0) Set pBottomMargin to 2.54                                             //CHS 07/15/00
+             If (pHeaderMargin(Self) = 0) Set pHeaderMargin to 0.7                                              //CHS 07/15/00
+             If (pFooterMargin(Self) = 0) Set pFooterMargin to 0.7                                              //CHS 07/15/00
+          End                                                                                                   //CHS 07/15/00
+          Send DFSetMargins (pLeftMargin(Self)) (pTopMargin(Self)) (pRightMargin(Self)) (pBottomMargin(Self))   //CHS 07/15/00
+          Send DFSetTopBottom (pHeaderMargin(Self)) (pFooterMargin(Self))                                       //CHS 07/15/00
+          // If pPreviewOnOpen start the preview as soon as the document is opened.
+          If (pPreviewOnOpen(Self)) Begin
+             Move (VpeWriteStatusbar(hDoc, VPE3_OemToChar(pProcessString(Self)))) to iRetVal
+             Move (VpePreviewDoc(hDoc, 0, VPE_SHOW_MAXIMIZED)) to iRetVal
+          End
+          Else Send Update_Status (pFinishString(Self))
+          Set DFCurrent_HeaderType To -1  // Needed if headers are not used.
+       End
+       Else Begin
+          Set pCheckNewPage To False
+          Send ClearSubheaders to (oHeaders(Self))
+          Send NewVpePage
+          Set pCheckNewPage To True
+       End
+       If (phDoc(Self)) Move (VpeGetCurrentPage(phDoc(Self))) to iPage
+       Function_Return iPage
+    End_Function  // DFNewPage
+
+
+    // cancelled
+    Function DFPrintDialog Returns Integer
+       Function_Return 0
+    End_Function
+
+
+    // 06/23/00,md,added optional parameter to do alternate printer setup files
+    //              (e.g. for picking the printer for an alternate print setup
+    //              file)
+    Procedure DFPrintSetup string sFile
+       Local Integer iReportType iRetVal
+       Local Handle  hDoc
+       Local String sSetupFile
+       Send InitializePrinterSetup
+       Get pSetupFile to sSetupFile
+       if (num_arguments=1) move sFile to sSetupFile   // 06/23/00,md
+       Move (VpeOpenDoc(0, 0, VPE_FIXED_MESSAGES)) to hDoc
+       If hDoc Begin
+          Move (VpeSetupPrinter(hDoc, sSetupFile, PRINTDLG_ALWAYS)) to iRetVal
+          If (iRetVal = 3) Send Stop_Box ("Error writing the printer setup file" * sSetupFile) "Print Setup"
+          Move (VpeCloseDoc(hDoc)) to iRetVal
+       End
+    End_Procedure  // DFPrintSetup
+
+
+    Procedure DFPreView Integer iAutoDelete
+       Local Integer iReportType iRetVal
+       Local Handle  hDoc
+       Get phDoc to hDoc
+       If hDoc Begin
+          Send FlushVpeBuffer
+          // If the processing has stopped, change EnableAutoDelete to close
+          // the document when the preview is cancelled.
+          // The only time this does not happen is in the preview of the interrupt panel.
+          If (Num_Arguments = 0 Or iAutoDelete = 1) Move (VpeEnableAutoDelete(hDoc, True)) to iRetVal
+          // For PRINT_TO_WINDOW the preview has already started, so just refresh.
+          If (pPreviewOnOpen(Self)) Begin
+             // Refreshing is needed for one page documents.
+             Move (VpeRefreshDoc(hDoc)) to iRetVal
+             Send Update_Status (pFinishString(Self))
+             // Clear the handle for the VPE document since we are through with it.
+             // Do not close the document at this time since the preview is still open.
+             Set phDoc to 0
+          End
+          // The handle phDoc is not cleared here since this block is done through the preview button
+          // of the report interrupt, and the user may want to continue the report after the preview.
+          Else Begin
+             Move (VpeGotoPage(hDoc, 1)) to iRetVal
+             Move (VpePreviewDoc(hDoc, 0, VPE_SHOW_MAXIMIZED)) to iRetVal
+          End
+       End
+    End_Procedure  // DFPreView
+
+
+    Procedure DFPrintDoc   //CHS 3/2/01
+       Local Integer iReportType iRetVal
+       Local Handle  hDoc
+       Get phDoc to hDoc
+       If hDoc Begin
+          Send FlushVpeBuffer
+          Move (VpePrintDoc(hDoc, 0)) to iRetVal   // 0 does not start the printer setup.
+          Send CloseDoc
+       End
+    End_Procedure  // DFPrintDoc
+
+    Procedure DFPrint     //CHS 3/2/01
+       Local Integer iReportType iRetVal
+       Local Handle  hDoc
+       Get phDoc to hDoc
+       If hDoc Begin
+          Send FlushVpeBuffer
+          Move (VpePrintDoc(hDoc, 1)) to iRetVal   // 1 starts the printer setup.
+          Send CloseDoc
+       End
+    End_Procedure  // DFPrint
+
+
+    Procedure DFClearDoc
+       Local Integer iReportType iRetVal
+       Local String  sFile
+       Local Handle hDoc
+       Get phDoc to hDoc
+       If hDoc Send CloseDoc
+       Set pLineHeight to 0   // Set the line height to 0 so that it will be calculated again for the new document.
+       Set DFCurrent_Font to ""
+       Set DFCurrent_FontSize to 0
+       Set pCharSet           to -99     //PB 08/30/01
+       Set pNextVTop to 0
+       Set pFirstItem To True
+       Send ClearHeaders to (oHeaders(Self))
+       If (pWriteToAscii(Self)) Begin
+          Get pFile_Location to sFile
+          If (sFile <> "") Direct_Output Channel (pAsciiChannel(Self)) sFile  // This clears the file, avoiding a double header.
+       End
+//CHS 08/14/00       Set pPrintFlags to 0
+       Set pOrientation to 0          //CHS 08/14/00
+       Set pPaper       to 0          //CHS 08/14/00
+       Set pBin         to 0          //CHS 08/14/00
+       Set pResolution  to 0          //CHS 08/14/00
+       // Reinitialize the item parameters.
+       Set pText    to ""            //CHS 01/24/00
+       Set pX1      to 0             //CHS 01/24/00
+       Set pX2      to 0             //CHS 01/24/00
+       Set pDec     to -1            //CHS 01/24/00
+       Set pAttr    to 0             //CHS 01/24/00
+       Set pNewLine to 0             //CHS 01/24/00
+       Set pTableCell       to 0       // PB 5/12/00
+       Set pListCell        to 0       // PB 5/15/00
+       Set pPrevListStart   to 9999999 // PB 5/15/00
+       Set pPrevListStop    to 0       // PB 5/15/00
+       Set pPrevUpdatePos   to 0       // PB 5/26/00
+       Set pPrevTableHeight to 0       // PB 5/12/00
+       Set pPrevTableColor  to 0       // PB 5/12/00
+       Set pPrevFrameColor  to 0       // PB 5/12/00
+       Set pPrevFrameSize   to 0       // PB 5/12/00
+       // Reinitialize the internal font properties.
+       Set pLastFontName    to ""    //CHS 02/17/00
+       Set pLastFontSize    to 0     //CHS 02/17/00
+       Set pLastCharSet     to -1    //PB 08/30/01
+       Set pCurrentFontName to ""    //CHS 02/17/00
+       Set pCurrentFontSize to 0     //CHS 02/17/00
+       Set pCurrentCharSet  to -1    //PB 08/30/01
+       Set pLeftMargin      to 0     //CHS 07/15/00
+       Set pRightMargin     to 0     //CHS 07/15/00
+       Set pTopMargin       to 0     //CHS 07/15/00
+       Set pBottomMargin    to 0     //CHS 07/15/00
+       Set pHeaderMargin    to 0     //CHS 07/15/00
+       Set pFooterMargin    to 0     //CHS 07/15/00
+       Set pDevice          to ""    //CHS 07/25/00
+       Set pNumberOfCopies  to 0     //PB  08/17/00
+       Set pBinFirstPage    to 0     //CHS 08/20/00
+       Set pSubPageCount    to 0     //PB  08/21/00
+    End_Procedure  // DFClearDoc
+
+
+    Procedure DFSetFont String FontName
+       Set DFCurrent_Font to FontName
+    End_Procedure  // DFSetFont
+
+
+    Procedure DFSetFontSize Integer Height Integer Width
+       Set DFCurrent_FontSize to Height   // Width = 0.
+    End_Procedure  // DFSetFontSize
+
+
+    // Cancelled, since this is an internal procedure of DF_Print.
+    Procedure DFSetFontStyle DWORD Style
+    End_Procedure  // DFSetFontStyle
+
+
+    // Cancelled, since this is an internal procedure of DF_Print.
+    Procedure DFSetUnderline Integer Underline
+    End_Procedure
+
+
+    // Cancelled, since this is an internal procedure of DF_Print.
+    Procedure DFSetBold Integer Bold
+    End_Procedure
+
+
+    // Cancelled, since this is an internal procedure of DF_Print.
+    Procedure DFSetItalic Integer Italic
+    End_Procedure
+
+
+    // Cancelled, since this is an internal procedure of DF_Print.
+    Procedure DFSetStrikeout Integer Strikeout
+    End_Procedure
+
+    Procedure DFSetMargins Number Left Number Top Number Right Number Bottom
+       Send DFSetLeftMargin   Left
+       Send DFSetTopMargin    Top
+       Send DFSetRightMargin  Right
+       Send DFSetBottomMargin Bottom
+    End_Procedure  // DFSetMargins
+
+
+    Procedure DFSetLeftMargin Number Left
+       Local Handle hDoc
+       Local Integer iRetVal
+       Get phDoc to hDoc
+       If hDoc Move (VpeSet(hDoc, VLEFTMARGIN, VpeScale(Self, Left))) to iRetVal
+       Set pLeftMargin to Left   //CHS 07/15/00
+    End_Procedure  // DFSetLeftMargin
+
+
+    Procedure DFSetRightMargin Number Right
+       Local Handle hDoc
+       Local Integer iRetVal iRight
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeScale(Self, Right)) to iRight     // Convert to Vpe scale of .1 mm
+          Move (VpeGetPageWidth(hDoc) - iRight) to iRight  // Subtract margin from the page width to set the Vpe right margin.
+          Move (VpeSet(hDoc, VRIGHTMARGIN, iRight)) to iRetVal
+       End
+       Set pRightMargin to Right   //CHS 07/15/00
+    End_Procedure  // DFSetRightMargin
+
+
+    Procedure DFSetTopMargin Number Top
+       Local Handle hDoc
+       Local Integer iRetVal iNewVpeTopMargin iCurrentVpeTopMargin iCurrentVpeTop
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeScale(Self, Top)) to iNewVpeTopMargin  // Convert to VPE scale
+          Move (VpeGet(hDoc, VTOPMARGIN)) to iCurrentVpeTopMargin
+          Move (VpeGet(hDoc, VTOP))       to iCurrentVpeTop
+          // Set the Vpe top margin.
+          Move (VpeSet(hDoc, VTOPMARGIN, iNewVpeTopMargin)) to iRetVal
+          Set pWriteLinePos to iNewVpeTopMargin   //CHS 10/9/99
+          // If the VTOP was equal to VTOPMARGIN, reset VTOP to the new top margin.
+          If (iCurrentVpeTopMargin = iCurrentVpeTop) Move (VpeSet(hDoc, VTOP, iNewVpeTopMargin)) to iRetVal
+       End
+       Set pTopMargin to Top   //CHS 07/15/00
+    End_Procedure  // DFSetTopMargin
+
+
+    Procedure DFSetBottomMargin Number Bottom
+       Local Handle hDoc
+       Local Integer iRetVal iBottom
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeScale(Self, Bottom)) to iBottom      // Convert to Vpe scale of .1 mm
+          Move (VpeGetPageHeight(hDoc) - iBottom) to iBottom  // Subtract margin from the page height to set the Vpe bottom margin.
+          Move (VpeSet(hDoc, VBOTTOMMARGIN, iBottom)) to iRetVal
+       End
+       Set pBottomMargin to Bottom   //CHS 07/15/00
+    End_Procedure  // DFSetBottomMargin
+
+
+    // Cancelled.
+    Procedure DFWriteToPage Integer Page String sText DWORD iStyle Integer Column Integer Dec
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFWritelnToPage Integer Page String sText DWORD iStyle Integer Column Integer Dec
+    End_Procedure
+
+
+    Procedure DFWrite String sText DWORD iStyle Integer Column Integer Dec
+       Local Number nColumnWidth nX1 nX2
+       Get ColumnWidth to nColumnWidth
+       If (Column > pColumns(Self)) Get pColumns to Column  // Do not allow Column > the number of columns.
+       // If Font_Center, center around the Column position.
+       If (iStyle iAnd FONT_CENTER) Begin
+          Move ((Column - 1) * nColumnWidth) to nX1
+          Move ((Column + 1) * nColumnWidth) to nX2
+       End
+       // Otherwise send the column position as the first parameter, and defer the second parameter.
+       Else Begin
+          Move (Column * nColumnWidth) to nX1
+          Move VDEFERRED to nX2
+       End
+       Send DFVpeWrite sText nX1 nX2 iStyle Dec 0
+    End_Procedure  // DFWrite
+
+
+    Procedure DFWriteln String sText DWORD iStyle Integer Column Integer Dec   //CHS 9/21/99
+       Local Number nColumnWidth nX2
+       Get ColumnWidth to nColumnWidth
+       If (Column > pColumns(Self)) Get pColumns to Column  // Do not allow Column > the number of columns.
+       // What about FONT_CENTER?
+       If (iStyle iAnd FONT_RIGHT Or Dec >= 0) Move VDEFERRED to nX2
+//CHS 06/15/00       // Use the page width instead of the right margin because Winprint allows printing
+//CHS 06/15/00       // beyond the margin, except for a text field which should wrap at the right margin.
+//CHS 06/15/00       Else Begin
+//CHS 06/15/00//CHS 9/29/99          If (Length(sText) >= pNoteLength(Self)) Move VRIGHTMARGIN to nX2
+//CHS 06/15/00          If (Length(sText) >= pNoteLength(Self) Or pPlace(Self) = HDR_CENTER) Move VRIGHTMARGIN to nX2   //CHS 9/29/99
+//CHS 06/15/00          Else Move (DFPageWidth(Self)) to nX2
+//CHS 06/15/00       End
+       // In a header Winprint prints to the end of the page.  Otherwise print to the margin.
+       Else Move (If(pPrintingHeader(Self), DFPageWidth(Self), VRIGHTMARGIN)) to nX2   //CHS 06/15/00
+       Send DFVpeWrite sText (Column * nColumnWidth) nX2 iStyle Dec 1  // 1 = New line.
+    End_Procedure  // DFWriteln
+
+
+    // Cancelled.
+    Procedure DFWritePosToPage Integer Page String sText DWORD iStyle Number Pos Integer Dec
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFWritelnPosToPage Integer Page String sText DWORD iStyle Number Pos Integer Dec
+    End_Procedure
+
+
+    Procedure DFWritePos String sText DWORD iStyle Number Pos Integer Dec Number nMax      // PB 5/12/00
+       Local Number nMax_Length                                                            // PB 5/12/00
+       If (Num_Arguments > 4)  Move nMax to nMax_Length                                    // PB 5/12/00
+                         Else  Move    0 to nMax_Length
+       If (nMax_Length > 0 and Dec < 0) Begin                                              // PB 5/12/00
+          // nMax_Length will always be in CM.  If the metrics is "INCH", convert to inches.
+//CHS 09/21/00          If (DFCurrent_Metrics(Current_Object) = "INCH") Move (nMax_Length/2.54) to nMax_Length
+          If (iStyle iAnd FONT_RIGHT) Send DFVpeWrite sText (Pos - nMax_Length) Pos iStyle Dec 0
+          // FONT_CENTER is not supported yet.
+          Else Send DFVpeWrite sText Pos (Pos + nMax_Length)  iStyle Dec 0
+       End
+       Else Send DFVpeWrite sText Pos VDEFERRED iStyle Dec 0 // VDEFERRED = no right position, 0 = do not start a new line.
+    End_Procedure  // DFWritePos
+
+
+    Procedure DFWritePosMax String sText DWORD iStyle Number Pos Integer Dec Number nMax_Length
+       // If this is a number, the Winprint DFWritePosMax ignores nMax_Length and reduces to DFWritePos.
+       // Do the same here.
+       If (Dec >=0) Send DFWritePos sText iStyle Pos Dec
+       Else Begin
+          // nMax_Length will always be in CM.  If the metrics is "INCH", convert to inches.
+//CHS 09/21/00          If (DFCurrent_Metrics(Current_Object) = "INCH") Move (nMax_Length/2.54) to nMax_Length
+          If (iStyle iAnd FONT_RIGHT) Send DFVpeWrite sText (Pos - nMax_Length) Pos iStyle Dec 0
+          // FONT_CENTER is not supported yet.
+          Else Send DFVpeWrite sText Pos (Pos + nMax_Length)  iStyle Dec 0
+       End
+    End_Procedure  // DFWritePosMax
+
+
+    Procedure DFWritelnPos String sText DWORD iStyle Number Pos Integer Dec Number nMax  //CHS 9/21/99     // PB 5/12/00
+       Local Number nX2
+       Local Number nMax_Length                                                                            // PB 5/12/00
+       If (iStyle iAnd FONT_RIGHT Or iStyle iAnd FONT_CENTER Or Dec >= 0) Move VDEFERRED to nX2
+//CHS 06/15/00       // Use the page width instead of the right margin because Winprint allows printing
+//CHS 06/15/00       // beyond the margin, except for a text field which should wrap at the right margin.
+//CHS 06/15/00       Else Begin
+//CHS 06/15/00          If (Length(sText) >= pNoteLength(Self)) Move VRIGHTMARGIN to nX2
+//CHS 06/15/00          Else Move (DFPageWidth(Self)) to nX2
+//CHS 06/15/00       End
+       // In a header Winprint prints to the end of the page.  Otherwise print to the margin.
+       Else Move (If(pPrintingHeader(Self), DFPageWidth(Self), VRIGHTMARGIN)) to nX2   //CHS 06/15/00
+       If (Num_Arguments > 4)  Move nMax to nMax_Length                                          // PB 5/12/00
+                         Else  Move    0 to nMax_Length
+       If (nMax_Length > 0 and Dec < 0) Begin                                                    // PB 5/12/00
+          // nMax_Length will always be in CM.  If the metrics is "INCH", convert to inches.
+//CHS 09/21/00          If (DFCurrent_Metrics(Current_Object) = "INCH") Move (nMax_Length/2.54) to nMax_Length
+//CHS 3/31/01          If (iStyle iAnd FONT_RIGHT) Send DFVpeWrite sText (Pos - nMax_Length) nX2 iStyle Dec 1
+          If (iStyle iAnd FONT_RIGHT) Send DFVpeWrite sText (Pos - nMax_Length) Pos iStyle Dec 1   //CHS 3/31/01
+          // FONT_CENTER is not supported yet.
+          Else Begin
+             // If nX2 is set to the right margin above, set the new nX2 to either the Max Length Pos
+             // or the right margin if that would go beyond the right margin.
+             If (nX2 = VRIGHTMARGIN) Move (Pos + nMax_Length Min VpeGet(phDoc(Self), VRIGHTMARGIN)) to nX2
+             Else Move (Pos + nMax_Length) to nX2
+             Send DFVpeWrite sText Pos nX2  iStyle Dec 1
+          End
+       End
+       Else Send DFVpeWrite sText Pos nX2 iStyle Dec 1   // 1 = start a new line.                // PB 5/12/00
+    End_Procedure  // DFWritelnPos
+
+
+    Procedure DFBeginHeaderType Integer HeaderNr Integer HeaderType
+       Local Integer iBottomMargin iRetVal
+       Local Handle  hDoc
+       Set DFCurrent_HeaderType To HeaderType
+       Set DFCurrent_HeaderNr   To HeaderNr
+//CHS 4/22/00       Send Delete_Data to (oHeaders(Self)) HeaderType
+       Send Delete_Data to (oHeaders(Self)) HeaderNr HeaderType   //CHS 4/22/00
+    End_Procedure  // DFBeginHeaderType
+
+
+    Procedure DFEndHeaderType
+       Set pVertOffset to 0
+    End_Procedure  // DFEndHeaderType
+
+
+    Procedure DFWriteHeaderType Integer HeaderNr Integer HeaderType
+       Local Integer iCheckNewPage
+       Set DFCurrent_HeaderType to -1
+       Set pPlace to 0
+//CHS 01/19/00       If (HeaderType = DFSubHeader Or HeaderType = DFSubTotal Or HeaderType = DFTotal) Begin
+       If (HeaderType = DFSubHeader Or HeaderType = DFSubTotal Or HeaderType = DFTotal Or HeaderType = DFReportFooter) Begin   //CHS 01/19/00
+//CHS 4/22/00          Send VpePrintHeader to (oHeaders(Self)) HeaderType
+          Send VpePrintHeader to (oHeaders(Self)) HeaderNr HeaderType   //CHS 4/22/00
+       End
+    End_Procedure  // DFWriteHeaderType
+
+
+    // Cancelled.
+    Procedure DFWriteHeaderTypeToPage Integer PageNr Integer HeaderNr Integer HeaderType
+    End_Procedure
+
+
+    Procedure DFHeaderPosition Integer Place
+       Set pPlace to Place
+    End_Procedure  // DFHeaderPosition
+
+
+    Procedure DFHeaderFrameType Integer Frame Dword dwColor Number nWeight;
+                                Dword FColor Integer iFill
+       Local Integer iWeight dwVpeColor dwFVpeColor
+       Get VpeScale nWeight to iWeight      // Convert to the Vpe Scale.
+       Get VpeColor dwColor to dwVpeColor   // Convert the color used by Winprint to the VPE color.
+       Get VpeColor FColor  to dwFvpeColor  // Convert the color used by Winprint to the VPE color.
+       Send SetHeaderFrameType to (oHeaders(Self)) Frame dwVpeColor iWeight dwFVpeColor iFill
+    End_Procedure  // DFHeaderFrameType
+
+
+    // Cancelled.
+    Procedure DFHeaderWrap Integer OnOff
+       Send SetHeaderWrap to (oHeaders(Self)) OnOff
+    End_Procedure  // DFHeaderWrap
+
+
+    Procedure DFWriteBMP String sFileName Number StartX Number StartY Number Height Number Width Integer iUCp
+       Local Integer iX1 iX2 iY1 iY2 iRetVal iSaveVTop iSaveVBottom iSavePenSize
+       Local Handle hDoc
+       If (DFCurrent_HeaderType(Self) <> -1) Begin   //CHS 06/05/00
+          Send AddHeaderBmp to (oHeaders(Self)) sFileName StartX StartY Height Width iUCp
+       End
+       Else Begin               //CHS 06/05/00  Added Else condition.
+          Send FlushVpeBuffer   //CHS 06/05/00
+          Get phDoc to hDoc
+          If hDoc Begin
+             Move (VpeGet(hDoc, VTOP))    to iSaveVTop
+             Move (VpeGet(hDoc, VBOTTOM)) to iSaveVBottom
+             Move (VpeGetPenSize(hDoc))   to iSavePenSize                            // PB 5/12/00
+
+             If (StartX = DFGR_CURRLINE)        Move (VpeGet(hDoc, VRIGHT)) to iX1   // PB 5/12/00   // don't work the way I want
+             Else Move (VpeGet(hDoc, VLEFTMARGIN) + VpeScale(Self, StartX)) to iX1   // PB 5/12/00
+
+//CHS 06/05/00             If (StartY = DFGR_CURRLINE)  Move      (VpeGet(hDoc, VBOTTOM)) to iY1   // PB 5/12/00
+             If (StartY = DFGR_CURRLINE)  Move      (VpeGet(hDoc, VTOP)) to iY1      //CHS 06/05/00
+             Else Move (VpeGet(hDoc, VTOPMARGIN)  + VpeScale(Self, StartY)) to iY1   // PB 5/12/00
+
+//PB 5/12/00          Move (VpeGet(hDoc, VLEFTMARGIN) + VpeScale(Self, StartX)) to iX1
+//PB 5/12/00          Move (VpeGet(hDoc, VTOPMARGIN)  + VpeScale(Self, StartY)) to iY1
+             Move (iX1 + VpeScale(Self, Width))  to iX2
+             Move (iY1 + VpeScale(Self, Height)) to iY2
+             Move (VpeSetPenSize(hDoc, 0)) to iRetVal                //PB 5/12/00
+//CHS 6/12/01             Move (VpePicture(hDoc, iX1, iY1, iX2, iY2, sFileName, 0)) to iRetVal
+             Move (VpePicture(hDoc, iX1, iY1, iX2, iY2, sFileName, pVpePicFlags(Self))) to iRetVal   //CHS 6/12/01
+             If (pPrintingHeader(Self)) Begin   //CHS 06/05/00
+                If (pFrameTop(Self)    > iY1) Set pFrameTop    to iY1
+                If (pFrameBottom(Self) < iY2) Set pFrameBottom to iY2
+             End
+             Move (VpeSetPenSize(hDoc, iSavePenSize)) to iRetVal     //PB 5/12/00
+             If (iUCp = DFGR_NOPOS) Begin
+                Move (VpeSet(hDoc, VTOP, iSaveVTop)) to iRetVal
+                Move (VpeSet(hDoc, VBOTTOM, iSaveVBottom)) to iRetVal
+             End
+             // iUcp = DFGR_SETPOS.
+             Else Begin   // AF 3/29/00
+                Move (VpeSet(hDoc, VTOP, iY2)) to iRetVal
+                Move (VpeSet(hDoc, VBOTTOM, iY2)) to iRetVal
+             End
+          End
+       End      //CHS 06/05/00
+    End_Procedure  // DFWriteBMP
+
+
+    // Cancelled
+    Procedure DFWriteBMPToPage Integer iPage String sFileName Number StartX Number StartY Number Height Number Width Integer iUCp
+    End_Procedure   // DFWriteBMPToPage
+
+
+    Procedure DFHeaderLineCheck Integer iLines
+       Send HeaderLineCheck to (oHeaders(Current_Object)) iLines
+    End_Procedure  // DFHeaderLineCheck
+
+
+    Procedure DFPrintFlags Integer iFlags
+//CHS 08/14/00       Set pPrintFlags to iFlags
+       Local Integer iOrientation iPaper iBin iResolution      //CHS 08/14/00
+       // Orientation                                          //CHS 08/14/00
+       Move (Mod(iFlags, 10)) to iOrientation                  //CHS 08/14/00
+//CHS 5/7/01       Set pOrientation to iOrientation                        //CHS 08/14/00
+       // Ignore the Print To File flags (1 - 3) which are not supported.
+       // This sets pOrientation to either DF_PORTRAIT (0) or DF_LANDSCAPE (4)
+       Set pOrientation to (iOrientation iAnd $0000000C)       //CHS 5/7/01
+       Subtract iOrientation From iFlags                       //CHS 08/14/00
+       // Paper Size                                           //CHS 08/14/00
+       Move (Mod(iFlags, 500)) to iPaper                       //CHS 08/14/00
+       Set pPaper to iPaper                                    //CHS 08/14/00
+       Subtract iPaper From iFlags                             //CHS 08/14/00
+       // Paper Bin                                            //CHS 08/14/00
+       Move (Mod(iFlags, 10000)) to iBin                       //CHS 08/14/00
+       Set pBin to iBin                                        //CHS 08/14/00
+       Subtract iBin From iFlags                               //CHS 08/14/00
+       // Resolution                                           //CHS 08/14/00
+       Move (Mod(iFlags, 10000)) to iResolution                //CHS 08/14/00
+       Set pResolution to iResolution                          //CHS 08/14/00
+       // Call the VPE functions to set the printer flags.
+       Send SetPrinterFlags
+    End_Procedure  // DFPrintFlags
+
+
+    // The equivalent VPE function VpeSetDevice has only one parameter, sDevice, so
+    // the remaining parameters are ignored.
+    Procedure DFSelectPrinter String sDriver String sDevice String sPort Integer iUpdate   //CHS 07/25/00
+       Local Integer iRetVal
+       Local Pointer hDoc
+       Get phDoc to hDoc
+       If hDoc Move (VpeSetDevice(hDoc, sDevice)) to iRetVal
+       Else Set pDevice to sDevice
+    End_Procedure
+
+
+    Procedure DFSetNumberOfCopies Integer iNrOfCopies          //PB  08/17/00
+      Local Integer iRetVal
+      Local Pointer hDoc
+      Get phDoc to hDoc
+      If hDoc Move (VpeSetDevCopies(hDoc, iNrOfCopies)) to iRetVal
+      Else Set pNumberOfCopies to iNrOfCopies
+    End_Procedure
+
+
+    Procedure DFPrinterBinFirstPage Integer iBin   //CHS 08/20/00
+       Local Integer iRetVal iBinF
+       Local Pointer hDoc
+       Get phDoc to hDoc
+       If (iBin = DF_BIN_AUTO)             Move VBIN_AUTO          to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_LOWER)            Move VBIN_LOWER         to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_CASSETTE)         Move VBIN_CASSETTE      to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_MANUAL)           Move VBIN_MANUAL        to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_ENVELOPE)         Move VBIN_ENVELOPE      to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_MIDDLE)           Move VBIN_MIDDLE        to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_ENVMANUAL)        Move VBIN_ENVMANUAL     to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_ONLYONE)          Move VBIN_ONLYONE       to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_SMALLFMT)         Move VBIN_SMALLFMT      to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_LARGECAPACITY)    Move VBIN_LARGECAPACITY to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_TRACTOR)          Move VBIN_TRACTOR       to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_LARGEFMT)         Move VBIN_LARGEFMT      to iBinF         //PB 08/21/00
+       If (iBin = DF_BIN_UPPER)            Move VBIN_UPPER         to iBinF         //PB 08/21/00
+       Set pBinFirstPage to iBinF
+       If (hDoc And (VpeGetCurrentPage(hDoc) = 1)) Move (VpeSetPaperBin(hDoc, iBinF)) to iRetVal
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFSetDFColor DWORD dwColor
+    End_Procedure
+
+
+    Procedure DFSetTopBottom Number nTop Number nBottom Integer iAll
+       Local Integer iLength
+       Local Handle hDoc
+       Get phDoc to hDoc
+       If hDoc Begin
+          Move (VpeGetPageHeight(hDoc)) to iLength
+          Set pTop to (VpeScale(Self, nTop))
+          Set pBottom to (iLength - VpeScale(Self, nBottom))
+       End
+       Set pHeaderMargin to nTop      //CHS 07/15/00
+       Set pFooterMargin to nBottom   //CHS 07/15/00
+    End_Procedure  // DFSetTopBottom
+
+
+    // Cancelled.
+    Procedure DFSetJMode Integer iAlign
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFWriteEllip Number StartX Number StartY Number Height Number Width;
+              Dword BColor Dword FColor Integer iFill Number nWeight Integer Wrap Integer iUCp
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFWriteEllipToPage Integer iPage Number StartX Number StartY Number Height Number Width;
+              Dword BColor Dword FColor Integer iFill Number nWeight Integer Wrap Integer iUCp
+    End_Procedure
+
+
+    // 6/23/00,md, added a line to handle DFGR_CURRLINE on StartY parameter
+    Procedure DFWriteRect Number nStartX Number nStartY Number nHeight Number nWidth;
+              Dword dBColor Dword dFColor Integer iFill Number nWeight Integer iWrap Integer iUCp
+       Local Handle hDoc
+       Local Integer iRetVal iX1 iX2 iY1 iY2 iSaveVTop iSaveVBottom
+       // dBColor dFColor iFill nWeight iWrap are not implemented.
+       Get phDoc to hDoc
+       If hDoc Begin
+          // Save VTop and VBottom.
+          Move (VpeGet(hDoc, VTOP))    to iSaveVTop
+          Move (VpeGet(hDoc, VBOTTOM)) to iSaveVBottom
+          // iX1
+          Move (VpeGet(hDoc, VLEFTMARGIN) + VpeScale(Self, nStartX)) to iX1
+          // iY1
+          If ( nStartY = DFGR_CURRLINE) Move (VpeGet(hDoc,VTOP)) to iY1          // 6/23/00,md
+          Else Move (VpeGet(hDoc, VTOPMARGIN) + VpeScale(Self, nStartY)) to iY1
+          // iX2
+          If (nWidth = DFGR_RB_MARGIN) Move (VpeGet(hDoc, VRIGHTMARGIN)) to iX2
+          Else Move (iX1 + VpeScale(Self, nWidth)) to iX2
+          // iY2
+          If (nHeight = DFGR_RB_MARGIN) Move (VpeGet(hDoc, VBOTTOMMARGIN)) to iY2
+          Else Move (iY1 + VpeScale(Self, nHeight)) to iY2
+          // Print the rectangle.
+          Send DFVpeBox iX1 iY1 iX2 iY2 (VpeColor(Self,dBColor)) (VpeScale(Self,nWeight)) (VpeColor(Self,dFColor)) iFill
+          // Restore VTop and VBottom
+          If (iUCp = DFGR_NOPOS) Begin
+             Move (VpeSet(hDoc, VTOP, iSaveVTop)) to iRetVal
+             Move (VpeSet(hDoc, VBOTTOM, iSaveVBottom)) to iRetVal
+          End
+          // If iUcp = DFGR_SETPOS move position to end of rectangle.
+       End
+    End_Procedure  // DFWriteRect
+
+    // 6/23/00,md, new procedure to write a rectangle relative to the current
+    //              line  (see also new command DFWRITERECTREL)
+    Procedure DFWriteRectRel Number nStartX Number nStartY Number nHeight Number nWidth;
+              Dword dBColor Dword dFColor Integer iFill Number nWeight Integer iWrap Integer iUCp
+       Local Handle hDoc
+       Local Integer iRetVal iX1 iX2 iY1 iY2 iSaveVTop iSaveVBottom
+       // dBColor dFColor iFill nWeight iWrap are not implemented.
+       Get phDoc to hDoc
+       If hDoc Begin
+          Send FlushVpeBuffer   //CHS 09/29/00
+          // Save VTop and VBottom.
+          Move (VpeGet(hDoc, VTOP))    to iSaveVTop
+          Move (VpeGet(hDoc, VBOTTOM)) to iSaveVBottom
+          // iX1
+          Move (VpeGet(hDoc, VLEFTMARGIN) + VpeScale(Self, nStartX)) to iX1
+          // iY1
+          Move (VpeGet(hDoc, VTOP) + VpeScale(Self, nStartY)) to iY1
+          // iX2
+          If (nWidth = DFGR_RB_MARGIN) Move (VpeGet(hDoc, VRIGHTMARGIN)) to iX2
+          Else Move (iX1 + VpeScale(Self, nWidth)) to iX2
+          // iY2
+          If (nHeight = DFGR_RB_MARGIN) Move (VpeGet(hDoc, VBOTTOMMARGIN)) to iY2
+          Else Move (iY1+VpeScale(self,nHeight)) to iY2
+          // Print the rectangle.
+          Send DFVpeBox iX1 iY1 iX2 iY2 (VpeColor(Self,dBColor)) (VpeScale(Self,nWeight)) (VpeColor(Self,dFColor)) iFill
+          // Restore VTop and VBottom
+          If (iUCp = DFGR_NOPOS) Begin
+             Move (VpeSet(hDoc, VTOP, iSaveVTop)) to iRetVal
+             Move (VpeSet(hDoc, VBOTTOM, iSaveVBottom)) to iRetVal
+          End
+          // If iUcp = DFGR_SETPOS move position to end of rectangle.
+       End
+    End_Procedure  // DFWriteRectRel
+
+    // Cancelled.
+    Procedure DFWriteRectToPage Integer iPage Number StartX Number StartY Number Height Number Width;
+              Dword BColor Dword FColor Integer iFill Number nWeight Integer Wrap Integer iUCp
+    End_Procedure
+
+
+    Procedure DFLineCheck Integer iLines
+       Local Handle hDoc
+       Get phDoc to hDoc
+       // FlushVpeBuffer prints the last item, resetting VTOP to the bottom of the last item.
+       // This is especially important for wrapping text, since they may wrap over many lines.
+       Send FlushVpeBuffer   //PB 5/2/01
+//PB 1/22/01       If (hDoc And pCheckNewPage(Self) And (VpeGet(hDoc, VTOP) + (iLines * pLineHeight(Self)) > VpeGet(hDoc, VBOTTOMMARGIN)) ) Begin
+       // Ignore pCheckNewPage because it is now False until the next line is started.
+       Send SelectVpeFont (DFCurrent_Font(Self)) (DFCurrent_FontSize(Self)) (pCharSet(Self))   //PB 09/04/01
+       If (hDoc And (VpeGet(hDoc, VTOP) + (iLines * pLineHeight(Self)) > VpeGet(hDoc, VBOTTOMMARGIN)) ) Begin   //PB 1/22/01
+          Set pCheckNewPage To False
+          Send NewVpePage
+          Set pCheckNewPage To True
+       End
+    End_Procedure  // DFLineCheck
+
+
+    // Cancelled.
+    Procedure DFCreateDiagram Integer iType Integer iFx Number nHeight Number nWidth
+    End_Procedure  // DFCreateDiagram
+
+
+    // Cancelled.
+    Procedure DFDiagram_Item Integer iDiagram String sLabel Number nValue;
+                             Dword BColor Dword FColor Integer iFill;
+                             Integer iDec Integer iVP Integer iExt
+    End_Procedure  // DFDiagram_Item
+
+
+    // Cancelled.
+    Procedure DFLockDiagram Integer iDiagram
+    End_Procedure  // DFLockDiagram
+
+
+    // Cancelled.
+    Procedure DFDrawDiagram Integer iDiagram Number nYPos Number nXPos
+    End_Procedure  // DFDrawDiagram
+
+
+    // Cancelled.
+    Procedure DFDrawDiagramToPage Integer iPage Integer iDiagram Number nYPos Number nXPos
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFDiagramLabel Integer iDiagram String sLabel
+    End_Procedure  // DFDiagramLabel
+
+
+    // Cancelled.
+    Procedure DFDiagramXLabel Integer iDiagram String sLabel
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFDiagramYLabel Integer iDiagram String sLabel Integer iVert
+    End_Procedure
+
+
+    // Cancelled.
+    Procedure DFWriteXYLine Number StartX Number StartY Number StoppX Number StoppY;
+              Dword Color Number nWeight Integer Wrap Integer iUCp
+    End_Procedure
+
+
+    Procedure DFWriteLine Number StartX Number StartY Number Length;
+                          Integer iHorVert Dword Color Number nWeight Integer iUCp
+       Local Integer iRetVal iX1 iX2 iY1 iY2 iHeaderType
+       Local Handle  hDoc
+       If (DFCurrent_HeaderType(Self) <> -1) Begin
+          Send AddHeaderLine to (oHeaders(Self)) StartX StartY Length iHorVert Color nWeight iUCp
+       End
+       Else Begin
+          Send FlushVpeBuffer
+          Get phDoc to hDoc
+          If hDoc Begin
+             If (iUCp = DFGR_NOPOS) Move (VpeStorePos(hDoc)) to iRetVal
+             Move (VpeSetPen(hDoc, VpeScale(Self, nWeight), PS_SOLID, VpeColor(Self, Color))) to iRetVal
+             Move (VpeScale(Self, StartX) + VpeGet(hDoc, VLEFTMARGIN)) to ix1
+//CHS 07/13/00             If (StartY = DFGR_CURRLINE) Move VBOTTOM to iY1
+             If (StartY = DFGR_CURRLINE) Get pNextVTop to iY1   //CHS 07/13/00
+             Else Move (VpeScale(Self, StartY) + pWriteLinePos(Self)) to iY1   //CHS 10/9/99
+//CHS 10/9/99             Else Move (VpeScale(Self, StartY) + VpeGet(hDoc, VTOPMARGIN)) to iY1
+             If (iHorVert = DFGR_VERT) Begin
+                // This is not correct for vertical lines within headers.
+                If (Length = DFGR_RB_MARGIN) Move VBOTTOMMARGIN to iY2
+                Else Move (iY1 + VpeScale(Self, Length)) to iY2
+                Move (VpeLine(hDoc, iX1, iY1, iX1, iY2)) to iRetVal
+                // No Write to file for vertical lines.
+             End
+             Else Begin
+                If (Length = DFGR_RB_MARGIN) Move VRIGHTMARGIN to iX2
+                Else Move (iX1 + VpeScale(Self, Length)) to iX2
+                Send WriteToAscii iX1 (VpeGet(hDoc, VRIGHTMARGIN)) (Repeat("_", VpeGet(hDoc, VRIGHTMARGIN) - iX1)) 0 1
+                Move (VpeLine(hDoc, iX1, iY1, iX2, iY1)) to iRetVal
+             End
+             If (iUCp = DFGR_NOPOS) Move (VpeRestorePos(hDoc)) to iRetVal
+             // For DFGR_SETPOS, the next item will be automatically printed to the position of the line.
+             // pNextVTop, which is used to set the next VTOP after a WriteLn, is set to 0 so that it will
+             // be reset when the next item is printed.
+             If (iUCp = DFGR_SETPOS) Set pNextVTop to 0   //CHS 11/26/01
+          End
+       End
+    End_Procedure  // DFWriteLine
+
+
+    // Cancelled.
+    Procedure DFClearPrinter
+    End_Procedure
+
+
+
+    // Cancelled.
+    Function DFGetCurrentDriver Returns String
+    End_Function
+
+
+    // Cancelled.
+    Function DFGetCurrentDevice Returns String
+    End_Function
+
+
+    // Cancelled.
+    Function DFGetCurrentPort Returns String
+    End_Function
+
+
+    // Cancelled.
+    Function DFGetPrintDialogFlags Returns Dword
+    End_Function
+
+
+
+    //***
+    //*** Returns PRN_TRUE=  if the flag is set     (1)
+    //*** Returns PRN_FALSE= If the flag not is set (0)
+    //***
+    //CHS 07/28/00  Added support for paper bins.
+    //CHS 07/26/00  Added support for more paper sizes.
+    Function DFCheckPrintDialogFlag Dword PDFlag Returns Integer
+       Local Integer iRetVal iTemp
+       Local Handle hDoc
+       Send InitializePrinterSetup
+       Move (VpeOpenDoc(0, 0, VPE_FIXED_MESSAGES)) to hDoc
+       If hDoc Begin
+          Move (VpeSetupPrinter(hdoc, pSetupFile(Self), PRINTDLG_NEVER)) to iRetVal
+          If (PDFlag = DF_LANDSCAPE)                Move (If(VpeGetDevOrientation(hDoc) = VORIENT_LANDSCAPE,         PRN_TRUE, PRN_FALSE)) to iRetVal
+          // Paper sizes
+          If (PDFlag = DF_PAPER_LETTER)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_LETTER,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_LETTERSMALL)        Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_LETTERSMALL,        PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_TABLOID)            Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_TABLOID,            PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_LEDGER)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_LEDGER,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_LEGAL)              Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_LEGAL,              PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_STATEMENT)          Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_STATEMENT,          PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_EXECUTIVE)          Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_EXECUTIVE,          PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_A3)                 Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_A3,                 PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_A4)                 Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_A4,                 PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_A4SMALL)            Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_A4SMALL,            PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_A5)                 Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_A5,                 PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_B4)                 Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_B4,                 PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_B5)                 Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_B5,                 PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_FOLIO)              Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_FOLIO,              PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_QUARTO)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_QUARTO,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_10X14)              Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_10X14,              PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_11X17)              Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_11X17,              PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_NOTE)               Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_NOTE,               PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_9)              Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_9,              PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_10)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_10,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_11)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_11,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_12)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_12,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_14)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_14,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_CSHEET)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_CSHEET,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_DSHEET)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_DSHEET,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ESHEET)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ESHEET,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_DL)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_DL,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_C3)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_C3,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_C4)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_C4,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_C5)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_C5,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_C6)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_C6,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_C65)            Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_C65,            PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_B4)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_B4,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_B5)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_B5,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_B6)             Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_B6,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_ITALY)          Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_ITALY,          PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_MONARCH)        Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_MONARCH,        PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_ENV_PERSONAL)       Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_ENV_PERSONAL,       PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_FANFOLD_US)         Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_FANFOLD_US,         PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_FANFOLD_STD_GERMAN) Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_FANFOLD_STD_GERMAN, PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_FANFOLD_LGL_GERMAN) Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_FANFOLD_LGL_GERMAN, PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_PAPER_USER)               Move (If(VpeGetDevPaperFormat(hDoc) = VPAPER_USER_DEFINED,       PRN_TRUE, PRN_FALSE)) to iRetVal
+          // Paper bin
+          If (PDFlag = DF_BIN_AUTO)                 Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_AUTO,                 PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_LOWER)                Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_LOWER,                PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_CASSETTE)             Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_CASSETTE,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_MANUAL)               Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_MANUAL,               PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_ENVELOPE)             Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_ENVELOPE,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_MIDDLE)               Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_MIDDLE,               PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_ENVMANUAL)            Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_ENVMANUAL,            PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_ONLYONE)              Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_ONLYONE,              PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_SMALLFMT)             Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_SMALLFMT,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_LARGECAPACITY)        Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_LARGECAPACITY,        PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_TRACTOR)              Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_TRACTOR,              PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_LARGEFMT)             Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_LARGEFMT,             PRN_TRUE, PRN_FALSE)) to iRetVal
+          If (PDFlag = DF_BIN_UPPER)                Move (If(VpeGetDevPaperBin(hDoc)    = VBIN_UPPER,                PRN_TRUE, PRN_FALSE)) to iRetVal
+          Move (VpeCloseDoc(hDoc)) to iTemp
+       End
+       Function_Return iRetVal
+    End_Function  // DFCheckPrintDialogFlag
+
+
+//CHS 08/14/00    Procedure DFSetSpecPrintFlag Dword PDFlag
+//CHS 08/14/00       If (VpeCheckPrintDialogFlag(Self, PDFlag) = 0) Send DFPrintFlags (pPrintFlags(Self) + PDFlag)
+//CHS 08/14/00    End_Procedure
+
+    Procedure DFSetSpecPrintFlag Dword PDFlag   //CHS 08/14/00
+       Local Integer iOrientation iPaper iBin iResolution
+       // Orientation
+       If (PDFlag = 0) Set pOrientation to 0  // Special case for DF_PORTRAIT
+       Move (Mod(PDFlag, 10)) to iOrientation
+       If iOrientation Set pOrientation to iOrientation
+       Subtract iOrientation From PDFlag
+       // Paper Size
+       Move (Mod(PDFlag, 500)) to iPaper
+       If iPaper Set pPaper to iPaper
+       Subtract iPaper From PDFlag
+       // Paper Bin
+       Move (Mod(PDFlag, 10000)) to iBin
+       If iBin Set pBin to iBin
+       Subtract iBin From PDFlag
+       // Resolution
+       If iResolution Move (Mod(PDFlag, 10000)) to iResolution
+       Set pResolution to iResolution
+       // Call the VPE functions to set the printer flags.
+       Send SetPrinterFlags
+    End_Procedure  // DFPrintFlags
+
+
+    // Cancelled.
+    Function DFGetUserDefinedLength Returns Number
+    End_Function
+
+
+    // Cancelled.
+    Function DFGetUserDefinedWidth Returns Number
+    End_Function
+
+
+    // Cancelled.
+    Procedure DFSetUserDefinedPapersize Number nLength Number nWidth
+    End_Procedure
+
+
+    // Cancelled.
+    Function DFGetCurrentDiagram Returns Integer
+    End_Function  // DFGetCurrentDiagram
+
+
+    // Cancelled.
+    Procedure DFSetCurrentDiagram Integer iDiagram
+    End_Procedure  // DFSetCurrentDiagram
+
+
+    // Cancelled.
+    Procedure DFSetDiagramList Integer Item# Integer iDiagram
+    End_Procedure  // DFSetDiagramList
+
+
+    // Cancelled.
+    Function DFGetDiagramList Integer Item# Returns Integer
+    End_Function
+
+
+    // Cancelled.
+    Procedure DFClearDiagramList
+    End_Procedure
+
+
+    // Cancelled.
+    Function DFGetCurrentColor Returns Dword
+    End_Function
+
+
+    Procedure Set DFCurrent_Page Integer iCurrPage
+       Local Handle hDoc
+       Local Integer iRetVal
+       Forward Set DFCurrent_Page to iCurrPage
+       Get phDoc to hDoc
+       If hDoc Begin
+          If (Not(pFirstItem(Self))) Send FlushVpeBuffer
+          Move (VpeGoToPage(hDoc, iCurrPage)) to iRetVal
+       End
+    End_Procedure  // Set DFCurrent_Page
+
+    Procedure DFCharset dWord dCharset         // PB 08/30/01
+      Set pCharSet to dCharSet
+    End_Procedure  // Set DFCharset
+
+
+End_Class  // Vpe_Printer
+
+#COMMAND DFVOffset RSDE#OBL
+   Send DFVOffset to WinprintID !1
+#ENDCOMMAND
+
+#COMMAND DFCharset RSDE#OBL                        // PB 8/23/01
+   Send DFCharset to WinprintID !1
+#ENDCOMMAND
+
+#COMMAND DFStartTable                           // PB 5/12/00
+   Set pTable of WinprintID to True
+   Set pUpdatePos of WinprintID to True
+#IF !0>0
+   Set pTableHeight of WinprintID to !1
+#ELSE
+   Set pTableHeight of WinprintID to VFREE
+#ENDIF
+#IF !0>1
+   Set pTableColor of WinprintID to !2
+#ELSE
+   Set pTableColor of WinprintID to RGB_WHITE
+#ENDIF
+#IF !0>2
+   Set pFrameColor of WinprintID to !3
+#ELSE
+   Set pFrameColor of WinprintID to RGB_BLACK
+#ENDIF
+#IF !0>3
+   Set pFrameSize  of WinprintID to !4
+#ELSE
+   Set pFrameSize  of WinprintID to 2          // PB 5/25/00   Default: 2
+#ENDIF
+#ENDCOMMAND
+
+#COMMAND DFStopTable                           // PB 5/12/00
+   Set pTable of WinprintID to False
+#IF !0>0
+   DFWriteLnPos "" !1
+#ENDIF
+#ENDCOMMAND
+
+#COMMAND DFStartBox                            // PB 5/26/00
+   DFStartTable !1 !2 !3 !4 !5 !6 !7 !8 !9
+   Set pUpdatePos of WinprintID to False
+#ENDCOMMAND
+
+#COMMAND DFStopBox                             // PB 5/12/00
+   DFStopTable !1
+#ENDCOMMAND
+
+
+#COMMAND DFStartList                           // PB 5/15/00
+   Set pList of WinprintID to 99
+   Set pUpdatePos of WinprintID to True        // PB 12/6/00
+#IF !0>0
+   Set pTableHeight of WinprintID to !1
+#ELSE
+   Set pTableHeight of WinprintID to VFREE
+#ENDIF
+#IF !0>1
+   Set pTableColor of WinprintID to !2
+#ELSE
+   Set pTableColor of WinprintID to RGB_WHITE
+#ENDIF
+#IF !0>2
+   Set pFrameColor of WinprintID to !3
+#ELSE
+   Set pFrameColor of WinprintID to RGB_BLACK
+#ENDIF
+#IF !0>3
+   Set pFrameSize  of WinprintID to !4
+#ELSE
+   Set pFrameSize  of WinprintID to 2           // PB 5/25/00   Default: 2
+#ENDIF
+#ENDCOMMAND
+
+#COMMAND DFStopList                            // PB 5/15/00
+   Set pList of WinprintID to False
+#IF !0>0
+   DFWriteLnPos "" !1
+#ENDIF
+#ENDCOMMAND
+
+// DFWriteRectRel, new command for drawing rectangle relative to current position
+
+//*** DFWriteRectRel
+//*** 1. Required = Vertical start
+//*** 2. Required = Horizontal start
+//*** 3. Required = Height
+//*** 4. Required = Width
+//*** 5. Not Req. = Boarder/line color    //RGB_??
+//*** 6. Not Req. = Weight of line
+//*** 7. Not Req. = Wrap to next page     //DFGR_NOWRAP,DFGR_WRAP
+//*** 8. Not Req. = Fill color            //RGB_??
+//*** 9. Not Req. = Set current position or not //DFGR_NOPOS, DFGR_SETPOS
+//***
+#COMMAND DFWRITERECTREL RSD#OBL RSD#OBL RSD#OBL RSD#OBL SD#OBL SD#OBL SD#OBL SD#OBL SD#OBL
+ #IF (!0=9)
+    Send DFWriteRectRel To WinprintID !2 !1 !3 !4 !5 !8 DFGR_FILL !6 !7 !9
+ #ENDIF
+ #IF (!0=8)
+    Send DFWriteRectRel To WinprintID !2 !1 !3 !4 !5 !8 DFGR_FILL !6 !7 DFGR_NOPOS
+ #ENDIF
+ #IF (!0=7)
+    Send DFWriteRectRel To WinprintID !2 !1 !3 !4 !5 RGB_BLACK DFGR_TRAN !6 !7 DFGR_NOPOS
+ #ENDIF
+ #IF (!0=6)
+    Send DFWriteRectRel To WinprintID !2 !1 !3 !4 !5 RGB_BLACK DFGR_TRAN !6 DFGR_WRAP DFGR_NOPOS
+ #ENDIF
+ #IF (!0=5)
+    Send DFWriteRectRel To WinprintID !2 !1 !3 !4 !5 RGB_BLACK DFGR_TRAN 0 DFGR_WRAP DFGR_NOPOS
+ #ENDIF
+ #IF (!0=4)
+    Send DFWriteRectRel To WinprintID !2 !1 !3 !4 RGB_BLACK RGB_BLACK DFGR_TRAN 0 DFGR_WRAP DFGR_NOPOS
+ #ENDIF
+#ENDCOMMAND
+
+
+
+// This is the actual object through which the Winprint messages are routed.
+Object oVpePrint is an Vpe_PRINTER
+
+//CHS 3/2/01    Procedure DFPrint
+//CHS 3/2/01       Local Integer iReportType iRetVal
+//CHS 3/2/01       Send DFPrintDoc
+//CHS 3/2/01    End_Procedure  // DFPrint
+
+    Move Self to WinprintID
+    Move Self to vpeWinprintID
+
+End_Object // oVpePrint

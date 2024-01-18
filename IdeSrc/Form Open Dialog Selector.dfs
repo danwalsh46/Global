@@ -1,0 +1,32 @@
+//AB/ SUBCOMPONENT
+Object Form1 is a Form
+    Set Label to "File Name"
+    Set Label_Col_Offset to 2
+    Set Label_Justification_Mode to jMode_Right
+    Set Prompt_Button_Mode to pb_PromptOn
+    Set Size to 13 129
+    Set Location to 14 67
+
+    //AB-StoreStart
+    Object OpenFile is an OpenDialog
+            Set Dialog_Caption to "Open Dialog Selecotr"
+            Set Filter_String To 'Txt (*.txt)|*.txt|All (*.*)|*.*'
+            Set FileMustExist_State to False
+            //Set Initial_Folder to (CurrentDataPath(ghoWorkSpace))
+            Set ShowFileTitle_state to True
+    End_Object
+
+    Procedure Prompt
+            local integer bOpen
+            Local integer hDialog
+            Local String sFileTitle sFileName
+            Move (OpenFile(self)) to hDialog
+            Get Show_Dialog of hDialog To bOpen
+            If bOpen Begin
+                    Get File_Name of hDialog To sFileName
+                    Set Value to sFileName
+            End
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Form1

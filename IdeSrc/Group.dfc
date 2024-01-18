@@ -1,0 +1,9 @@
+//AB/ CLASSDEF
+Class Group is a AbstractContainer Group GroupMixin DefineGroupMixin
+    Set ObjectNameMask To "oGroup<count>"
+    Set ClassHelpName  To "Group"
+    Set ClassCETV      To 3               // use TreeView Image #3 (1-based offset)
+    Inherit
+    Property String Label // Text/Label for Group
+    Property Always_Generate Complex Size 40 80
+End_Class

@@ -1,0 +1,10 @@
+//AB/ CLASSDEF
+Class cSzRichEdit Is a edit
+    Set ClassPackage to cszrichedit.pkg
+    Inherit
+End_Class
+
+Class cSzDbRichEdit Is a dbedit
+    Set ClassPackage to cszrichedit.pkg
+    Inherit
+End_Class

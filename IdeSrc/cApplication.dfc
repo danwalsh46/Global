@@ -1,0 +1,21 @@
+//AB/ CLASSDEF
+Class cApplication is a AbstractNonVisualContainer
+    Set ClassPackage   To "cApplication.pkg"
+    Set peClassLibrary To clCommon           // this class belongs to all class libraries
+    Set ClassCETV      To 41                 // use TreeView Image #41
+    Set ObjectNameMask To "oApplication"
+    Set ClassHelpName  To "cApplication"
+   
+    Inherit
+
+    Property No_Visible  String  Bitmap "cApplication.bmp" // show this bitmap on control
+
+    Property No_Execute String  psCompany                  // The name of the company producing the program
+    Property No_Execute String  psProduct                  // The name of the product
+    Property No_Execute String  psVersion                  // The version of the program
+    Property No_Execute String  psProgram                  // The name of the program
+    Property No_Execute String  psHelpFile                 // The name of the helpfile to be used by the program. See also peHelpType.
+    Property No_Execute Boolean pbPreserveEnvironment True // Determines whether program information is automatically saved and restored
+    Property No_Execute Boolean pbEnterKeyAsTabKey False   // Determines whether the Enter key should act like the Tab key
+    Property No_Execute Mode    peHelpType htNoHelp htNoHelp htHtmlHelp htWinHelp  // Determines which help system is used by the program. htNoHelp - no help system, htHtmlHelp - HTML help system, htWinHelp - WinHelp help system. See also psHelpFile.
+End_Class

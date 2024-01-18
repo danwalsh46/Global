@@ -1,0 +1,25 @@
+//****************************************************************************
+// $Module type: Class
+// $Module name: cWindbGrid
+// $Author     : Nils G. Svedmyr
+// Created     : 2004-05-15 @ 16:02
+//
+// Description :
+//
+// $Rev History:
+//    2004-05-15  Module header created
+//****************************************************************************
+Use cWinToolTip.pkg
+
+Class cWindbGrid Is A dbGrid
+
+    Import_Class_Protocol cWinToolTip_mx
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Send Define_cWinToolTip
+        Set pbClassEnabledHandleType    To False // True=Default
+        Set pbClassDisabledHandleType   To True  // True=Default
+        Set pbClassEntryStateHandleType To True  // True=Default
+    End_Procedure // Construct_Object
+
+End_Class // cWindbGrid

@@ -1,0 +1,27 @@
+//AB/ CLASSDEF
+Class TrackBar is a AbstractControl TrackBar TrackbarMixin DefineTrackbarMixin
+    Set ObjectNameMask To "oTrackbar<count>"
+    Set ClassHelpName  To "TrackBar"
+    Set ClassCETV      To 24                // use TreeView Image #24 (1-based offset)
+    Set ClassPackage   To "TrckBr.pkg"
+    // no inherit
+    Property Always_Generate Complex Size 20 120 // Object Size (Complex: height, width)
+    Property Complex Location 0 0 // Object Location (Complex: Row, Column)
+    Property String Label // Text/Label associated with this Control
+    Property Integer Label_Row_Offset // Row offset for Label. Result depends on Label_Justification_Mode
+    Property Integer Label_Col_Offset 60 // Column offset for Label. Value depends on Label_Justification_Mode
+    Property Mode Label_Justification_Mode jMode_Left jMode_Left jMode_Right jMode_Top // Mode determines where label's row and column values are offset
+    Property Integer Minimum_Position    0 // The absolute value of the slider when it is slid to its lowest position.  The value is in the range of 0-65,535
+    Property Integer Maximum_Position    100 // The absolute value of the slider when it is slid to its maximum position. The value is in the range of 0-65,535
+    Property Integer Current_Position    0 // Current position of slider. Normally not set here.
+    Property Boolean Visible_Tick_State  TRUE // Specifies whether tick marks are displayed in the control.
+    Property Mode    Tick_Orientation    tkTOP tkBOTTOM tkTOP tkBOTH // Specifies where the ticks should be placed in relation to the slider.
+    Property Mode    Orientation_Mode    slHORZ slHORZ slVERT // Specifies whether the control should be displayed horizontally or vertically.
+    Property Integer Tick_Frequency      5 // The increment at which to display tick marks. For example, using default values and a Tick_Frequency of 25, ticks would be placed at values 0, 25, 50, 75, 100. The value is in the range of 0-65,535
+    Property Integer Line_Size           1 // The amount the Current_Position changes whenever users move the slider by use of the arrow keys. The value is in the range of  0-65,535.
+    Property Integer Page_Size // The amount the Current_Position changes whenever users move the slider by use of the PAGEUP or PAGEDOWN keys. The value is in the range of 0-65,535.
+    Property String Status_Help // Help text that appears in status window when this control has the focus
+    Property NO_EXECUTE Integer Help_Id // Context Help ID
+    Property Boolean pbTooltips True  // If true, display a tooltip showing the value of the Current_Position property, whenever the slider is dragged with the mouse.
+    Property no_execute anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+End_Class

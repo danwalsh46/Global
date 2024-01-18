@@ -1,0 +1,705 @@
+//****************************************************************************
+// $Module type: Package
+// $Module name: cBaseWinControl
+// $Author     : Chris Spencer
+//               Sergey V. Natarov
+//               Wil van Antwerpen
+//               Nils G. Svedmyr
+// Created     : 2004-05-16 @ 13:09
+//
+// Description :
+//
+// $Rev History:
+//    2004-05-16  Module header created
+//****************************************************************************
+Use cBaseWinControl.h
+Use cWinUserEx.h
+Use cWinGradient.h
+Use cWinGDIEx.h
+Use cWinTrackMouse.h
+Use cWinToolTip.h
+Use mPointer.pkg
+Use mBitmapStuff.pkg
+
+Register_Function psBitmap       Returns String
+Register_Function piBitmapHeight Returns Integer
+Register_Function piBitmapWidth  Returns Integer
+Register_Function piTransparentColor Returns Integer
+Register_Procedure onMouseMove
+Register_Procedure onMouseLeave
+
+Class cWinControlBitmap Is A cImageList
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property Integer piImageListType Public ILC_COLORDDB
+        Set piMaxImages   To 1
+    End_Procedure // Construct_Object
+    Procedure onCreate
+        Local String  sFileName
+        Local Integer iIndex iColor
+        Move (Trim(psBitmap(parent(Self)))) To sFileName
+        If (sFileName <> "") Begin
+          Get piTransparentColor To iColor
+          Get AddTransparentImage sFileName iColor To iIndex
+        End
+    End_Procedure // onCreate
+    Procedure doCreate
+        Local Integer cx cy iGrowBy dwFlags iColor
+        Move (piBitmapHeight(parent(Self))) To cy
+        Move (piBitmapWidth(parent(Self)))  To cx
+        Set piImageHeight To cy
+        Set piImageWidth  To cx
+        Get piImageListType To iColor
+        Move (iColor+ILC_MASK) To dwFlags
+        Set phImageList To (ImageList_Create(cx, cy, dwFlags, 0, 1))
+    End_Procedure // doCreate
+End_Class // vcBitmapImageList
+
+Class cBaseWinControl Is A cWinControl
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        // Windows Messages
+        Set External_Message WM_MOUSEMOVE       To Wmsg_onMouseMove
+        Set External_Message WM_MOUSELEAVE      To Wmsg_onMouseLeave
+
+        //
+        // Mouse Tracking//System
+        Property Integer piMouseTracking           Public False
+
+        // ToolTip//Public
+        Property Integer phToolTip                 Public 0
+        Property String  psToolTip                 Public ""
+        Property String  psToolTipTitle            Public ""
+        Property String  psShadowText              Public "(Unavailable)"
+        // 2004-06-02 ------------------------------------ Start Nils G. Svedmyr
+        //Property Integer piToolTipIcon             Public 0
+        Property Integer piToolTipIcon             Public TTI_INFO
+        // 2004-06-02 ------------------------------------ Stop Nils G. Svedmyr
+        // Changed with from 300 to 350 pixels, easier to read.
+        Property Integer piToolTipWidth            Public 350
+        Property Boolean pbAutoStatusHelpAsToolTip Public True
+        Property Boolean pbAutoLabelAsToolTipTitle Public True
+        // TooTips//Private
+        Property Boolean Private.pbToolTipBalloon         True
+        Property Boolean Private.pbToolTipEnable          True
+        Property String  Private.psTipTitle               "Help"
+
+        // Gradient//System
+        // Added Set Gradient_mode procedure.
+        //Property Integer Gradient_Mode             Public GRADIENT_NONE
+        // Made this a Procedure Set Gradient_Mode and function instead
+        // so the object can be redrawn:
+        Property Integer Private.piGradient_Mode   Public GRADIENT_NONE
+
+        // Colors//System
+        // Made this a Procedure Set piColor and function instead so the object
+        // can be redrawn
+        Property Integer Private.piColor           Public (GetSysColor(clBtnFace    Iand $000000FF))
+
+        // Changed these into Private and added Procedure Set piTextColor and Function:
+        // This way we can Set piTextColor for all cBaseWinControls within an application without disrupting
+        // other VDF standard controls.
+        Property Integer Private.piTextColor       Public (GetSysColor(clWindowText Iand $000000FF))
+        Property Integer Private.piOriColor        Public (GetSysColor(clWindowText Iand $000000FF))
+        Property Boolean Private.pbBoldFace        Public False
+
+        // Font//System
+        Property Integer phFont                    Public 0
+        Property Integer piTextAlignFlags          Public (DT_CENTER Ior DT_VCENTER Ior DT_SINGLELINE)
+        //
+        // Butmap//System
+        Property Integer phBitmap                  Public 0
+        Property String  psBitmap                  Public ""
+        Property Integer piBitmapHeight            Public 0
+        Property Integer piBitmapWidth             Public 0
+        Property Integer phImageList               Public 0
+
+        // Shadow//System
+        Property Boolean Private.pbShadowState     Public False
+        //
+        // Label//System
+        Property String  psLabel                   Public ""
+        //
+        // Gradient//Public
+        Property Integer piGradientFrom            Public clWhite
+        Property Integer piGradientTo              Public clNavy
+        // Font//Public
+        Property Integer FontStrikeOut             Public False
+        // HotTrack//Public
+        Property Boolean pbHotTrack                Public False
+        Property Integer piHotColor                Public clBlue
+        //
+        Property Handle  phCursor                  Public 0
+        Property Integer piCursor                  Public 0
+        //
+    End_Procedure // Construct_Object
+
+    //
+    // *****************************************************************
+    // SYSTEM
+    // *****************************************************************
+    //
+    Function ObjectHandle Returns Integer
+        Local Integer x y hoDrop
+        Local String  sPoint
+        Pointer lpsPoint
+        ZeroType tPoint                 To sPoint
+        GetAddress Of sPoint            To lpsPoint
+        Move (GetCursorPos(lpsPoint))   To windowindex
+        GetBuff From sPoint At tPoint.x To x
+        GetBuff From sPoint At tPoint.y To y
+        Function_Return (WindowFromPoint(x,y))
+    End_Function // ObjectHandle
+
+    Procedure Set Enabled_State Integer iFlag
+        Set Private.pbShadowState To (Not(iFlag))
+    End_Procedure // Set Enabled_State
+
+    Function Enabled_State Returns Integer
+        Function_Return (Not(Private.pbShadowState(Self)))
+    End_Function // Enabled_State
+
+    //
+    // *****************************************************************
+    // LABEL
+    // *****************************************************************
+    //
+    Procedure Set Label String sLabel
+        Local String sCur sToolTipTitle
+        // **WvA Aug 30, 2004
+        // ToAnsi added for support of extended characters such as 
+        Move (ToAnsi(Trim(sLabel)))                                      To sLabel
+        Move (Replaces("\n",sLabel,Character(13)+Character(10))) To sLabel
+        Get psLabel                                              To sCur
+        If (sCur <> sLabel) Begin
+          Set psLabel                          To sLabel
+          // **WvA Aug 30, 2004 
+          // Added To force the change Of a label to be immediate
+          If ((visible_state(Self)) And (Active_State(Self))) Begin
+            Send RedrawControl 
+          End  
+        End  
+        If (pbAutoLabelAsToolTipTitle(Self)) Begin
+          Get psToolTipTitle                                     To sToolTipTitle
+          If (Length(sToolTipTitle) > 0) Procedure_Return
+          If (Length(sLabel) = 0) Get Private.psTipTitle         To sLabel
+          Set psToolTipTitle                                     To sLabel
+          If (Window_Handle(Self)) Send RefreshToolTip  // Do not refresh ToolTip if object is being constructed.
+        End // If (pbAutoLabelAsToolTipTitle(Self)) Begin
+    End_Procedure // Set Label
+
+    Function Label Returns String
+        Function_Return (psLabel(Self))
+    End_Function // Label
+
+    // This will only change the FontWeight of an object after
+    // it has been constructed. It will also be redrawn.
+    Procedure Set FontWeight Integer iValue
+      Local Integer iSz iOldWeight
+      Local Boolean bOk
+      Get FontWeight         To iOldWeight
+// *** NEEDS SOME IMPROVEMENTS ****
+      If (iOldWeight = iValue) Procedure_Return
+      Get GuiSize            To iSz
+      Forward Set FontWeight To iValue
+      // We don't want to the code below to execute when the object is contructed:
+      If (Window_Handle(Self) = 0) Procedure_Return
+      Set GuiSize            To (Hi(iSz)) (Low(iSz))
+      Send Adjust_Logicals
+      Get RebuildFontHandle  To bOk
+      // A FontWeight value more than 550 equals BoldFace:
+      Set Private.pbBoldFace To (If(FontWeight(Self) > 550, (True), (False)))
+    End_Procedure // Set FontWeight
+
+    // This is just a more simple way of setting the font style to Bold:
+    Procedure Set pbBoldFace Boolean bState
+      Local Integer iValue
+      If (bState = (False)) Move 400 To iValue
+      Else                  Move 800 To iValue
+      Set FontWeight                 To iValue
+    End_Procedure // Set pbBoldFace Boolean bState
+
+    Function pbBoldFace Returns Boolean
+      Function_Return (Private.pbBoldFace(Self))
+    End_Function // pbBoldFace
+
+    Function RebuildFontHandle Returns Boolean
+      Local Integer iRet
+      Local Handle hFont
+      Get phFont To hFont
+      If (hFont <> 0) Begin                   // Handle can be a negative integer.
+        Move (DeleteObject(hFont))   To iRet  // Delete Font object.
+        If (iRet <> 0) Set phFont    To 0     // If iRet <> 0 DeleteObject was successful.
+        Get ControlFont              To hFont // Recreate Font object.
+        If (hFont <> 0) Begin
+          Set phFont                 To hFont
+          Send RedrawControl
+        End // If (hFont <> 0) Begin
+      End // If (hFont <> 0) Begin
+      Function_Return (If(hFont > 0, (True), (False)))
+    End_Function // RebuildFontHandle Returns Boolean
+
+    Function ControlFontHandle Returns Handle
+        Local Handle hFont
+        Local String sFont
+        Local Pointer lpszFont
+        Local Integer iFWt iFHt iFWd iFI iFU iFS
+        Move (TypeFace(Self))              To sFont
+        If (sFont="") Move "MS Sans Serif" To sFont
+        Move (sFont+Character(0))          To sFont
+        GetAddress Of sFont                To lpszFont
+        Move (Hi(FontSize(Self)))          To iFHt
+        Move (Low(FontSize(Self)))         To iFWd
+        Get FontWeight                     To iFWt
+        Get FontItalics                    To iFI
+        Get FontUnderline                  To iFU
+        Get FontStrikeOut                  To iFS
+        Move (CreateFontEf(iFHt, iFWd, 0, 0, iFWt, iFI, iFU, iFS, DEFAULT_CHARSET, 0, 0, 0, 0, lpszFont)) To hFont
+        Function_Return hFont
+    End_Function // ControlFontHandle
+
+    Function ControlFont Returns Handle
+        Local Integer hFont
+        Get phFont                         To hFont
+        If (hFont=0) Begin
+            Get ControlFontHandle          To hFont
+            Set phFont                     To hFont
+        End
+        Function_Return hFont
+    End_Function // ControlFont
+
+    //
+    // *****************************************************************
+    // BITMAPS
+    // *****************************************************************
+    //
+    Procedure Set Bitmap String sFileName
+        Local Integer iX iY hoImageList iSize
+        Local Handle hBitMap
+        Set psBitmap To sFileName
+        Move (LoadImage(GetModuleHandle(0), sFileName, IMAGE_BITMAP, 0, 0, 0)) To hBitmap
+        If (hBitmap = 0) Begin // the bitmap was not in the EXE resource
+          Get_File_Path sFileName          To sFileName
+          Get APIBitmapSize sFileName      To iSize
+          Move (Hi(iSize))                 To iY
+          Move (Low(iSize))                To iX
+        End
+        Else Begin
+          Get BitmapSizefromHandle hBitMap To iSize
+          Move (Hi(iSize))                 To iY
+          Move (Low(iSize))                To iX
+        End
+        Set piBitmapHeight                 To iY
+        Set piBitmapWidth                  To iX
+        Get phImageList                    To hoImageList
+        If (hoImageList <> 0) ;
+          Send Destroy_Object              To hoImageList
+
+        Object oImageList Is A cWinControlBitmap
+          Move Self                        To hoImageList
+        End_Object // oImageList
+
+        Set phImageList                    To hoImageList
+    End_Procedure // Set Bitmap
+
+    Function Bitmap Returns String
+        Function_Return (psBitmap(Self))
+    End_Function // Bitmap
+    //
+    // *****************************************************************
+    // COLORS
+    // *****************************************************************
+    //
+    // Gradient
+    Procedure Set Gradient_Mode Integer iState
+        Local Integer iOldState
+        Get Private.piGradient_Mode To iOldState
+        If (iOldState = iState) Procedure_Return
+        Set Private.piGradient_Mode To iState
+        // We don't want to the code below to execute when the object is contructed:
+        If (Window_Handle(Self) = 0) Procedure_Return
+        Send RedrawControl
+    End_Procedure // Set Gradient_Mode Integer iState
+
+    Function Gradient_Mode Returns Integer
+        Function_Return (Private.piGradient_Mode(Self))
+    End_Function // Gradient_Mode
+
+    Procedure Set GradientFromColor Integer iColor
+        Local Integer iOldColor
+        If (Not(iColor)) Move clWindowText To iColor
+        If (iColor<0)    Move (GetSysColor(iColor Iand $000000FF)) To iColor
+        Get piGradientFrom  To iOldColor
+        If (iOldColor = iColor) Procedure_Return
+        Set piGradientFrom  To iColor
+        // We don't want to the code below to execute when the object is contructed:
+        If (Window_Handle(Self) = 0) Procedure_Return
+        Send RedrawControl
+    End_Procedure // Set GradientFromColor
+
+    Function GradientFromColor Returns Integer
+        Function_Return (piGradientFrom(Self))
+    End_Function // GradientFromColor
+
+    Procedure Set GradientToColor Integer iColor
+        Local Integer iOldCOlor
+        If (Not(iColor)) Move clWindowText To iColor
+        If (iColor<0)    Move (GetSysColor(iColor Iand $000000FF)) To iColor
+        Get piGradientTo  To iOldColor
+        If (iOldColor = iColor) Procedure_Return
+        Set piGradientTo  To iColor
+        // We don't want to the code below to execute when the object is contructed:
+        If (Window_Handle(Self) = 0) Procedure_Return
+        Send RedrawControl
+    End_Procedure // Set GradientToColor
+
+    Function GradientToColor Returns Integer
+        Function_Return (piGradientTo(Self))
+    End_Function // GradientToColor
+
+    // Background
+    Procedure Set Color Integer iColor
+      Local Integer iOldColor
+      If (iColor < 0)  Move (GetSysColor(iColor Iand $000000FF))   To iColor
+      Forward Set Color                                            To iColor
+      Get Private.piColor                                          To iOldColor
+      If (iOldColor = iColor) Procedure_Return
+      Set Private.piColor                                          To iColor
+      // We don't want to the code below to execute when the object is contructed:
+      If (Window_Handle(Self) = 0) Procedure_Return
+      Send RedrawControl
+    End_Procedure // Set Color Integer iColor
+
+    Function Color Returns Integer
+        Function_Return (Private.piColor(Self))
+    End_Function // Color
+
+    Function piColor Returns Integer
+        Function_Return (Private.piColor(Self))
+    End_Function // piColor
+
+    // Changed the logic slightly so it will be possible to dynamically
+    // change the TextColor for objects of this class with a Broadcast Set piTextColor message.
+    // This way regular VDF controls will retain their original text color.
+    // We also need to redraw the control to see the changes.
+    // This is being used by the cWindowsEx sample views.
+    Procedure Set TextColor Integer iColor
+        Local Integer iOldColor
+        Forward Set TextColor    To iColor
+        If (iColor < 0)  Move (GetSysColor(iColor Iand $000000FF)) To iColor   // ????
+        Get Private.piTextColor  To iOldColor
+        If (iOldColor = iColor) Procedure_Return
+        Set Private.piTextColor  To iColor
+        Set Private.piOriColor   To iColor
+        // We don't want to the code below to execute when the object is contructed:
+        If (Window_Handle(Self) = 0) Procedure_Return
+        Send RedrawControl
+    End_Procedure // Set TextColor Integer iColor
+
+    Function TextColor Returns Integer
+        Function_Return (Private.piTextColor(Self))
+    End_Function // TextColor
+
+    Function piTextColor Returns Integer
+        Function_Return (Private.piTextColor(Self))
+    End_Function // piTextColor
+
+    //
+    // *****************************************************************
+    // REDRAW CONTROL
+    // *****************************************************************
+    //
+    Procedure RedrawControl
+        Local Integer iRet
+        Move (RedrawWindowEf(Window_Handle(Self),0,0,(RDW_INVALIDATE Ior RDW_NOERASE))) To iRet
+    End_Procedure // RedrawControl
+    //
+    // *****************************************************************
+    // MOUSE MOVE/LEAVE
+    // *****************************************************************
+    //
+    Procedure WMSG_onMouseMove Integer wParam Integer lParam
+        Local Integer iRet iHot iR
+        Local String sMouse
+        Local Pointer pMouse
+        If (Private.pbShadowState(Self)) Procedure_Return
+        ZeroType cfTRACKMOUSEEVENT        To sMouse
+        Put cfTRACKMOUSEEVENT_SIZE        To sMouse At cfTRACKMOUSEEVENT.cbSize
+        Put (TME_HOVER Ior TME_LEAVE)     To sMouse At cfTRACKMOUSEEVENT.dwFlags
+        Put (Window_Handle(Self))         To sMouse At cfTRACKMOUSEEVENT.hwndTrack
+        Put 500                           To sMouse At cfTRACKMOUSEEVENT.dwHoverTime
+        GetAddress Of sMouse              To pMouse
+        Move (TrackMouseEventEf(pMouse))  To iRet
+        Set piMouseTracking               To True
+        If (pbHotTrack(Self) = (True)) Begin
+            If (Private.piTextColor(Self)<>piHotColor(Self)) Begin
+                Set Private.piTextColor   To (piHotColor(Self))
+                Send RedrawControl
+            End // If (Private.piTextColor(Self)<>piHotColor(Self)) Begin
+        End // If (pbHotTrack(Self) = (True)) Begin
+        Send OnMouseMove wParam lParam
+    End_Procedure // WMSG_onMouseMove
+
+    Procedure WMSG_onMouseLeave Integer wParam Integer lParam
+        If (Private.pbShadowState(Self)) Procedure_Return
+        If (pbHotTrack(Self) = (True)) Begin
+            Set Private.piTextColor       To (Private.piOriColor(Self))
+            Send RedrawControl
+        End // If (pbHotTrack(Self) = (True)) Begin
+        Send OnMouseLeave wParam lParam
+    End_Procedure // WMSG_onMouseLeave
+
+    //
+    // *****************************************************************
+    // TOOLTIP
+    // *****************************************************************
+    //
+    Procedure CreateToolTipWindow
+        Local Handle hWnd
+        Local String sClass
+        Local Pointer pClass
+        Move ("tooltips_class32" + (Character(0))) To sClass
+        GetAddress Of sClass To pClass
+        If (Private.pbToolTipBalloon(Self) = (True)) Move (CreateWindowExEf(0,pClass,0,TTS_ALWAYSTIP Ior TTS_BALLOON,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,0,0,(window_handle(desktop)),0)) To hWnd
+        Else Move (CreateWindowExEf(0,pClass,0,TTS_ALWAYSTIP,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,0,0,(window_handle(desktop)),0)) To hWnd
+        Set phToolTip To hWnd
+    End_Procedure // CreateToolTipWindow
+
+    // This is the message that regular VDF (read toolbar and tabpage) classes
+    // use for enabling/disabling tooltips. These two messages have been
+    // added here to have one common message that could be broadcasted
+    // from e.g. a program's property box.
+    Procedure Set pbToolTips Boolean bState
+      Local Integer iRet
+      Local Boolean bOldState
+      If (phToolTip(Self) = 0) Procedure_Return
+      Get Private.pbToolTipEnable To bOldState
+      If (bOldState = bState)  Procedure_Return
+      Set Private.pbToolTipEnable To bState
+      Move (SendMessage(phToolTip(Self),TTM_ACTIVATE,bState,0)) To iRet
+    End_Procedure // Set pbToolTips
+
+    Function pbToolTips Returns Boolean
+      Function_Return (Private.pbToolTipEnable(Self))
+    End_Function // pbToolTips
+
+    Procedure Set pbToolTipBalloon Boolean bState
+      Local Boolean bOldState
+      Get Private.pbToolTipBalloon To bOldState
+      If (bOldState = bState) Procedure_Return
+      Set Private.pbToolTipBalloon To bState
+      Send RecreateToolTip
+    End_Procedure // Set pbToolTipBalloon
+
+    Procedure RecreateToolTip
+        If (Window_Handle(Self) = 0) Procedure_Return
+        Send DestroyToolTip    // Destroy
+        Send Page_Object True  // Recreate
+    End_Procedure // RecreateToolTip
+
+    Procedure AddWindowToToolTip Handle hToolWnd
+        Local Integer iRet
+        Local String sToolInfo
+        Local Pointer pToolInfo pToolTip
+        Local Handle hToolTip
+        Local String sTipText sTipTitle sLabel
+        Local Pointer pTipText pTipTitle
+        Local Integer iTipIcon
+
+        Get psToolTip                             To sTipText
+        Move (Trim(sTipText))                     To sTipText
+        Move (Replaces("\n",sTipText,Character(13)+Character(10)))             To sTipText
+        If (Length(sTipText) = 0 And pbAutoStatusHelpAsToolTip(Self) = (True)) Begin
+          Get Status_Help                         To sTipText
+          Move (Trim(sTipText))                   To sTipText
+          Move (Replaces("\n",sTipText,Character(13)+Character(10)))           To sTipText
+          Set psToolTip                           To sTipText
+        End // If (Length(sTipText) = 0 And pbAutoStatusHelpAsToolTip(Self) = (True)) Begin
+        If (Private.pbShadowState(Self) And Length(Trim(sTipText)) > 0) ;
+          Move (sTipText * psShadowText(Self))    To sTipText
+        Move (ToAnsi(sTipText))                   To sTipText
+
+        Get phToolTip                             To hToolTip
+        ZeroType tTOOLINFO                        To sToolInfo
+        GetAddress Of sToolInfo                   To pToolInfo
+
+        Put tTOOLINFO_SIZE                        To sToolInfo At tTOOLINFO.cbSize
+        Put (TTF_SUBCLASS Ior TTF_IDISHWND)       To sToolInfo At tTOOLINFO.uFlags
+        Put hToolTip                              To sToolInfo At tTOOLINFO.hwnd
+        Put hToolWnd                              To sToolInfo At tTOOLINFO.uID
+        Put (AddressOf(sTipText))                 To sToolInfo At tTOOLINFO.lpszText
+        Put (Self)                                To sToolInfo At tTOOLINFO.lParam
+
+        Move (SendMessage(hToolTip,TTM_ADDTOOL,0,pToolInfo))                   To iRet
+        Move (SendMessage(hToolTip,TTM_SETMAXTIPWIDTH,0,piToolTipWidth(Self))) To iRet
+
+        Get psToolTipTitle                        To sTipTitle
+        Move (Trim(sTipTitle))                    To sTipTitle
+        If (Length(sTipTitle) = 0 And pbAutoLabelAsToolTipTitle(Self)) Begin
+          Get Label                               To sLabel
+          Move (Trim(sLabel))                     To sLabel
+          Move (Replaces("\n",sLabel,Character(13)+Character(10)))             To sLabel
+          Move (Replaces(":", sLabel, ""))        To sLabel
+          Move (Replaces("&", sLabel, ""))        To sLabel
+          If (Length(sLabel) = 0) ;
+            Get Private.psTipTitle                To sLabel   // Default is "Help".
+          Set psToolTipTitle                      To sLabel
+          Move sLabel                             To sTipTitle
+        End // If (Length(sTipTitle) = 0 And pbAutoLabelAsToolTipTitle(Self)) Begin
+
+        If (Length(sTipTitle) > 0) Begin
+            Get piToolTipIcon                     To iTipIcon
+            Move (Replaces("&", sTipTitle,""))    To sTipTitle
+            Move (Replaces(":", sTipTitle, ""))   To sTipTitle
+            Move (Replaces("\n",sTipTitle,Character(13)+Character(10)))        To sTipTitle
+            Move (sTipTitle + (Character(0)))     To sTipTitle
+            Move (ToAnsi(sTipTitle))              To sTipTitle
+            GetAddress Of sTipTitle               To pTipTitle
+            Move (SendMessage(hToolTip,TTM_SETTITLEA,iTipIcon,pTipTitle))      To iRet
+        End // If (Length(sTipTitle) > 0) Begin
+
+        // These methods works, but not implemented yet.
+        // Sets background/foreground tooltip window colors.
+        // If you need it, just uncomment and add properties into the control.
+        //Move (SendMessage(hToolTip,TTM_SETTIPBKCOLOR,clNavy,0)) To iRet
+        //Move (SendMessage(hToolTip,TTM_SETTIPTEXTCOLOR,clYellow,0)) To iRet
+    End_Procedure // AddWindowToToolTip
+
+    // If there is a need to dynamically change the ToolTip and/or ToolTipTitle for an object,
+    // while the program is running, send RefreshToolTip after the psToolTip
+    // property has been changed.
+    Procedure RefreshToolTip
+        Local Handle hToolTip pToolInfo hToolWnd pTipText pTipTitle
+        Local String sToolInfo sTipText sTipTitle
+        Local Integer iRet iTipIcon
+
+        Get phToolTip                             To hToolTip
+        Get psToolTip                             To sTipText
+        Move (Trim(sTipText))                     To sTipText
+        Move (Replaces("\n",sTipText,Character(13)+Character(10)))        To sTipText
+        If (Length(sTipText) = 0 Or hToolTip = 0) Procedure_Return
+
+        If (Private.pbShadowState(Self)) ;
+          Move (sTipText * psShadowText(Self))    To sTipText
+        Move (ToAnsi(sTipText))                   To sTipText
+
+        GetAddress Of sTipText                    To pTipText
+        Get Window_Handle                         To hToolWnd
+        ZeroType tTOOLINFO                        To sToolInfo
+        GetAddress Of sToolInfo                   To pToolInfo
+
+        Put tTOOLINFO_SIZE                        To sToolInfo At tTOOLINFO.cbSize
+        Put (TTF_SUBCLASS Ior TTF_IDISHWND)       To sToolInfo At tTOOLINFO.uFlags
+        Put hToolTip                              To sToolInfo At tTOOLINFO.hwnd
+        Put hToolWnd                              To sToolInfo At tTOOLINFO.uID
+        Put pTipText                              To sToolInfo At tTOOLINFO.lpszText
+        Put (Self)                                To sToolInfo At tTOOLINFO.lParam
+        Move (Sendmessage(hToolTip,TTM_UPDATETIPTEXT,0,pToolInfo))        To iRet
+
+        Get psToolTipTitle                        To sTipTitle
+        Move (Trim(sTipTitle))                    To sTipTitle
+        If (Length(sTipTitle) > 0) Begin
+            Get piToolTipIcon                     To iTipIcon
+            // Removes ampersands (&) from the title tip.
+            Move (Replaces("&", sTipTitle,""))    To sTipTitle
+            Move (Replaces(":", sTipTitle, ""))   To sTipTitle
+            Move (Replaces("\n",sTipTitle,Character(13)+Character(10)))   To sTipTitle
+            Move (sTipTitle + (Character(0)))     To sTipTitle
+            Move (ToAnsi(sTipTitle))              To sTipTitle
+            GetAddress Of sTipTitle               To pTipTitle
+            Move (SendMessage(hToolTip,TTM_SETTITLEA,iTipIcon,pTipTitle)) To iRet
+        End // If (Length(sTipTitle) > 0) Begin
+    End_Procedure // RefreshToolTip
+
+    Procedure DestroyToolTip
+        Local String sToolInfo
+        Local Handle hWindow hToolTip pToolInfo
+        Local Integer iRet
+
+        Get phToolTip To hToolTip
+        If (hToolTip = 0) Procedure_Return
+
+        Get Window_Handle Of (Parent(Self)) To hWindow
+        ZeroType tTOOLINFO        To sToolInfo
+        GetAddress Of sToolInfo   To pToolInfo
+
+        Put tTOOLINFO_Size        To sToolInfo At tTOOLINFO.cbSize
+        Put hToolTip              To sToolInfo At tTOOLINFO.hwnd
+        Put hWindow               To sToolInfo At tTOOLINFO.uID
+        Move (SendMessage(hToolTip,TTM_DELTOOL,0,pToolInfo)) To iRet // Remove the tool from the ToolTip control.
+        Move (DestroyWindowEf(hToolTip))                     To iRet // Destroy object.
+        Set phToolTip To 0
+    End_Procedure // DestroyToolTip
+
+    Procedure DeActivating
+        Forward Send DeActivating
+        Send DestroyToolTip
+    End_Procedure // DeActivating
+
+    Procedure Page_Object Integer iFlag
+        Local Handle hWnd
+        Local Integer iRet
+        Forward Send Page_Object iFlag
+        If (iFlag) Begin
+            If (phToolTip(Self) = 0) Begin
+                Send CreateToolTipWindow
+                Move (SendMessage(phToolTip(Self),TTM_ACTIVATE,(Private.pbToolTipEnable(Self)),0)) To iRet
+                // Added Window_Handle to pass to AddWindowToToolTip procedure.
+                Get Window_Handle To hWnd
+                If (hWnd <> 0) Send AddWindowToToolTip hWnd
+            End // If (phToolTip(Self) = 0) Begin
+            If (piCursor(Self)) Send Load_Cursor (piCursor(Self))
+        End // If (iFlag) Begin
+    End_Procedure // Page_Object
+
+    //
+    // *****************************************************************
+    // CURSORS
+    // *****************************************************************
+    //
+    Procedure Load_Cursor Integer iCursor
+        Local Integer iRet
+        If (phCursor(Self)<>0) Move (DeleteObject(phCursor(Self))) To iRet
+        Set phCursor To (LoadCursor(0, iCursor))
+    End_Procedure // Load_Cursor
+
+    Procedure SetCustom_Cursor
+        Local Integer iRet
+        If (phCursor(Self)<>0) Move (SetCursor(phCursor(Self))) To iRet
+    End_Procedure // SetCustom_Cursor
+
+    Procedure Restore_Cursor
+        Local Integer iRet
+        Move (SetCursor(LoadCursor(0,IDC_ARROW))) To iRet
+    End_Procedure // Restore_Cursor
+    //
+    // *****************************************************************
+    // PUBLIC EVENTS
+    // *****************************************************************
+    //
+    Procedure onMouseMove Integer wParam Integer lParam
+    End_Procedure // onMouseMove
+
+    Procedure onMouseLeave Integer wParam Integer lParam
+    End_Procedure // onMouseLeave
+
+    Procedure OnClick
+    End_Procedure // OnClick
+    //
+    // *****************************************************************
+    // FREE USED MEMORY
+    // *****************************************************************
+    //
+    // Destroy Resources.
+    Procedure Destroy_Object
+        Local Integer iRet
+        If (phBitmap(Self)) Move (DeleteObject(phBitmap(Self))) To iRet
+        If (phFont(Self))   Move (DeleteObject(phFont(Self)))   To iRet
+        If (phCursor(Self)) Move (DeleteObject(phCursor(Self))) To iRet
+        Send DestroyToolTip
+        Forward Send Destroy_Object
+    End_Procedure
+    //
+End_Class

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbTrackBar is a dbTrackBar
+    Set ClassPackage To "cGlblDbTrackBar.pkg"
+    Inherit
+End_Class

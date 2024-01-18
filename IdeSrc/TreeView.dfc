@@ -1,0 +1,27 @@
+//AB/ ClassDef
+Class TreeView is a AbstractControl TreeView TreeViewMixin DefineTreeViewMixin
+    Set ClassPackage   To "DfTreeVw.pkg"
+    Set ObjectNameMask To "oTreeView<count>"
+    Set ClassHelpName  To "TreeView"
+    Set ClassCETV      To 40                 // use TreeView Image #40
+
+    Property Mode Border_Style Border_ClientEdge Border_None Border_Normal Border_Dialog Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style
+    Property no_execute anchor peAnchors anNone // When a container is resized this determines how child objects are moved and resized. Objects can  be anchored in any combination of left, right, top or bottom.
+
+    Property Always_Generate Complex Size 60 120  // Object Size (Complex: height, width)
+    Property Complex Location 0 0  // Object Location (Complex: Row, Column)
+    Property Boolean pbHotTracking // Enable Hot-tracking? Hot-tracking automatically highlights an item when the mouse hovers over it.
+    Property Boolean pbFullRowSelect // Enables full-row selection in the treeview. The entire row of the selected item is highlighted, and clicking anywhere on an item's row will cause it to be selected.
+    Property Boolean pbShowTooltips  True // If true, as the mouse hovers over on item that it too wide to be fully visible within the treeview, a tooltip will automatically display the full text of the item.
+    Property Boolean pbSingleExpand // If true, changing the selection will automatically cause the item being selected to collapse if it was expanded, or expand if it was collapsed. The unselected item will collapse.
+    //Property Boolean pbCheckboxes
+    Property Color   piLineColor clDefault // Controls the color of the lines drawn in the treeview. Set this property to any valid color. When set to clDefault, Windows provides the color automatically.
+    Property Color   piTextColor clNone // Controls the color of text in the items of the treeview. Set this property to any valid color. When set to clNone, Windows provides the color automatically.
+    Property Color   piBackColor clNone // Controls the color of the background of the treeview. Set this property to any valid color. When set to clNone, Windows provides the color automatically.
+    Property Boolean TreeRootLinesState True // Specifies whether graphical lines should be drawn to connect Root-Items. The parent-most items in the this object (that is, items that have no parent), are known as "Root-Items".
+    Property Boolean TreeLinesState True // If true, the control draws graphical lines between connecting items. If false, no lines are drawn.
+    Property Boolean TreeEditLabelsState False // If true, supports in-line editing of items' label. The manner that this is initiated is governed by the operating system (usually by clicking the item twice without moving the mouse).
+    Property Boolean TreeButtonsState True // If true, display "+" and "-" button for each item that has child items. If false, the buttons will never be displayed.
+    Property Boolean TreeRetainSelState False // If false, whenever this object loses the focus, the currently selected item will lose its focus highlight. If true, the current item will always remain visibly highlighted
+    Property Integer TreeIndentWidth 15 // Number of pixels that are used to indent child items from their parent items. This value is used by all items and cannot be changed once the control becomes visible.
+End_Class

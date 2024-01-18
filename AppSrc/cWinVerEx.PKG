@@ -1,0 +1,122 @@
+// This package defines class to retrieve current version information
+// from executable MS Windows files.
+
+Use cWinVerEx.h // Header file. Collects all required API calls.
+
+Class cWinVerEx Is a mixin
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // Major version number of executable file
+        Property Integer Major_Version
+        // Minor version number of executable file
+        Property Integer Minor_Version
+        Property Integer Release_Version
+        Property Integer Build_Version
+        Property Boolean Special_Build
+        Property Boolean Private_Build
+        // This property returns the phisical file size
+        Property String  FileSize_Bytes
+        // This property returns the date when file created
+        Property String  Creation_DateTime
+        // This property returns the date when file was changed last time
+        Property String  Lastwrite_DateTime
+        // This property returns the date when file was accessed by O/S
+        Property String  Lastaccess_DateTime
+    End_Procedure
+    
+    // This procedure deletes currently collected information
+    Procedure Delete_Data
+        Set Major_Version To 0
+        Set Minor_Version To 0
+        Set Release_Version To 0
+        Set Build_Version To 0
+        Set Special_Build To False
+        Set Private_Build To False
+        Set FileSize_Bytes To ""
+        Set Creation_DateTime To ""
+        Set Lastwrite_DateTime To ""
+        Set Lastaccess_DateTime To ""
+    End_Procedure
+
+    // This procedure extracts additional information from the file specified.
+    Procedure File_Info String sFile
+        String  sFindData
+        Pointer lpFindData lpFile
+        Handle  hFindFile 
+        Integer dwLowDateTime dwHighDateTime
+        Integer dwFileSizeHigh dwFileSizeLow 
+        Integer iRet
+        //
+        Move (sFile+Character(0)) To sFile
+        ZeroType Win32_Find_Data To sFindData
+        GetAddress Of sFindData  To lpFindData
+        GetAddress Of sFile      To lpFile
+        Move (OemToAnsi(lpFile, lpFile)) To iRet
+        Move (FindFirstFileEf( lpFile, lpFindData)) To hFindFile
+        If (hFindFile <> INVALID_HANDLE_VALUE) Begin
+            GetBuff From sFindData At Win32_Find_Data.dwFileSizeHigh To dwFileSizeHigh
+            GetBuff From sFindData At Win32_Find_Data.dwFileSizeLow  To dwFileSizeLow
+            Set FileSize_Bytes To (String((dwFileSizeHigh * vMaxDword) + dwFileSizeLow))
+
+            GetBuff From sFindData At Win32_Find_Data.dwCRLowDateTime  To dwLowDateTime
+            GetBuff From sFindData At Win32_Find_Data.dwCRHighDateTime To dwHighDateTime
+            Set Creation_DateTime To (vConvertFileDateTime (dwLowDateTime, dwHighDateTime))
+
+            GetBuff From sFindData At Win32_Find_Data.dwLALowDateTime  To dwLowDateTime
+            GetBuff From sFindData At Win32_Find_Data.dwLAHighDateTime To dwHighDateTime
+            Set LastAccess_DateTime To (vConvertFileDateTime (dwLowDateTime, dwHighDateTime))
+
+            GetBuff From sFindData At Win32_Find_Data.dwLWLowDateTime  To dwLowDateTime
+            GetBuff From sFindData At Win32_Find_Data.dwLWHighDateTime To dwHighDateTime
+            Set LastWrite_DateTime To (vConvertFileDateTime (dwLowDateTime, dwHighDateTime))
+        End
+    End_Procedure
+
+    // Collects general information on the file specified
+    Function Read_File String sFile Returns Integer
+        Send Delete_Data
+        String sdwHandle
+        Pointer lpdwHandle lpFile lpData lpSubBlock lpFileInfo lpVerSize lpBuffer lpInfo
+        Integer iSize iVerSize iOk iVersion iVoid iFlags iRet
+        String sData sFileInfo sSubBlock sVerSize sBuffer
+
+        Move (Repeat(Character(0), 4)) To sdwhandle
+        GetAddress Of sdwHandle To lpdwHandle
+        Move (sFile+Character(0)) To sFile
+        GetAddress Of sFile To lpFile
+        ZeroType tdwVarEx To sVerSize
+        GetAddress Of sVerSize To lpVerSize
+        ZeroType tdwVarEx To sBuffer
+        GetAddress Of sBuffer To lpBuffer
+
+        Move (GetFileVersionInfoSizeEf( lpFile, lpdwHandle)) To iSize
+        If (iSize) Begin
+            Move (Repeat(Character(0), iSize)) To sData
+            GetAddress Of sData To lpData
+            Move (GetFileVersionInfoEf( lpFile, 0, iSize, lpData)) To iok
+            If (iOk) Begin
+                Move ("\"+Character(0)) To sSubBlock
+                GetAddress Of sSubBlock To lpSubBlock
+                If (VerQueryValueEf( lpData, lpSubBlock, lpBuffer, lpVerSize)) Begin
+                    ZeroType VS_FIXEDFILEINFO To sFileInfo
+                    GetAddress Of sFileInfo To lpFileInfo
+                    GetBuff From sBuffer At tdwVarEx.dwVar To lpInfo
+                    Move (CopyMemory(lpFileInfo, lpInfo, VS_FIXEDFILEINFO_SIZE)) To iRet
+                    GetBuff From sFileInfo At VS_FIXEDFILEINFO.dwFileVersionMS To iVersion
+                    Set Major_Version To (Hi(iVersion))
+                    Set Minor_Version To (Low(iVersion))
+                    GetBuff From sFileInfo At VS_FIXEDFILEINFO.dwFileVersionLS To iVersion
+                    Set Release_Version To (Hi(iVersion))
+                    Set Build_Version   To (Low(iVersion))
+                    GetBuff From sFileInfo At VS_FIXEDFILEINFO.dwFileFlags To iFlags
+                    Set Special_Build    To (iFlags Iand VS_FF_SPECIALBUILD)
+                    Set Private_Build    To (iFlags Iand VS_FF_PRIVATEBUILD)
+                    Send File_Info sFile
+                End
+            End
+        End
+        Function_Return iSize
+    End_Function
+
+End_Class
+

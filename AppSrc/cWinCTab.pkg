@@ -1,0 +1,189 @@
+// cWinCTab.pkg (Cool Tab dialog)
+// By Sergey V. Natarov (senatc@postman.ru)
+//
+
+Use cWinCTab.h
+Use cWinCTabButton.pkg
+Use cWinCTabPage.pkg
+
+Class cWinCTab Is a Container3d
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set Border_Style To Border_None
+        Set Color        To (Rgb(210, 230, 240)) // Light blue
+        // Pages
+        Property Integer Default_Page           Public 0
+        Property Integer piButtonSize           Public 0
+        Property Integer Current_Page           Public 0
+        Object oPages Is an Array
+        End_Object
+        Object oButtons Is an Array
+        End_Object
+        // Images
+        Property Integer phCTabImages           Public 0
+        Property Integer piBitmapHeight         Public 0
+        Property Integer piBitmapWidth          Public 0
+        Property Integer piTransparentColor     Public clFuchsia
+        //
+        Object oCTabImagesArray Is an Array
+        End_Object
+        //
+    End_Procedure
+
+    // Appearance determinated by pages style    
+    Procedure Set Border_Style Integer iBorder
+        Forward Set Border_Style To Border_None
+    End_Procedure
+
+    Function Register_CTab_Page Integer hoPage String sLabel Returns Integer
+        Set CTab_Page To hoPage sLabel
+        Function_Return (Item_Count(oPages(Self))-1)
+    End_Function
+
+    Procedure Set CTab_Page Integer hoPage String sLabel 
+        Integer iPage cy cx
+        Move (Item_Count(oPages(Self))) To iPage
+        Get piButtonSize To cy
+        Move (low(cy))   To cx
+        Move (hi(cy))    To cy
+        Object oWinCTabButton Is a cWinCTabButton
+            Set FontWeight  To 800
+            Set TextColor   To clWhite
+            Set Color       To clBtnFace
+            Set Label       To sLabel
+            Set GuiLocation To 0 (iPage*cx)
+            Set GuiSize     To cy cx
+            Set Value       Of (oButtons(Self)) Item iPage To (Self)
+            Set Button_Id   To iPage
+            If (Default_Page(Self)=iPage) Set Button_State To CTAB_SELECTED
+            Set psToolTip        To (Private.ToolTip(hoPage))
+            Set psToolTipTitle   To (Private.ToolTipTitle(hoPage))
+            Set Pointer_Only_State To True
+        End_Object
+        Set Value Of (oPages(Self)) Item iPage To hoPage
+    End_Procedure
+    Function CTab_Page Integer Page_Id Returns Integer
+        Function_Return (Value(oPages(Self), Page_Id))
+    End_Function
+
+    Procedure Request_Next_Page
+        Integer iCurrent hoPage iNext iRet
+        Get Current_Page To iCurrent
+        Move iCurrent To iNext
+        Increment iNext
+        If (iNext>Item_Count(oPages(Self))) Move 0 To iNext
+        Get CTab_Page iNext To hoPage
+        If (hoPage) Get Page_Change iNext To iRet
+    End_Procedure
+
+    Procedure Request_Previous_Page
+        Integer iCurrent hoPage iPrev iRet
+        Get Current_Page To iCurrent
+        Move iCurrent To iPrev
+        Decrement iPrev
+        If (iPrev<0) Move 0 To iPrev
+        Get CTab_Page iPrev To hoPage
+        If (hoPage) Get Page_Change iPrev To iRet
+    End_Procedure
+
+    Procedure OnPageChange Integer iFrom Integer iTo
+    End_Procedure
+
+    Function Page_Change Integer iTo Returns Integer
+        Integer iCurrent hoFrom hoTo iRet
+        Get Current_Page To iCurrent
+        If ((iCurrent<>iTo) And (iTo<=Item_Count(oPages(Self)))) Begin
+            Get CTab_Page iCurrent To hoFrom
+            Get CTab_Page iTo      To hoTo
+            Send Show_Page Of hoFrom (False)
+            Send Show_Page Of hoTo   (True)
+            Send OnClick   Of hoTo
+            Move iTo To iRet
+            Send Activate To hoTo
+            //
+            Get Value Of (oButtons(Self)) Item iCurrent To hoFrom
+            Get Value Of (oButtons(Self)) Item iTo      To hoTo
+            Set Button_State Of hoFrom To CTAB_DEFAULT
+            Set Button_State Of hoTo   To CTAB_SELECTED
+            Send RedrawControl To hoFrom
+            Send RedrawControl To hoTo
+        End
+        Else Move iCurrent To iRet
+        Set Current_Page To iRet
+        If (iRet<>iCurrent) Send OnPageChange iCurrent iRet
+        Function_Return iRet
+    End_Function
+
+    Function Request_Page_Switch Integer iTo Returns Integer
+        Integer iRet
+        Get Page_Change iTo To iRet
+        Function_Return iRet
+    End_Function
+
+    Procedure Update_Button_Label Integer iButton String sLabel
+        Integer hoButton
+        Get Value Of (oButtons(Self)) Item iButton To hoButton
+        If (hoButton) Set Label Of hoButton To sLabel
+    End_Procedure
+
+    Procedure Update_Button_ToolTip Integer iButton String sLabel
+        Integer hoButton
+        Get Value Of (oButtons(Self)) Item iButton To hoButton
+        If (hoButton) Set psToolTip Of hoButton To sLabel
+    End_Procedure
+
+    Procedure Update_Button_ToolTipTitle Integer iButton String sLabel
+        Integer hoButton
+        Get Value Of (oButtons(Self)) Item iButton To hoButton
+        If (hoButton) Set psToolTipTitle Of hoButton To sLabel
+    End_Procedure
+
+    Procedure Set CTab_Image Integer iItem String sFileName
+        Integer hBitmap
+        Integer iSize iY iX
+        If (sFileName<>"") ;
+            Set Value Of (oCTabImagesArray(Self)) Item iItem To sFileName
+        Else Begin
+            Procedure_Return
+        End
+        If (iItem=CTAB_DEFAULT) Begin
+            Get CTab_Image CTAB_DEFAULT To sFileName
+            Move (LoadImage(GetModuleHandle(0), sFileName, IMAGE_BITMAP, 0, 0, 0)) To hBitmap
+            If (hBitmap = 0) Begin // the bitmap was not in the EXE resource
+                Get_File_Path sFileName To sFileName
+                Get APIBitmapSize sFileName To iSize
+                Move (Hi(iSize))   To iY
+                Move (Low(iSize))  To iX
+            End
+            Else Begin
+                Get BitmapSizefromHandle hBitmap To iSize
+                Move (Hi(iSize))   To iY
+                Move (Low(iSize))  To iX
+            End
+            Set piBitmapHeight To iY
+            Set piBitmapWidth  To iX
+            Set piButtonSize   To (iX+(iY*65536))
+        End
+    End_Procedure
+    Function CTab_Image Integer iItem Returns String
+        Function_Return (Value(oCTabImagesArray(Self), iItem))
+    End_Function
+
+    Procedure Add_Images
+        Integer hoImageList
+        If (Item_Count(oCTabImagesArray(Self))=0) Procedure_Return
+        Get phCTabImages To hoImageList
+        If (hoImageList <> 0) Send Destroy_Object To hoImageList
+        Object oCTabImages Is a cCTabImages
+            Move (Self) To hoImageList
+        End_Object
+        Set phCTabImages To hoImageList
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        Send Add_Images
+    End_Procedure
+        
+End_Class

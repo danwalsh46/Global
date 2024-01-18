@@ -1,0 +1,22 @@
+// cWinShellEx.pkg
+// By Sergey V. Natarov (senatc@postman.ru)
+// Windows Shell Interface
+//
+
+Use cWinShellEx.h
+
+Procedure ShellExecute String sMode String sFile Integer iShow
+    Local Integer iRet
+    Local Handle  hwnd
+    Move (GetDesktopWindow()) To hwnd // Defined in WinUser.pkg
+    Move (ShellExecuteEf(hwnd,sMode,sFile,"","",iShow)) To iRet
+    Procedure_Return iRet
+End_Procedure
+
+Function SHGetSpecialFolderPath Global Integer nFolder Returns string
+    Integer iRet
+    String sPath
+    ZeroString MAX_PATH to sPath
+    Move (SHGetSpecialFolderPathEf(0, AddressOf(sPath), nFolder, 0)) To iRet
+    Function_Return (CString(sPath))
+End_Function // SHGetSpecialFolderPath

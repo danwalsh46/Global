@@ -1,0 +1,34 @@
+//AB/ CLASSDEF
+Class cszDropDownButton IS A AbstractControl Button ABMetaButtonMixin DefineABMetaButtonMixin
+    Set ClassPackage to cszDropDownButton.pkg
+    Set ObjectNameMask To "oButton<count>"
+    // inherit is removed on purpose
+    Property String Label
+    Property String Bitmap
+    Property Always_Generate Complex Size 14 50
+    Property Always_Generate Complex Location 0 0
+
+    Property No_Execute Boolean pbUseDFPath True
+    Property No_Execute Boolean pbPointerOnly False
+    Property No_Execute Mode piButtonStyle ButtonStyle_Normal ButtonStyle_Normal ButtonStyle_Flat3D ButtonStyle_Flat ButtonStyle_Web
+    Property No_Execute Boolean pbUnderlineHot False
+    Property No_Execute Mode piBitmapLocation BITLOC_LEFT_VCENTER BITLOC_LEFT_VCENTER BITLOC_RIGHT_VCENTER BITLOC_TOP_CENTER BITLOC_BOTTOM_CENTER
+    Property No_Execute Boolean pbDropDownButton True
+    Property No_Execute Mode piDropDownPos True DropDown_Right DropDown_Right DropDown_Left
+    Property No_Execute Mode piTextStyle DBTEXTSTYLE_SINGLE_VHCENTER DBTEXTSTYLE_SINGLE_VHCENTER DBTEXTSTYLE_SINGLE_LEFT_HCENTER DBTEXTSTYLE_SINGLE_RIGHT_HCENTER DBTEXTSTYLE_SINGLE_TOP_VCENTER DBTEXTSTYLE_SINGLE_BOTTOM_VCENTER DBTEXTSTYLE_MULTI_TOP_LEFT DBTEXTSTYLE_MULTI_TOP_CENTER DBTEXTSTYLE_MULTI_TOP_RIGHT
+
+    Property No_Execute Color piTextColor           clWindowText
+    Property No_Execute Color piTextHotColor        clBlue
+
+    Property No_Execute Boolean pbBitmapMap3DColors False
+    Property No_Execute Boolean pbLoadBitmapTransparent False
+
+    Property No_Execute String psDropDownBitmap ""
+    Property No_Execute Boolean pbBitmapTransparent False
+    Property No_Execute Color piTransparentBitmapColor 0
+    Property No_Execute Color piColor clBtnFace
+
+    Property No_Execute String TypeFace ""
+    Property No_Execute Complex FontSize 0 0
+    Property No_Execute Integer FontWeight 0
+End_Class

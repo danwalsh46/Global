@@ -1,0 +1,8 @@
+//AB/ CLASSDEF
+Class Form_AutoComplete is a Form
+    Set ObjectNameMask To "oForm_AutoComplete<count>"
+    Property No_Execute Integer piMax_Finds 10
+    Property No_Execute Integer piTimeDelay 300
+    Inherit
+    Set ClassPackage to "DBForm_AutoComplete.pkg"
+End_Class // cForm_AutoComplete

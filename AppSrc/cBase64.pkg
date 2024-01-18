@@ -1,0 +1,178 @@
+//
+//  File: cBase64.pkg  - Antwise Base64 library for DataFlex
+//
+//  Author: Wil van Antwerpen
+//
+//  Copyright (c) 2004 Antwise Solutions
+//
+//
+
+
+External_function Win32_StringToBase64 "StringEncodeBase64" Base64.dll ;
+   Pointer pszSource Pointer pszDestination Returns Integer
+
+External_function Win32_Base64ToString "StringDecodeBase64" Base64.dll ;
+   Pointer pszSource Pointer pszDestination Returns Integer
+
+External_function Win32_BinaryToBase64 "BinaryEncodeBase64" Base64.dll ;
+   Pointer pszSource Integer iSize Pointer pszDestination Returns Integer
+
+External_function Win32_Base64ToBinary "BinaryDecodeBase64" Base64.dll ;
+   Pointer pszSource Pointer pszDestination Returns Integer
+
+Set_Argument_Size 64000               
+
+Class cBase64 Is a cObject
+                          
+                          
+    // We need to allocate the size for the string which is going to 
+    // recieves our data.
+    // Normally three 8bit characters will be represented by four 6 bit
+    // characters.                             
+    // But we have to take a small safeguard into mind, one
+    // 8bit char will translate into 2 6bits and for stupidities
+    // sake we are creating a 4k safeguard.
+  Function EstimateEncodedBase64Size Integer iSize Returns Integer
+    Function_Return (((4.0/3.0)*iSize)+4096)
+  End_Function // EstimateEncodedBase64Size
+                         
+    
+  // Encodes a chunk binary data passed in the string sBinary of size
+  // iSize into a base64 encoded DataFlex string  
+  Function BinaryEncode String sBinary Integer iSize Returns String
+    Pointer   psSource psDestination 
+    Integer   iAllocSize
+    Integer   iArgSize
+    String    sSource
+    String    sDestination
+                                           
+    Move (((4.0/3.0)*iSize)+4096) To iAllocSize       
+//    Showln "iSize = " iSize
+//    Showln "Allocated size = " iAllocSize 
+
+    Get_Argument_Size To  iArgSize
+
+    If (iArgSize<iAllocSize) Begin
+        Set_Argument_Size iAllocSize
+    End    
+    
+    ZeroString iAllocSize To sDestination   // Reserve space
+    Move sBinary To sSource //ToDo: Remove
+      
+    GetAddress Of sSource      To psSource
+    GetAddress Of sDestination To psDestination
+  
+    //Send info_box "Ok"
+    //abort
+    
+    If (Win32_BinaryToBase64(psSource,iSize,psDestination)<>0) Begin
+      Move ("Base64 Binary Encoding Error occured."+Character(0)) To sDestination
+    End  
+    Set_Argument_Size iArgSize
+    Function_Return (CString(sDestination))
+  End_Function // BinaryEncode
+  
+  
+  Function EstimateDecodedBase64Size Integer iSize Returns Integer
+    Function_Return (((3.0/4.0)*iSize)+4096)
+  End_Function // EstimateDecodedBase64Size
+  
+  // Decodes base64 encoded data passed as a DataFlex string into
+  // binary data again passed into a DataFlex string 
+  Function BinaryDecode String sSourceIn Returns String
+    Pointer   psSource psDestination
+    String    sSource 
+    String    sDestination
+    String    sBinaryData
+    Pointer   psBinaryData
+    Integer   iResult
+    Integer   iVoid
+    Integer   iSize
+    Integer   iAllocSize
+    Integer   iArgSize
+                   
+    Move (length(sSourceIn)) To iSize
+    Move (((3.0/4.0)*iSize)+4096) To iAllocSize       
+
+    Get_Argument_Size To  iArgSize
+
+    If (iArgSize<iAllocSize) Begin
+        Set_Argument_Size iAllocSize
+    End    
+    
+    ZeroString iAllocSize To sDestination   // Reserve 4 Kb
+      
+    Move (sSourceIn+Character(0)) To sSource // ToDo: Remove
+    //Move sSourceIn To sSource  
+    
+    GetAddress Of sSource      To psSource
+    GetAddress Of sDestination To psDestination
+  
+    Move (Win32_Base64ToBinary(psSource,psDestination)) To iResult
+    
+    // We now have the exact size of the binary data returned in
+    // iResult, not just an appoximization such as the value in iAllocSize
+    ZeroString iResult To sBinaryData
+    GetAddress Of sBinaryData To psBinaryData
+    Move (CopyMemory(psBinaryData,psDestination,iResult)) To iVoid
+    
+    If (iArgSize<iResult) Begin
+        Set_Argument_Size iResult
+    End    
+    If (iResult<>0) Begin
+      Function_Return sBinaryData
+    End
+    Else ;
+      Function_Return ("Binary Base64 Decoding Error:"*Trim(iResult)*"occured.")
+  End_Function // BinaryDecode
+                 
+  
+  Function StringEncode String sSourceIn Returns String
+    Pointer   psSource psDestination 
+    String    sSource sDestination
+  
+    ZeroString 34096 To sDestination   // Reserve 4 Kb
+      
+    //Move (sKeyIn+Character(0))  To sKey
+    Move (sSourceIn+Character(0)) To sSource
+    
+    GetAddress Of sSource      To psSource
+    GetAddress Of sDestination To psDestination
+  
+  
+    If (Win32_StringToBase64(psSource,psDestination)=0) Begin
+      Function_Return (CString(sDestination)) 
+    End
+    Else ;
+      Function_Return "Base64 String Encoding Error occured."
+  End_Function // StringEncode
+  
+  
+  
+  
+  Function StringDecode String sSourceIn Returns String
+    Pointer   psSource psDestination
+    String    sSource sDestination
+    Integer   iResult
+  
+    ZeroString 20670 To sDestination   // Reserve 4 Kb
+      
+    Move (sSourceIn+Character(0)) To sSource
+    
+    GetAddress Of sSource      To psSource
+    GetAddress Of sDestination To psDestination
+  
+    Move (Win32_Base64ToString(psSource,psDestination)) To iResult
+    If (iResult=0) Begin
+      Function_Return (CString(sDestination)) 
+    End
+    Else ;
+      Function_Return ("String Base64 Decoding Error:"*Trim(iResult)*"occured.")
+  End_Function // StringDecode
+
+
+End_Class // cBase64
+
+
+Object oBase64 Is a cBase64
+End_Object

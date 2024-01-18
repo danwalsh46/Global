@@ -1,0 +1,160 @@
+Use vdfbase.pkg
+
+// Idle handler to either move to the first or last row when the
+// scrollbar thumb is dragged to the very top or bottom respectively
+// done here as the scroll event can be called multiple times and we
+// only want to do this once and also when the grid has finished doing
+// all it's stuff
+
+Class ctaGridScrollingIdleHander is a cIdleHandler
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Property Boolean pbTop
+    End_Procedure
+
+    Procedure OnIdle
+        Boolean bLoadedAllData
+
+        Set pbEnabled To False
+        Get AllDataIsLoaded Of (phoDataSource(Self)) To bLoadedAllData
+        If (NOT(bLoadedAllData)) Begin
+            If (pbTop(Self)) Send MoveToFirstRow
+            Else Send MoveToLastRow
+        End
+    End_Procedure
+End_Class
+
+Class ctaGridScrolling_Mixin is a Mixin
+    
+    Procedure Define_ctaGridScrolling_Mixin
+        { DesignTime=False }
+        Property Boolean pbLegacy_Scrolling True
+        { DesignTime=False }
+        Property Handle  pohScrolling_Idle_Handler
+        { DesignTime=False }
+        Property Boolean pbIgnore_Scroll
+        { DesignTime=False }
+        Property Boolean pbActive_Drag
+    End_Procedure
+
+    // ReSynchToDataSource:
+    // Ignore the scrolling logic when resyncing the data source
+    //
+    Procedure ReSynchToDataSource
+        If (pbLegacy_Scrolling(Self)) Set pbIgnore_Scroll To True
+        
+        Forward Send ReSynchToDataSource
+        
+        If (pbLegacy_Scrolling(Self)) Set pbIgnore_Scroll To False
+    End_Procedure
+
+    // OnComMouseDown:
+    // Clicking on a row may cause the Scroll event to be called in these cases
+    // we can disable the idle handler and ignore this behaviour, note the scroll
+    // event method is called before this one so we disable the idle handler rather than
+    // set the pbIgnore_Scroll property to false
+    //
+    Procedure OnComMouseDown Short llButton Short llShift Integer llx Integer lly
+        If (pbLegacy_Scrolling(Self)) Begin
+            If (pbEnabled(pohScrolling_Idle_Handler(Self))) Set pbEnabled Of (pohScrolling_Idle_Handler(Self)) To False
+        End
+        
+        Forward Send OnComMouseDown llButton llShift llx lly
+    End_Procedure
+
+    // Dragging_Scrollbar:
+    // Returns if we are moving the scrollbar with the mouse
+    //
+    Function Dragging_Scrollbar Returns Boolean
+        tWinPoint ltPoint
+        tWinRect ltRect
+        Boolean bRetval bSwap
+        Integer iVoid iScrollbarLeft iState iRptL iRptT iRptR iRptB
+        
+        Move (GetSystemMetrics(SM_SWAPBUTTON)) To bSwap
+        If (NOT(bSwap)) Move (GetKeyState(VK_LBUTTON)) To iState
+        Else Move (GetKeyState(VK_RBUTTON)) To iState
+
+        // 0x0000 - not pressed, not toggled         0
+        // 0x8000 - Pressed, not toggled         32768
+        // 0x0001 - not pressed, toggled             1
+        // 0x8001 - Pressed, toggled             32769
+        
+        If ((iState IAND 32768) = 32768) Begin
+            Get pbActive_Drag To bRetval
+            If (NOT(bRetval)) Begin
+                Move (GetWindowRect(Window_Handle(Self), AddressOf(ltRect))) To iVoid
+                Move (GetCursorPos(AddressOf(ltPoint))) To iVoid
+                Send ComGetElementRect xtpReportElementRectReportArea (&iRptL) (&iRptT) (&iRptR) (&iRptB)
+                Move (ltRect.Right - ((ltRect.Right - ltRect.Left) - iRptR)) To iScrollbarLeft
+                Move (ltPoint.x > iScrollbarLeft AND ltPoint.x < ltRect.right AND ltPoint.y > ltRect.top AND ltPoint.y < ltRect.bottom) To bRetval
+                Set pbActive_Drag To bRetval
+            End
+        End
+        Else Begin
+            Set pbActive_Drag To False
+            Move (False) To bRetval
+        End
+
+        Function_Return bRetval
+    End_Function
+    
+    // OnComVScroll:
+    // The section is always 1 whilst the position is the position of the scroll thumb
+    //
+    Procedure OnComVScroll Integer llSection Integer llPosition
+        Boolean bSwap bClicked
+        Integer iState
+        Handle ohDataSource ohScrollingIdler
+        
+        If (pbLegacy_Scrolling(Self) AND Dragging_Scrollbar(Self)) Begin
+            If (NOT(pbIgnore_Scroll(Self))) Begin
+                Set pbIgnore_Scroll To True
+                Get phoDataSource To ohDataSource
+                Get pohScrolling_Idle_Handler To ohScrollingIdler
+                
+                // Don't do anything if there are no records
+                
+                If (RowCount(ohDataSource) > 0) Begin
+                    
+                    // If the thumb is pulled to the top and the selected row is not the first in the
+                    // data source then enable the idle handler to move to the first row
+                    
+                    If (llPosition = 0) Begin
+                        If (SelectedRow(ohDataSource) > 0) Begin
+                            Set pbEnabled Of ohScrollingIdler To True
+                            Set pbTop Of ohScrollingIdler To True
+                        End
+                    End
+                    
+                    // else if the we pull the thumb to the bottom which is the position + displayable rows
+                    // greater than the rows in the data source then enable the idle handler to move 
+                    // to the last row. N.b. piLastVisibleRowCount is one based
+                    
+                    Else Begin
+                        If ((llPosition + piLastVisibleRowCount(Self)) > RowCount(ohDataSource)) Begin
+                            Set pbEnabled Of ohScrollingIdler To True
+                            Set pbTop Of ohScrollingIdler To False
+                        End
+                    End
+                End
+                Set pbIgnore_Scroll To False
+            End
+        End
+    End_Procedure
+
+    // End_Define_ctaGridScrolling_Mixin:
+    //
+    Procedure End_Define_ctaGridScrolling_Mixin
+        Handle ohId
+
+        If (pbStaticData(Self)) Set pbLegacy_Scrolling To False
+
+        If (pbLegacy_Scrolling(Self)) Begin
+            Get CreateNamed (RefClass(ctaGridScrollingIdleHander)) "oGridScrollbarIdleHandler" To ohId
+            Set pohScrolling_Idle_Handler To ohId
+        End
+    End_Procedure
+End_Class

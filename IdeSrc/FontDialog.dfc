@@ -1,0 +1,49 @@
+//AB/ CLASSDEF
+Class FontDialog is a BitmapContainer
+    Set Drop_Allowed   To False          // disallow dropping controls onto this control
+    Set Type_Of_Drag   To TD_DRAG_NONVISUAL
+    Set Control_Type   To ctBASE         // disable DataBase tab page in Properties
+    Set Size_Allowed   To False
+    Set ObjectNameMask To "oFontDialog<count>"
+    Set ClassHelpName  To "FontDialog"
+    Set ClassCETV      To 28             // use TreeView Image #28 (1-based offset)
+    Set ClassPackage   To "Font_dlg.pkg"
+
+    //don't show location
+    Property No_Visible Pseudo Complex Location 0 0
+    //don't show size
+    Property No_Visible Pseudo Complex Size 20 20
+    //show this bitmap on control
+    Property No_Visible String Bitmap "FontDialog.bmp"
+    Property No_Visible Integer Bitmap_Style Bitmap_Center
+
+    Property No_Execute String Face_Name "" // A null-terminated string that specifies the typeface name of the font. Max length is 32
+    Property No_Execute Integer FontHeight -1 // The height, in logical units, of the font’s character cell or character. If set to -1, the Hi value of the FontSize of this object will be passed to the font dialog.
+    Property No_Execute Integer FontSizeMin 0 // Specifies the minimum point size a user can select.
+    Property No_Execute Integer FontSizeMax 96 // Specifies the maximum point size a user can select.
+
+    Property No_Execute Boolean Effects_State True // Determines whether the dialog box displays the controls that allow users to specify strikeout, underline, and text color options.
+    Property No_Execute Boolean FixedPitchOnly_State False // Determines whether only fixed-pitch fonts can be selected in the dialog box.
+    Property No_Execute Boolean ForceFontExist_State True // Indicates whether the font and style that are selected by the user must exist.
+    Property No_Execute Boolean TTOnly_State False // Indicates if only TrueType fonts should be selected in the font dialog box.
+
+    Property No_Execute Boolean SelectScript_State False // When set to true only fonts with the character set identified by the FontCharSet property will be displayed by the font dialog box. Users will not be able to change the character set.
+    Property No_Execute Boolean ShowHelp_State True // Determines if the dialog box shows the help button on the dialog box.
+
+    Property No_Execute Boolean NoFaceSel_State False // Detrmines whether to selectively prevent the font dialog box from displaying an initial selection for the font name combo box.
+    Property No_Execute Boolean NoScriptSel_State False // Determines whether the script combo box in the font dialog is disabled.
+    Property No_Execute Boolean NoSizeSel_State False // Determines whether to selectively prevent the dialog box from displaying an initial selection for the font size combo box.
+    Property No_Execute Boolean NoStyleSel_State False // Determines whether to selectively prevent the dialog box from displaying an initial selection for the font style combo box.
+    Property No_Execute Boolean NoSimulations_State False // Determines whether graphics-device-interface (GDI) font simulations are allowed in the dialog box.
+    Property No_Execute Boolean NoOEMFonts_State False  // Determines whether vector font selection is allowed in the dialog box.
+    Property No_Execute Boolean NoVectorFonts_State False // Determines whether vector font selection is allowed in the dialog box.
+    Property No_Execute Boolean NoVertFonts_State False // Determines whether the font dialog should display vertically oriented fonts.
+    Property No_Execute Boolean ScalableOnly_State False // Determines whether only scalable fonts should be selected. Scalable fonts include vector fonts, scalable printer fonts, TrueType fonts, and fonts scaled by other technologies.
+    Property No_Execute Boolean ScriptsOnly_State False // Determines whether the font dialog should allow selection of fonts for all non-OEM and Symbol character sets, as well as the ANSI character set.
+
+    Property No_Execute Mode FontFamily FF_DONTCARE FF_DECORATIVE FF_DONTCARE FF_MODERN FF_ROMAN FF_SCRIPT FF_SWISS // Font families describe the look of a font in a general way.
+    Property No_Execute Mode FontClipPrecision CLIP_DEFAULT_PRECIS CLIP_DEFAULT_PRECIS CLIP_STROKE_PRECIS CLIP_EMBEDDED CLIP_LH_ANGLES // Specifies the clipping precision.
+    Property No_Execute Mode FontOutPrecision OUT_DEFAULT_PRECIS OUT_DEFAULT_PRECIS OUT_DEVICE_PRECIS OUT_OUTLINE_PRECIS OUT_RASTER_PRECIS OUT_STRING_PRECIS OUT_STROKE_PRECIS OUT_TT_ONLY_PRECIS OUT_TT_PRECIS // Specifies the output precision.
+    Property No_Execute Mode FontPitch DEFAULT_PITCH DEFAULT_PITCH FIXED_PITCH VARIABLE_PITCH // Specifies the pitch of the font.
+    Property No_Execute Mode FontQuality DEFAULT_QUALITY DEFAULT_QUALITY DRAFT_QUALITY PROOF_QUALITY // Specifies the output quality.
+End_Class

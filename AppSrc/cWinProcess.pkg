@@ -1,0 +1,105 @@
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Confidential Trade Secret.
+// Copyright 1987-2001 Data Access Corporation, Miami FL, USA
+// All Rights reserved
+// DataFlex is a registered trademark of Data Access Corporation.
+//
+// Module:
+//      EnumProcessModules.Pkg
+//
+// Purpose:
+//      Defines interface to WinAPI function EnumProcessModules.
+//
+// Author:
+//      Ulbe Stellema, Vincent Oorsprong
+//
+// Date:
+//      2002, June, 29th
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Use cWinKernEx.h
+
+External_Function EnumProcessModulesEf "EnumProcessModules" Psapi.Dll Handle hProcess Pointer lphModule Integer cb Pointer lpcbNeeded Returns Integer
+
+//****************************************************************************
+// $Module type: CLASS
+// $Module name: cProcessModulesArray
+// $Author     : VO
+// Created     : 06/29/02 @ 10:58
+//
+// Description
+//      Create an object of this class to enumerate the process modules and
+//      retrieve the names from the array
+//
+// $Rev History
+//      06/29/02 VO Module header created
+//****************************************************************************
+Class cProcessModulesArray Is An Array
+    //****************************************************************************
+    // $Module type: PROCEDURE
+    // $Module name: DoEnumProcessModules
+    // $Author     : VO
+    // Created     : 06/29/02 @ 10:59
+    //
+    // Description
+    //      This is the public message to run the enumeration
+    //
+    // $Rev History
+    //      06/29/02 VO Module header created
+    //****************************************************************************
+    Procedure DoEnumProcessModules
+        Handle hProcess hModule
+        Dword dwProcessId
+        String sArrayOfProcessIds sModuleHandle sModuleName
+        Integer iSizeOfProcessIdsArray iVoid iModule iModules 
+        Integer iOldDelegationMode iModuleFileNameLength
+        Boolean bOk
+        Pointer lpModuleName lpArray lpvar
+        String sVar
+    
+        // Remove all previous enumerated process modules if they exist
+        Send Delete_Data
+    
+        Get Delegation_Mode To iOldDelegationMode
+        Set Delegation_Mode To Delegate_To_Parent
+    
+        Move (GetCurrentProcessIdEf()) To dwProcessId
+        If (dwProcessId <> 0) Begin
+            Move (OpenProcessEf((PROCESS_VM_READ + PROCESS_QUERY_INFORMATION), False, dwProcessId)) To hProcess
+            If (hProcess <> 0) Begin
+                Move 0 To iSizeOfProcessIdsArray
+                ZeroString 1 To sArrayOfProcessIds
+                GetAddress Of sArrayOfProcessIds To lpArray
+                ZeroType tdwVarEx to sVar
+                GetAddress of sVar to lpVar
+                Move (EnumProcessModulesEf(hProcess, lpArray, 0, lpVar)) To bOk
+                If (bOk) Begin
+                    GetBuff from sVar at tdwVarEx.dwVar to iSizeOfProcessIdsArray
+                    ZeroString iSizeOfProcessIdsArray To sArrayOfProcessIds
+                    GetAddress Of sArrayOfProcessIds To lpArray
+                    ZeroType tdwVarEx to sVar
+                    GetAddress of sVar to lpVar
+                    Move (EnumProcessModulesEf(hProcess, lpArray, iSizeOfProcessIdsArray, lpVar)) To bOk
+                    If (bOk) Begin
+                        GetBuff from sVar at tdwVarEx.dwVar to iSizeOfProcessIdsArray
+                        Move (iSizeOfProcessIdsArray / 4) To iModules
+                        For iModule From 1 To iModules
+                            Move (Mid (sArrayOfProcessIds, 4, (((iModule - 1) * 4) + 1))) To sModuleHandle
+                            Get BytesToDWord sModuleHandle 1 To hModule
+                            ZeroString 255 To sModuleName
+                            GetAddress of sModuleName To lpModuleName
+                            Move (GetModuleFileNameEf(hModule, lpModuleName, 255)) To iModuleFileNameLength
+                            If (iModuleFileNameLength <> 0) Begin
+                                Move (CString (sModuleName)) To sModuleName
+                                Set Array_Value Item (Item_Count (Self)) To sModuleName
+                            End
+                        Loop
+                    End
+                End
+                Move (CloseHandleEf(hProcess)) To bOk
+            End
+        End
+    
+        Set Delegation_Mode To iOldDelegationMode
+    End_Procedure // DoEnumProcessModules
+End_Class // cProcessModulesArray

@@ -1,0 +1,137 @@
+// ******************************************************************************* //
+// ******************************************************************************* //
+// ************                                                       ************ //
+// ************        Windows Common Controls support package        ************ //
+// ************                                                       ************ //
+// ******************************************************************************* //
+// ******************************************************************************* //
+//
+// Purposes.. This package is a suplement package for implementing
+//            Windows common controls library.
+//
+// Author.... Sergey V. Natarov (senatc@postman.ru)
+// Version... 0.0.1 
+// Date...... 03/05-2003
+// Support... Not available
+//
+// Revision History:
+//    03/05-2003 v0.0.1 -- Basic functionality implemented
+//
+
+Use cWinControl.pkg
+
+Define GDTR_MIN                For |CI$0001
+Define GDTR_MAX                For |CI$0002
+
+Define GDT_ERROR               For -1
+Define GDT_VALID               For 0
+Define GDT_NONE                For 1
+
+// Color schemas (COLORREF=DWORD)
+Define WC_CLR_NONE             For |CI$FFFFFFFF
+Define WC_CLR_DEFAULT          For |CI$FF000000
+
+
+// Init common controls
+External_function InitCommonControlsEx "InitCommonControlsEx" COMCTL32.DLL Pointer lpInitCtrls Returns Integer
+Type tINITCOMMONCONTROLSEX
+    Field tINITCOMMONCONTROLSEX.dwSize as DWord
+    Field tINITCOMMONCONTROLSEX.dwICC  as DWord
+End_Type
+
+Define ICC_LISTVIEW_CLASSES         For |CI$00000001 // listview, header
+Define ICC_TREEVIEW_CLASSES         For |CI$00000002 // treeview, tooltips
+Define ICC_BAR_CLASSES              For |CI$00000004 // toolbar, statusbar, trackbar, tooltips
+Define ICC_TAB_CLASSES              For |CI$00000008 // tab, tooltips
+Define ICC_UPDOWN_CLASS             For |CI$00000010 // updown
+Define ICC_PROGRESS_CLASS           For |CI$00000020 // progress
+Define ICC_HOTKEY_CLASS             For |CI$00000040 // hotkey
+Define ICC_ANIMATE_CLASS            For |CI$00000080 // animate
+Define ICC_WIN95_CLASSES            For |CI$000000FF
+Define ICC_DATE_CLASSES             For |CI$00000100 // month picker, date picker, time picker, updown
+Define ICC_USEREX_CLASSES           For |CI$00000200 // comboex
+Define ICC_COOL_CLASSES             For |CI$00000400 // rebar (coolbar) control
+// For IE > v4
+Define ICC_INTERNET_CLASSES         For |CI$00000800
+Define ICC_PAGESCROLLER_CLASS       For |CI$00001000   // page scroller
+Define ICC_NATIVEFNTCTL_CLASS       For |CI$00002000   // native font control
+// For Win32/NT > v5.01
+Define ICC_STANDARD_CLASSES         For |CI$00004000
+Define ICC_LINK_CLASS               For |CI$00008000
+
+Procedure InitCommonControlsEx Integer iClass
+    Integer iVoid
+    String  sICC
+    ZeroType tINITCOMMONCONTROLSEX To sICC
+    Put tINITCOMMONCONTROLSEX_size To sICC At tINITCOMMONCONTROLSEX.dwSize
+    Put iClass                     To sICC At tINITCOMMONCONTROLSEX.dwICC
+    Move (InitCommonControlsEx(AddressOf(sICC))) To iVoid
+End_Procedure
+
+// For the further use
+Class cBaseWinControls Is a cWinControl
+    // Functionality removed into the particular classes fro the moment
+End_Class
+
+Object oBitMask Is an Array 
+    //
+    Set Value Item  1 To |CI$00000001
+    Set Value Item  2 To |CI$00000002
+    Set Value Item  3 To |CI$00000004
+    Set Value Item  4 To |CI$00000008
+    Set Value Item  5 To |CI$00000010
+    Set Value Item  6 To |CI$00000020
+    Set Value Item  7 To |CI$00000040
+    Set Value Item  8 To |CI$00000080
+    Set Value Item  9 To |CI$00000100
+    Set Value Item 10 To |CI$00000200
+    //
+    Set Value Item 11 To |CI$00000400
+    Set Value Item 12 To |CI$00000800
+    Set Value Item 13 To |CI$00001000
+    Set Value Item 14 To |CI$00002000
+    Set Value Item 15 To |CI$00004000
+    Set Value Item 16 To |CI$00008000
+    Set Value Item 17 To |CI$00010000
+    Set Value Item 18 To |CI$00020000
+    Set Value Item 19 To |CI$00040000
+    Set Value Item 20 To |CI$00080000
+    //
+    Set Value Item 21 To |CI$00100000
+    Set Value Item 22 To |CI$00200000
+    Set Value Item 23 To |CI$00400000
+    Set Value Item 24 To |CI$00800000
+    Set Value Item 25 To |CI$01000000
+    Set Value Item 26 To |CI$02000000
+    Set Value Item 27 To |CI$04000000
+    Set Value Item 28 To |CI$08000000
+    Set Value Item 29 To |CI$10000000
+    Set Value Item 30 To |CI$20000000
+    //
+    Set Value Item 31 To |CI$40000000
+    Set Value Item 32 To |CI$80000000
+    //
+End_Object
+
+Function AddBit Global Integer iBit Integer cVal returns integer
+    Integer iMask
+    Get Value of oBitMask iBit To iMask
+    If ((iBit<1)or(iBit>31)) Function_Return cVal
+    Else Function_Return (cVal iOr iMask)
+End_Function
+
+Function IsBit Global Integer iBit Integer cVal returns integer
+    Integer iMask
+    Get Value of oBitMask iBit To iMask
+    If ((iBit<1)or(iBit>31)) Function_Return cVal
+    Else Function_Return (cVal iAnd iMask)
+End_Function
+
+//Integer __Val__
+//Move (AddBit(1, (AddBit(28, 0)))) To __val__
+//Showln 'First & Last bits = ' __val__
+//Showln 'Substruct 28th bit  = ' (IsBit(28,__val__)) " >> " __val__
+//Showln 'Substruct 31th bit  = ' (IsBit(15,__val__)) " >> " __val__
+//
+
+

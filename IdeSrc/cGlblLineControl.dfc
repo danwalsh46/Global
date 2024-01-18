@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblLineControl is a LineControl
+    Set ClassPackage To "cGlblLineControl.pkg"
+    Inherit
+End_Class

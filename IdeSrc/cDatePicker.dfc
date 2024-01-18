@@ -1,0 +1,16 @@
+//AB/ CLASSDEF
+Class cDatePicker Is a Form
+    Set ClassPackage to "cDatePicker.pkg"
+    Inherit
+    Property No_Execute Boolean pbLeftAlign True
+    Property No_Execute Boolean pbShortDate True
+    Property No_Execute Boolean pbCombo True
+End_Class
+
+Class cdbDatePicker Is a dbForm
+    Set ClassPackage to "cDatePicker.pkg"
+    Inherit
+    Property No_Execute Boolean pbLeftAlign True
+    Property No_Execute Boolean pbShortDate True
+    Property No_Execute Boolean pbCombo True
+End_Class

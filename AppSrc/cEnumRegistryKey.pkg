@@ -1,0 +1,128 @@
+// cWinRegistry.pkg
+// By SVN
+
+Class cEnumRegistryKey Is an message
+
+    Procedure Construct_Object
+        Forward Send construct_object
+        Integer iRegRoot
+        String  sRegBranch
+        Get_Registry_Root To iRegRoot sRegBranch
+        //
+        Property Integer piRegistryRoot       Public iRegRoot
+        Property String  psRegistryBranch     Public sRegBranch
+        Property String  psRegistryKey        Public ""
+        //
+        Property Integer piEnumRoot           Public HKEY_LOCAL_MACHINE 
+        Property String  psEnumBranch         Public 'Software'
+        Object oKey  Is an array
+        End_Object
+        Object oData Is an array
+        End_Object
+    End_Procedure
+
+    Procedure StoreRegistryRoot
+        Integer iRegRoot
+        String  sRegBranch
+        Get_Registry_Root To iRegRoot sRegBranch
+        Set piRegistryRoot     To iRegRoot
+        Set psRegistryBranch   To sRegBranch
+    End_Procedure // StoreRegistryRoot
+
+    Procedure RestoreRegistryRoot
+        Integer iRegRoot
+        String  sRegBranch
+        Get piRegistryRoot     To iRegRoot
+        Get psRegistryBranch   To sRegBranch
+        Set_Registry_Root To iRegRoot sRegBranch
+    End_Procedure // RestoreRegistryRoot
+
+    Function AnsiNametoOemName String sName Returns String
+        String szName
+        Pointer pszName
+        Integer iVoid
+        Move (sName + Character(0)) To szName
+        GetAddress Of szName To pszName
+        Move (AnsiToOem(pszName, pszName)) To iVoid
+        Function_Return (cstring(szName))
+    End_Function
+
+    Function Reg_Key_Enum Integer iKey String szKeyName Returns Integer
+        String  sData sKey sName
+        Integer iCount
+        Get psRegistryKey  To sKey
+        Move (Replace((psEnumBranch(Self)+"\"),sKey,"")) To sKey
+        Get_Foreign_Profile_String sKey szKeyName "" To sName
+        Move (AnsiNametoOemName(Self,sName)) To sName
+        If (sName<>"") Begin
+            Get Item_Count Of (oKey(Self)) To iCount
+            Set Value Of (oKey(Self))  Item iCount To sName
+        End
+        Function_Return 1
+    End_Function // Reg_Key_Enum
+    
+    Function Reg_String_Value_Enum String sName String sData Returns Integer
+        Integer iCount
+        Get Item_Count  Of (oKey(Self))     To   iCount
+        Move (AnsiNametoOemName(Self,sName)) To sName
+        Set Value       Of (oKey(Self))     Item iCount To sName
+        Set Value       Of (oData(Self))    Item iCount To sData
+        Function_Return 1  // continue with this pass of enumeration.
+    End_Function
+
+    Function Reg_Integer_Value_Enum String sName Integer iValue Returns Integer
+        Integer iCount
+        Get Item_Count  Of (oKey(Self))     To   iCount
+        Move (AnsiNametoOemName(Self,sName)) To sName
+        Set Value       Of (oKey(Self))     Item iCount To sName
+        Set Value       Of (oData(Self))    Item iCount To iValue
+        Function_Return 1  // continue with this pass of enumeration.
+    End_Function
+    
+    Procedure DoEnumKey String sKey
+        Integer hoSelf hKey iRoot
+        String  sBranch
+        Send StoreRegistryRoot
+        Send Delete_Data    To (oKey(Self))
+        Send Delete_Data    To (oData(Self))
+        Set psRegistryKey   To sKey
+        Get Object_Id       To hoSelf
+        Get piEnumRoot      To iRoot
+        Get psEnumBranch    To sBranch
+
+        Set_Registry_Root To iRoot sBranch
+
+        REG_OPEN_KEY sKey To hKey
+        If hKey Ne 0 Begin
+            REG_ENUM_KEY_INFO hoSelf
+            REG_ENUM_KEY      hKey  0
+            REG_CLOSE_KEY     hKey
+        End
+
+        Send RestoreRegistryRoot
+    End_Procedure
+
+    Procedure DoEnumValue String sKey
+        Integer hoSelf hKey iRoot
+        String  sBranch
+        Send StoreRegistryRoot
+        Send Delete_Data    To (oKey(Self))
+        Send Delete_Data    To (oData(Self))
+        Set psRegistryKey   To sKey
+        Get Object_Id       To hoSelf
+        Get piEnumRoot      To iRoot
+        Get psEnumBranch    To sBranch
+
+        Set_Registry_Root To iRoot sBranch
+
+        REG_OPEN_KEY sKey To hKey
+        If hKey Ne 0 Begin
+            REG_ENUM_KEY_INFO hoSelf
+            REG_ENUM_VALUE    hKey
+            REG_CLOSE_KEY     hKey
+        End
+
+        Send RestoreRegistryRoot
+    End_Procedure
+
+End_Class

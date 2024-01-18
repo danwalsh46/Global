@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblBitmapContainer is a BitmapContainer
+    Set ClassPackage To "cGlblBitmapContainer.pkg"
+    Inherit
+End_Class

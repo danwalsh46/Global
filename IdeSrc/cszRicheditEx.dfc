@@ -1,0 +1,12 @@
+//AB/ CLASSDEF
+
+Class cszRicheditEx IS A edit
+    Set ClassPackage TO "cszRicheditEx.pkg"
+    Inherit
+End_Class
+
+Class cSzDbRichEditEx IS A dbedit
+    Set ClassPackage TO "cszRicheditEx.pkg"
+    Inherit
+End_Class
+

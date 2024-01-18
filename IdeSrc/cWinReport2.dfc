@@ -1,0 +1,19 @@
+//AB/ CLASSDEF
+Class cWinReport2 is a AbstractNonVisualContainer
+    Set ClassPackage   To "cWinReport2.pkg"
+    Set ClassCETV      To 60                  // use TreeView Image #60
+    Set ObjectNameMask To "oWinReport<count>"
+    Set ClassHelpName  To "cWinReport2"
+
+    Inherit
+    
+    Property No_Visible Pseudo Complex Location 5 5   // don't show location
+    Property No_Visible Pseudo Complex Size 30 34     // don't show size
+    Property No_Visible        String  Bitmap "cWinReport2.bmp"  // show this bitmap on the control
+
+    Property No_Execute Boolean pbMultiReports False // Determines if the report is part of a multiple report allowing multiple reports in a single run. Multi-Reports must be explicitly ended with the EndWinPrintReport message.
+    Property No_Execute mode Output_Device_mode Print_to_Undefined Print_to_Window Print_to_Printer Deferred_Print_to_Window Print_to_Undefined // Determines where report is output. Print_to_Window displays the report as it is created. Deferred_Print_to_Window displays report after it is finished. If the value is Print_to_Undefined it will use this container's output_device_mode.
+    Property No_Execute Boolean Refind_for_SubTotal_State True // if True, the last record and all its parents is refound before sub-totals procedures are called. If you are using file fields in your sub-totals, this should be true. Setting it false, can speed up reports
+    Property No_Execute Boolean No_Finding_State False // If set to True, the report does not find the records wihtin the report - records must be passed to the report using Get Handle_Report_Line. For advanced use.
+    Property No_Execute String  Report_Title "Report" // Sets the title of the report. The appears in the caption bar of the report viewer.
+End_Class

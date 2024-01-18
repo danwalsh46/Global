@@ -1,0 +1,269 @@
+// Author: Wil van Antwerpen
+//
+// Special thanks to Stuart Booth and Michael Kurz for helping me out with the correct API calls
+// to use.
+//
+// This package needs at least VDF7 to add the transparancy, otherwise a plain bitmapcontainer
+// is included by the compiler
+//
+// (c) 2001, Antwise Solutions / VDF-GUIdance
+//
+// 11-11-2002 WvA: Classname change from vcBitmapontainer to cvBitmapContainer, same for
+//                 vcBitmapImageList. Changed the default transparent color to clFuchsia
+//                 Changed code to comply with VDF8 standard
+//                 Added the doRefresh method, added the possibility to use bitmaps with
+//                 more as 256 colors, you need to set the piImageListType to do so.
+// 10-23-2001 WvA: The bitmap was not repainted in the case a new bitmap was set.
+//                 Added an object existincy check in the userpaint method to avoid errors if no
+//                 bitmapfile is selected.
+//
+//
+//
+
+#IF (FMAC_VERSION < 7)
+// Transparent bitmapcontainer is not supported, revert to a normal bitmapcontainer
+// Show a warning to the developer (hence no translation define)
+Error 300 "You are trying to use a Transparent bitmapcontainer in an unsupported version of VDF"
+//
+Class cvBitmapContainer Is A BitmapContainer
+End_Class // cvBitmapContainer
+#ELSE
+
+Define CS_TIMAGENOTFOUND1 For "Transparent image ["
+Define CS_TIMAGENOTFOUND2 For "] could not be found"
+
+
+Use RgbColor.pkg
+Use DfShape.pkg
+Use cImageList.pkg
+Use mBitmapStuff.pkg
+Use vWin32fh.pkg
+
+//BOOL ImageList_Draw(
+//
+//    HIMAGELIST himl,  // handle to the image list
+//    int i,  // index of the image to draw
+//    HDC hdcDst,   // handle to the destination device context
+//    int x,  // x-coordinate to draw at
+//    int y,  // y-coordinate to draw at
+//    UINT fStyle // drawing style
+//   );
+Define vILD_NORMAL          For |CI$0000
+Define vILD_TRANSPARENT     For |CI$0001
+
+//define LR_LOADFROMFILE     for |CI$0010
+Define LR_CREATEDIBSECTION For |CI$2000
+
+External_Function vWin32_ImageList_Draw "ImageList_Draw" comctl32.dll Handle hImageList Integer iIndex ;
+                      Handle hDC Integer iXPos Integer iYPos Integer iStyle Returns Integer
+
+
+Object oColor2RGB Is A RgbColorSystem
+End_Object // oColor2RGB
+
+//
+Register_Function psFileName     Returns String
+Register_Function piBitmapHeight Returns Integer
+Register_Function piBitmapWidth  Returns Integer
+
+// **WvA
+// These functions need to be defined in the case no workspace is used
+#IF (FMAC_VERSION < 8)
+Register_Function CurrentProgramPath Returns String
+Register_Function CurrentBitmapPath  Returns String
+#ELSE
+Register_Function psProgramPath Returns String
+Register_Function psBitmapPath  Returns String
+#ENDIF
+
+// This subclass should only be used from within the cvBitmapContainer class as it expects to
+// be a child object of an instance of the cvBitmapContainer class.
+Class cvBitmapImageList Is A cImageList
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    Set piMaxImages    To 1
+  End_Procedure // Construct_Object
+
+
+
+  Procedure onCreate
+    String  sFileName
+    Integer iIndex iColor
+    Move (Trim(psFileName(parent(Self)))) To sFileName
+    If (sFileName <> "") Begin
+      Delegate Get piTransparentColor To iColor
+
+      Get AddTransparentImage  sFileName  iColor  To iIndex
+      If (iIndex = -1) Error 300 (CS_TIMAGENOTFOUND1+sFileName+CS_TIMAGENOTFOUND2)
+    End
+  End_Procedure // onCreate
+
+
+  // The doCreate message is overrided in here because we also want to support
+  // more as just 256 colors. This has been tested from VDF7.3 upto VDF8.3
+  Procedure doCreate
+    Integer cx cy iGrowBy
+    Integer dwFlags iType
+
+    Delegate Get piBitmapHeight  To cy
+    Delegate Get piBitmapWidth   To cx
+    Delegate Get piImageListType To iType
+    //Move (piBitmapHeight(parent(Self))) To cy
+    //Move (piBitmapWidth(parent(Self)))  To cx
+
+    Set piImageHeight   To cy
+    Set piImageWidth    To cx
+    Get piMaxImages     To iGrowBy
+
+
+    Move (iType +ILC_MASK) To dwFlags
+    Set phImageList To (ImageList_Create(cx, cy, dwFlags, 0, iGrowBy))
+  End_Procedure // doCreate
+
+End_Class // cvBitmapImageList
+
+
+
+Class cvBitmapContainer Is A ShapeControl
+  Procedure Construct_Object
+    Property Integer phoImageList         Public 0
+    Property Integer pbAutoSize           Public True
+    Property Integer piBitmapHeight       Public 0
+    Property Integer piBitmapWidth        Public 0
+    Property String  psBitmap             Public ""
+    Property String  psFileName           Public "" // includes a full path
+    Property Integer piTransparentColor   Public clFuchsia // Default
+    Property Integer piImageListType      Public ILC_COLOR // Default 4 bits color (16 colors)
+    Forward Send Construct_Object
+  End_Procedure // Construct_Object
+
+
+  //
+  // A function to retrieve the full pathname of the bitmap.
+  // If a workspace is defined it will first look in the programpath and
+  // if the bitmap is not present it will look into the bitmappath after that.
+  // When no workspacename is defined the normal bitmapname is returned and
+  // the program assumes that the icon resides in the same folder as the program.
+  //
+  Function BitMapFullPathName String sBitmap Returns String
+    Local String  sBitmapFullPathName
+    Local String  sBitmapPath
+    Local Integer bFile_Exists
+
+    Move "" To sBitmapPath
+#IF (FMAC_VERSION < 8)
+    If (ghoWorkspace <> 0) Begin
+      Get CurrentProgramPath Of ghoWorkspace To sBitmapPath
+    End
+#ELSE
+    If (ghoApplication <> 0) Begin
+      Get psProgramPath Of (phoWorkspace(ghoApplication)) To sBitmapPath
+    End
+#ENDIF
+    If (sBitmapPath <> "") Begin
+
+      Move (sBitmapPath+sBitmap) To sBitmapFullPathName
+      Move (vFilePathExists(Self,sBitmapFullPathName)) To bFile_Exists
+
+      If bFile_Exists Function_Return sBitmapFullPathName
+      Else Begin
+#If (FMAC_VERSION < 8)
+        If (ghoWorkspace <> 0) Begin
+          Get CurrentBitmapPath Of ghoWorkspace To sBitmapPath
+        End
+#ELSE
+        If (ghoApplication <> 0) Begin
+          Get psBitmapPath Of (phoWorkspace(ghoApplication)) To sBitmapPath
+        End
+#ENDIF
+        Move (sBitmapPath+sBitmap) To sBitmapFullPathName
+        Move (vFilePathExists(Self,sBitmapFullPathName)) To bFile_Exists
+
+        If bFile_Exists Function_Return sBitmapFullPathName
+      End
+    End
+    // does not exist or no workspace available, search in DFPATH
+    Get_File_Path sBitmap To sBitmap
+    Function_Return sBitmap
+  End_Function // BitmapFullPathName
+
+
+  Procedure doRedrawBitmap
+    Local Handle hWnd
+    Local Integer iVoid
+    Get Window_Handle To hWnd
+    Move (InvalidateRect(hWnd,0,True)) To iVoid
+    Move (UpdateWindow (hWnd)) To iVoid
+  End_Procedure // doRedrawBitmap
+
+  Procedure Set Bitmap String sFileName
+    Integer iChannel iX iY hoSelf hoOldSelf hoImageList iSize
+    Set Dynamic_Update_State To False
+    Set psBitmap To sFileName
+    Get BitmapFullPathname sFileName To sFileName
+    Get APIBitmapSize sFileName To iSize
+    Move (Hi(iSize))   To iY
+    Move (Low(iSize))  To iX
+    Set psFileName     To sFileName
+    Set piBitmapHeight To iY
+    Set piBitmapWidth  To iX
+    Get phoImageList To hoImageList
+    If (hoImageList <> 0) Send Destroy_Object To hoImageList
+    Object oImageList Is A cvBitmapImageList
+      Move Self         To hoImageList
+    End_Object
+    Set phoImageList  To hoImageList
+    Set Dynamic_Update_State To True
+  End_Procedure // Set Bitmap
+
+
+  // This will redraw the bitmap by destroying the current imagelist and
+  // loading it again from the file or resource
+  Procedure doRefresh
+    String sFileName
+    Get psBitmap To sFileName
+    Set Bitmap To sFileName
+    Send doRedrawBitmap
+  End_Procedure // doRefresh
+
+  Function Bitmap Returns String
+    Function_Return (psBitmap(Self))
+  End_Function // Bitmap
+
+  // The page is executed before the UserPaint, so this can be used to set up
+  // an appropriate imagelist
+  Procedure Page Integer bState
+    Local Integer iBackColor iY iX hoImageList
+    Forward Send Page bState
+    If (bState) Begin
+
+      Get phoImageList To hoImageList
+      If (hoImageList <> 0) Begin
+        Delegate Get Color To iBackColor
+
+        Get ColorIdToRGB Of oColor2RGB iBackColor To iBackColor
+
+        Set piBackColor   Of hoImageList To iBackColor
+        Get piImageWidth  Of hoImageList To iX
+        Get piImageHeight Of hoImageList To iY
+
+        Set GuiSize To iY iX
+        Send Adjust_Logicals
+      End
+    End
+  End_Procedure // Page
+
+
+  Procedure UserPaint Handle hDC
+    Integer hoImages iVoid
+    Handle hImageList
+    Get phoImageList To hoImages
+    If (hoImages <> 0) Begin
+      Get phImageList Of hoImages To hImageList
+      If (hImageList <> 0) Begin
+        Move (vWin32_ImageList_Draw(hImageList,0,hDC,0,0,vILD_NORMAL )) To iVoid
+      End
+    End
+  End_Procedure
+End_Class // cvBitmapContainer
+#ENDIF

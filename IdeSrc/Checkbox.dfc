@@ -1,0 +1,11 @@
+//AB/ CLASSDEF
+Class CheckBox IS A AbstractControl CheckBox CheckBoxMixin DefineCheckBoxMixin
+    Set ObjectNameMask To "oCheckbox<count>"
+    Set ClassHelpName  To "CheckBox"
+    Set ClassCETV      To 1                     // use TreeView Image #1 (1-based offset)
+    Inherit
+    Property String Bitmap  // Bitmap Resource name or file name (options: /T=transparent /3D=3D Display)
+    Property Mode AlignmentMode taRightJustify taLeftJustify taRightJustify // Should text appear to the left or right of the checkbox?
+    Property Color Color clBtnFace
+    Property Always_Generate Complex Size 10 50
+End_Class

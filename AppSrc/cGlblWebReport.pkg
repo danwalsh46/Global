@@ -1,0 +1,24 @@
+//***************************************************************************
+//*
+//* Class:        cGlblWebReport
+//* Package Name: cGlblWebReport.pkg
+//*
+//***************************************************************************
+
+Class cGlblWebReport is a cWebReport
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+End_Class // cGlblWebReport

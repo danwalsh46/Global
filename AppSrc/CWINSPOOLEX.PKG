@@ -1,0 +1,194 @@
+// cWinSpoolEx.pkg
+//
+
+Use cWinSpoolEx.h
+
+Enum_List
+   Define Printer_Enum_ServerName For 1
+   Define Printer_Enum_PrinterName
+   Define Printer_Enum_ShareName
+   Define Printer_Enum_PortName
+   Define Printer_Enum_DriverName
+   Define Printer_Enum_Comment
+   Define Printer_Enum_Location
+   Define Printer_Enum_SepFile
+   Define Printer_Enum_PrintProcessor
+   Define Printer_Enum_Datatype
+   Define Printer_Enum_Parameters
+   Define Printer_Enum_SecurityDescriptor
+   Define Printer_Enum_Attributes
+   Define Printer_Enum_Priority
+   Define Printer_Enum_DefaultPriority
+   Define Printer_Enum_Status
+   Define Printer_Enum_cJobs
+   Define Printer_Enum_AveragePPM
+   Define Printer_Enum_bShared
+   Define Printer_Enum_bDefault
+End_Enum_List
+
+Class cWinPrinters Is an array
+
+    Function Ptr2StrEx Pointer lpsDataPointer Returns String
+        String sResult sCharacter
+        Integer iVoid
+        Pointer pCharacter
+        If (lpsDataPointer <> 0) Begin
+            ZeroString 1 To sCharacter
+            GetAddress Of sCharacter To pCharacter
+            Move (CopyMemory (pCharacter, lpsDataPointer, 1)) To iVoid
+            While (Ascii (sCharacter) <> 0)
+                Move (sResult + sCharacter) To sResult
+                Increment lpsDataPointer
+                Move (CopyMemory (pCharacter, lpsDataPointer, 1)) To iVoid
+            End
+        End
+        Function_Return sResult
+    End_Function 
+    
+
+    //****************************************************************************
+    // $Module type: PROCEDURE
+    // $Module name: DoEnumPrinters
+    // $Author     : VO
+    // Created     : 08/12/01 @ 4:44
+    //
+    // Description
+    //    This method enumerate the windows printers and stores the information
+    //    in a DataFlex object
+    //
+    //****************************************************************************
+    Procedure delete_data
+        Integer iPrinters iPrinter hoPrinter
+        Get Item_Count To iPrinters
+        If (iPrinters > 0) Begin
+            For iPrinter From 0 To (iPrinters-1)
+                Get Integer_Value Item iPrinter To hoPrinter
+                If (hoPrinter <> 0) Send Destroy Of hoPrinter
+            Loop
+        End
+        Forward Send delete_data
+    End_Procedure // delete_data 
+    
+    Procedure DoEnumPrinters
+        Integer iRetval iRet pcbNeeded pcReturned iPrinter iStartPos
+        Integer hoPrinters iPrinters hoPrinter iPrinterInfoArraySize
+        Integer hoDevMode
+        String sPrinterInfoArray sPrinterInfo sPrinterName sServerName sDefault
+        String sShareName sPortName sDriverName sComment sLocation
+        String sDevMode sSepFile sPrintProcessor sDatatype sParameters
+        String sPrinterStatus
+        Pointer pPrinterName pServerName pShareName pPortName pDriverName
+        Pointer pComment pLocation pDevMode pSepFile pPrintProcessor
+        Pointer pDatatype pParameters
+        Dword dwAttributes dwPriority dwDefaultPriority dwStartTime dwUntilTime
+        Dword dwStatus dwcJobs dwAveragePPM
+        DateTime dtNow
+        Integer iDefBuffer
+
+        Send Delete_Data
+                
+        Move (100 * PRINTER_INFO_2_SIZE) To iPrinterInfoArraySize
+        
+        ZeroString iPrinterInfoArraySize To sPrinterInfoArray
+        Move 0 To pcbNeeded
+        Move 0 To pcReturned
+        
+        If (Sysconf (Sysconf_Os_Major_Rev) >= 5) Begin
+            Move (EnumPrintersEf(PRINTER_ENUM_LOCAL + PRINTER_ENUM_CONNECTIONS, 0, 2, (AddressOf (sPrinterInfoArray)), iPrinterInfoArraySize, AddressOf (pcbNeeded), AddressOf (pcReturned))) To iRetval
+            Move MAX_PATH To iDefBuffer
+            ZeroString iDefBuffer To sDefault
+            Move (GetDefaultPrinterEf(AddressOf(sDefault), AddressOf(iDefBuffer))) To iRet
+        End
+        Else Begin
+            Move (EnumPrintersEf(PRINTER_ENUM_LOCAL, 0, 2, (AddressOf (sPrinterInfoArray)), iPrinterInfoArraySize, AddressOf (pcbNeeded), AddressOf (pcReturned))) To iRetval
+        End
+        
+        If (iRetval <> 0) Begin
+            For iPrinter From 1 To pcReturned
+                Get Create U_Array To hoPrinter
+                Set Array_Value Item iPrinter To hoPrinter
+                Move ((iPrinter - 1) * PRINTER_INFO_2_SIZE + 1) To iStartPos
+                Move (Mid (sPrinterInfoArray, PRINTER_INFO_2_SIZE, iStartPos)) To sPrinterInfo
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pServerName To pServerName
+                Get Ptr2StrEx pServerName To sServerName
+                Set Value Of hoPrinter Item Printer_Enum_ServerName To sServerName
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pPrinterName To pPrinterName
+                Get Ptr2StrEx pPrinterName To sPrinterName
+                Set Value Of hoPrinter Item Printer_Enum_PrinterName To sPrinterName
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pShareName To pShareName
+                Get Ptr2StrEx pShareName To sShareName
+                Set Value Of hoPrinter Item Printer_Enum_ShareName To sShareName
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pPortName To pPortName
+                Get Ptr2StrEx pPortName To sPortName
+                Set Value Of hoPrinter Item Printer_Enum_PortName To sPortName
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pDriverName To pDriverName
+                Get Ptr2StrEx pDriverName To sDriverName
+                Set Value Of hoPrinter Item Printer_Enum_DriverName To sDriverName
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pComment To pComment
+                Get Ptr2StrEx pComment To sComment
+                Set Value Of hoPrinter Item Printer_Enum_Comment To sComment
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pLocation To pLocation
+                Get Ptr2StrEx pLocation To sLocation
+                Set Value Of hoPrinter Item Printer_Enum_Location To sLocation
+                
+//                GetBuff From sPrinterInfo At Printer_Info_2.pDevMode To pDevMode
+//                ZeroType PrinterInfo_DEVMODE To sDevMode
+//                Move (MemCopy (AddressOf (sDevMode), pDevMode, PrinterInfo_DEVMODE_SIZE)) To iRetval
+//                Get Create Of hoPrinter U_cDevMode To hoDevMode
+//                If (hoDevMode <> 0) Begin
+//                   Send DoReadDevMode Of hoDevMode sDevMode
+//                   Set Array_Value Of hoPrinter Item Printer_Enum_DevMode To hoDevMode
+//                End
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pSepFile To pSepFile
+                Get Ptr2StrEx pSepFile To sSepFile
+                Set Value Of hoPrinter Item Printer_Enum_SepFile To sSepFile
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pPrintProcessor To pPrintProcessor
+                Get Ptr2StrEx pPrintProcessor To sPrintProcessor
+                Set Value Of hoPrinter Item Printer_Enum_PrintProcessor To sPrintProcessor
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pDatatype To pDatatype
+                Get Ptr2StrEx pDatatype To sDatatype
+                Set Value Of hoPrinter Item Printer_Enum_Datatype To sDatatype
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.pParameters To pParameters
+                Get Ptr2StrEx pParameters To sParameters
+                Set Value Of hoPrinter Item Printer_Enum_Parameters To sParameters
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.Attributes To dwAttributes
+                Set Value Of hoPrinter Item Printer_Enum_Attributes To dwAttributes
+                If (Sysconf (Sysconf_Os_Major_Rev) >= 5) Begin
+                    If (sDefault=sPrinterName)                       Set Value Of hoPrinter Item Printer_Enum_bDefault To True 
+                End
+                Else Begin
+                    If (dwAttributes Iand PRINTER_ATTRIBUTE_DEFAULT) Set Value Of hoPrinter Item Printer_Enum_bDefault To True 
+                End
+                If (dwAttributes Iand PRINTER_ATTRIBUTE_SHARED)      Set Value Of hoPrinter Item Printer_Enum_bShared  To True 
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.Priority To dwPriority
+                Set Value Of hoPrinter Item Printer_Enum_Priority To dwPriority
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.DefaultPriority To dwDefaultPriority
+                Set Value Of hoPrinter Item Printer_Enum_DefaultPriority To dwDefaultPriority
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.Status To dwStatus
+                Set Value Of hoPrinter Item Printer_Enum_Status To dwStatus
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.cJobs To dwcJobs
+                Set Value Of hoPrinter Item Printer_Enum_cJobs To dwcJobs
+                
+                GetBuff From sPrinterInfo At Printer_Info_2.AveragePPM To dwAveragePPM
+                Set Value Of hoPrinter Item Printer_Enum_AveragePPM To dwAveragePPM
+            Loop
+        End
+    End_Procedure // DoEnumPrinters
+End_Class
+

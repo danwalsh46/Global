@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblEdit is a Edit
+    Set ClassPackage To "cGlblEdit.pkg"
+    Inherit
+End_Class

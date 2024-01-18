@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbBitmap is a dbBitmap
+    Set ClassPackage To "cGlblDbBitmap.pkg"
+    Inherit
+End_Class

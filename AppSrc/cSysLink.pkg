@@ -1,0 +1,66 @@
+
+Use cSysLink.h
+
+Class cSysLink Is a cBaseWinControls
+    //
+    Procedure Construct_object
+        Forward Send Construct_Object
+        // Styles
+        Property Integer pbFocused  Public False
+        Property Integer pbEnabled  Public True
+        Property Integer pbVisited  Public False
+        //
+        Property String  psLabel    Public ""
+        Property String  psLink     Public ""
+        //
+        Send InitCommonControlsEx ICC_LINK_CLASS 
+        Set External_Class_Name "cSysLink" To WC_LINK
+        //
+        Set Size        To 20 150 
+    End_Procedure
+    //
+    // Page and adjust window styles
+    Procedure Page Integer iState
+        Handle hWnd iRet
+        If (iState =1) Begin
+            Set Window_Style To LIS_FOCUSED   (pbFocused(Self))
+            Set Window_Style To LIS_ENABLED   (pbEnabled(Self))
+            Set Window_Style To LIS_VISITED   (pbVisited(Self))
+        End
+        Forward Send Page iState
+        If (iState =1) Begin
+            Get Window_Handle To hWnd
+            If (hWnd) Begin
+            End
+        End
+    End_Procedure
+    //
+    Procedure Set Label String sLabel
+        Set psLabel To sLabel
+    End_Procedure
+    Function Label Returns String 
+        Function_Return (psLabel(Self))
+    End_Function
+    //
+    Procedure Set Link String sLink
+        Set psLink To sLink
+    End_Procedure
+    Function Link Returns String 
+        Function_Return (psLink(Self))
+    End_Function
+    //
+    // Capture notify messages we interested
+//    Procedure Notify Integer wParam Integer lParam
+//        Integer iVoid     iCode
+//        String  sNmHdr 
+//        Pointer lpsNmHdr 
+//        ZeroType tNmHdr To sNmHdr
+//        GetAddress Of sNmHdr To lpsNmHdr
+//        Move (CopyMemory(lpsNmHdr, lParam, tNmHdr_size)) To iVoid
+//        GetBuff From sNmHdr At tNmHdr.code  To iCode
+//        If (iCode = MCN_SELCHANGE)          Send MCNM_SelChange     lParam
+//        Else If (iCode = MCN_GETDAYSTATE)   Send MCNM_GetDayState   lParam
+//        Else If (iCode = MCN_SELECT)        Send MCNM_Select        lParam
+//    End_Procedure
+    //
+End_Class

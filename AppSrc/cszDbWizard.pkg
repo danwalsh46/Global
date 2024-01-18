@@ -1,0 +1,517 @@
+
+Use Windows.pkg
+Use dfline.pkg
+
+External_Function AdjustWindowRect "AdjustWindowRect" USER32.DLL Pointer lpRect Integer dwStyle Integer bmenu Returns Integer
+
+Class cSzDbWizardPage IS A DbContainer3d
+    Procedure Construct_Object
+        Local Integer hoSelf
+
+        Forward Send Construct_Object
+
+        // short description
+        Property String ShortTitle Public ""
+        Property String psBitmap Public ""
+
+        Set PopUp_State TO TRUE
+        Set Caption_Bar TO FALSE
+        Set Border_Style TO Border_None
+        Set Ring_State TO False
+
+        // long description
+        Object oTitle IS A TextBox
+
+            // bold text
+            Set FontWeight To 800
+
+            Set GUILocation To 2 0
+            Set GUISize             To 20 500
+        End_Object
+
+        Move Self TO hoSelf
+        Send AddWizardPage hoSelf
+    End_Procedure
+
+    Procedure Request_Cancel
+        Delegate Send Request_Cancel
+    End_Procedure
+
+    Procedure Set Label String sLabel
+        Set ShortTitle TO sLabel
+    End_Procedure
+
+    // public access method to set long description/title
+    Procedure Set Title String strtitle
+        Set Value OF (oTitle(Current_Object)) TO strTitle
+    End_Procedure
+
+    Function Title Returns String
+        Function_Return (Value(oTitle(Self),0))
+    End_Function
+
+    Procedure OnEnter Integer fromObj
+        Local STring sBitmap
+        Get psBitmap TO sBitmap
+
+        if sBitmap NE "" Delegate Set Wizard_Bitmap TO sBitmap
+    End_Procedure
+
+    Procedure OnLeave Integer toObj
+    End_Procedure
+
+    Procedure OnNext
+    End_Procedure
+
+    Procedure OnBack
+    End_Procedure
+
+    Procedure Set GUISize Integer gsy Integer gsx
+        Forward Set GUISize TO gsy gsx
+
+        Send DoResizeWizard gsy gsx
+    End_Procedure
+End_Class
+
+Class cSzWizardNextButton IS A Button
+    Procedure OnClick
+        Local Integer iCurPage
+
+        Get Current_Page TO iCurPage
+        if iCurPage GE 0 Delegate Get PageObjectID iCurPage TO iCurPage
+
+        if iCurPage GE 0 Send RequestDoNext TO iCurPage
+    End_Procedure
+End_Class
+
+Class cSzWizardBackButton IS A Button
+    Procedure OnClick
+        Local Integer iCurPage
+
+        Get Current_Page TO iCurPage
+        if iCurPage GE 0 Delegate Get PageObjectID iCurPage TO iCurPage
+
+        if iCurPage GE 0 Send RequestDoBack TO iCurPage
+    End_Procedure
+End_Class
+
+Class cSzWizardCloseButton IS A Button
+    Procedure OnClick
+        Local Integer iCurPage
+
+        Get Current_Page TO iCurPage
+        if iCurPage GE 0 Delegate Get PageObjectID iCurPage TO iCurPage
+
+        if iCurPage GE 0 Send RequestDoClose TO iCurPage
+    End_Procedure
+End_Class
+
+Class cWizardBitmapBox IS A Container3D
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Property Integer pbBitmapSet Public FALSE
+    End_Procedure
+
+    Procedure DoSetBitmap String btmname
+        Local STring btmpath
+
+        Get_File_Path btmname TO btmpath
+        if btmpath NE "" Begin
+            Set Bitmap TO btmname
+
+            Set pbBitmapSet TO TRUE
+        End
+    End_Procedure
+
+    Function GetBitmapWidth Returns Integer
+        Local Integer iRtv
+
+        if (pbBitmapSet(Self)) Begin
+            Get Bitmap_Width TO iRtv
+        End
+        else move 0 to iRtv
+
+        Function_Return iRtv
+    End_Function
+
+    Function GetBitmapHeight Returns Integer
+        Local Integer iRtv
+
+        if (pbBitmapSet(Self)) Begin
+            Get Bitmap_Height TO iRtv
+        End
+        else move 0 to iRtv
+
+        Function_Return iRtv
+    End_Function
+
+End_Class
+
+Class cSzDbWizardPanel IS A DbModalPanel
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Property Integer phoPageContainer       Public 0
+        Property String  psOriginalLabel        Public ""
+        Property Integer pbFinish               Public FALSE
+        Property Integer pbAutoClearWizardState Public TRUE
+        // set up caption bar
+        Set Extended_Window_Style TO WS_EX_TOOLWINDOW FALSE
+        // Set Locate_Mode TO NO_LOCATE
+        Set Border_Style TO BORDER_DIALOG
+
+        Set SysMenu_Icon  To False
+        Set Minimize_Icon To False
+        Set Maximize_Icon To False
+
+        // Set Size in pixels
+        Set GUISize To 400 623
+
+        // current page number
+        Property Integer Current_Page Public -1
+        Property Integer phoInvokingObject Public 0
+        Property String psBitmap Public ""
+
+        // Title property
+        Property String Title Public ""
+
+        // storage array for pages
+        Object PageArray IS An Array
+        End_Object
+
+        On_Key KCancel Send DoRequestCancel
+    End_Procedure
+
+    Procedure RequestDoBack
+        Send DoBack
+    End_Procedure
+
+    Procedure RequestDoNext
+        Send DoNext
+    End_Procedure
+
+    Procedure RequestDoClose
+        Send DoClose
+    End_Procedure
+
+    Procedure DoRequestCancel
+        Send Close_Panel
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+        Object oBackButton is a cSzWizardBackButton
+            Set Label to "< B&ack"
+            Set Size             TO 14 54
+        End_Object    // oBackButton
+
+        // bitmap container object
+        Object oBitmapBox IS A cWizardBitmapBox
+            Set GUILocation  To  14  14
+            Set GUISize      To 278 155
+            Set Border_Style To Border_StaticEdge
+            Set Color TO clTeal
+            Set Focus_Mode TO NonFocusable
+            Set Client_Area_State TO FALSE
+        End_Object
+
+        if (psBitmap(Self)) NE "" Set Wizard_Bitmap TO (psBitmap(Self))
+
+        Object LineControl1 is a LineControl
+            Set GUILocation TO 310 12
+            Set GUISize             TO 2 591
+        End_Object    // LineControl1
+
+        Object oNextButton is a cSzWizardNextButton
+            Set Label to "&Next >"
+            Set Size             TO 14 54
+        End_Object    // oNextButton
+
+        Object oCloseButton is a cSzWizardCloseButton
+            Set Label to "Close"
+            Set Size             TO 14 54
+        End_Object    // oCancel_bn
+
+    End_Procedure
+
+    Procedure PopUp
+        Set phoInvokingObject TO (Focus(Desktop))
+
+        // clear main dd as we are creating new records
+        if (pbAutoClearWizardState(Self)) if (Main_DD(Self)) Send Clear TO (Main_DD(Self))
+
+        Forward Send PopUp
+    End_Procedure
+
+    Procedure Activating
+        Forward Send Activating
+        Set pbFinish TO FALSE
+    End_Procedure
+
+    Procedure Set Label String sLabel
+        Set psOriginalLabel TO sLabel
+    End_Procedure
+
+    Function PageObjectID Integer page# returns Integer
+        Local Integer ObjectID
+        Get Value OF (PageArray(Current_Object)) Item page# to ObjectID
+
+        Function_Return ObjectID
+    End_Function
+
+    Procedure Set PageObjectID Integer page# Integer ObjectID
+        Set Value OF (PageArray(Current_Object)) Item page# To ObjectID
+    End_Procedure
+
+    Function Page_Count Returns Integer
+        Local Integer iPageCount
+
+        Get Item_Count Of (PageArray(Current_Object)) To iPageCount
+        Function_Return iPageCount
+    End_Function
+
+    Procedure AddWizardPage Integer objId
+        Local Integer nxItem
+
+        Get Item_Count OF (PageArray(Current_Object)) To nxItem
+
+        Set Value OF (PageArray(Current_Object)) Item nxItem To objid
+    End_Procedure
+
+//    Procedure Page Integer state
+//        Forward Send Page state
+
+        //if state EQ 1 Send ShowPage 0
+//    End_Procedure
+
+    Procedure ShowPage Integer page#
+        Local Integer ToObj FromObj curPage
+
+        Get Current_Page TO curPage
+
+        Get PageObjectID page#   TO ToObj
+        Get PageObjectID curPage TO FromObj
+
+        // make sure page exists !
+        if ToObj NE 0 begin
+
+            // only if valid page
+            if curpage NE -1 Begin
+                send OnLeave To FromObj ToObj
+
+                send deactivate to FromObj
+
+                set Current_Page To -1
+            End
+
+            // set location and size just to be sure
+            Set GUILocation OF ToObj To 0 0 // 14 180
+            Set GUISize     OF ToObj To (HI(GUISize(ToObj))) (Low(GUISize(ToObj)))
+
+            If page# EQ 0 Send EnableBack FALSE
+            Else Send EnableBack TRUE
+
+            Send EnableNext TRUE
+
+            If page# EQ (Page_Count(Current_Object)-1) begin
+                Set Value OF (oNextButton(Current_Object)) to '&Finish'
+            end
+            else begin
+                Set Value OF (oNextButton(Current_Object)) to '&Next >'
+            End
+
+            //if (Window_Handle(phoPageContainer(Self))) EQ 0 Send Activate TO (Active_State(phoPageContainer(Self)))
+
+            Send OnEnter TO ToObj FromObj
+            Send Popup   TO ToObj
+
+            Set Current_Page To page#
+
+            if (ShortTitle(ToObj)) Begin
+                Set Value TO (psOriginalLabel(Current_Object) + " - " + ;
+                          ShortTitle(ToObj))
+            End
+            Else Set Value TO (psOriginalLabel(Current_Object))
+        End
+    End_Procedure
+
+    Procedure DoFinish
+        Send Request_Save_No_Clear
+        [Not err] Begin
+            Set pbFinish TO TRUE
+            Send Close_Panel
+        End
+    End_Procedure
+
+    Procedure DoBack
+        Local Integer CurPage pageID
+
+        Get Current_Page To CurPage
+
+        // make sure we are not on first page or uninitialized
+        If CurPage LE 0 Procedure_Return
+
+        Get PageObjectID CurPage TO pageId
+        if PageID Send OnBack TO PageID
+
+        // switch to previous page
+        Send ShowPage (CurPage - 1)
+    End_Procedure
+
+    Procedure DoNext
+        Local Integer CurPage pageid
+
+        Get Current_Page To CurPage
+
+        // make sure we do have pages
+        If CurPage EQ -1 Procedure_Return
+
+        Get PageObjectID CurPage TO pageId
+        if PageID Send OnNext TO PageID
+
+        // are we on last Page ?
+        If CurPage EQ (Page_Count(Current_Object)-1) Begin
+            Send DoFinish
+            Procedure_Return
+        End
+
+        // switch to next page
+        Send ShowPage (CurPage + 1)
+
+        Set Default_State OF (oNextButton(Self)) TO TRUE
+    End_Procedure
+
+    Procedure DoClose
+        Send Close_Panel
+    End_Procedure
+
+    Procedure Request_Cancel
+        local integer foc#
+        Local Integer FromObj curPage
+
+        if (verify_exit(current_object) = 0) begin
+            Get Current_Page TO curPage
+
+            Get PageObjectID curPage TO FromObj
+
+            if FromObj Send Deactivate TO FromObj
+
+            send deactivate AREA_FLAG
+            get focus of desktop to foc#
+            if (foc# AND skip_State(foc#)) send switch to foc#
+        end
+    end_procedure
+
+    Procedure EnableNext Integer state
+        Set Shadow_State OF (oNextButton(Current_Object)) To (1-state)
+    End_Procedure
+
+    Procedure EnableBack Integer state
+        Set Shadow_State OF (oBackButton(Current_Object)) To (1-state)
+    End_Procedure
+
+    Procedure Set Wizard_Bitmap String bitmapName
+        Send DoSetBitmap TO (oBitmapBox(Current_Object)) bitmapName
+    End_Procedure
+
+    Procedure OnResize1
+        Forward Send OnResize
+
+        if (phoPageContainer(Self)) Begin
+            Set GUILocation OF (phoPageContainer(Self)) TO 10 10
+            Set GUISize OF (phoPageContainer(Self)) TO 100 100
+        End
+    End_Procedure
+
+    Procedure DoResizeWizard Integer iPageY Integer iPageX
+        Local Integer iColStart iHeight iWidth ileft iright itop ibottom iBMPY iBMPX
+        Local String sBuffer
+        Local Pointer pBuffer
+
+        if BuildingObjectID EQ 0 Begin
+            if (oBitmapBox(Self)) Begin
+//                if iPageY LE 104 Set Wizard_Bitmap TO "Wiz104.bmp"
+//                Else if iPageY LE 173 Set Wizard_Bitmap TO "Wiz173.bmp"
+//                else Set Wizard_Bitmap TO "Wiz331.bmp"
+                // OBitmapBox
+
+                Move (GetBitmapHeight(oBitmapBox(Self)))    TO iBMPY
+                Move (GetBitmapWidth(oBitmapBox(Self)))     TO iBMPX
+
+                If iBMPY GT iPageY Move iBMPY TO iPageY
+
+                if iBMPY LT 0 Move 0 TO iBMPY
+                if iBMPX LT 0 Move 0 TO iBMPX
+
+                Set GUILocation OF (oBitmapBox(Self)) TO 8 8
+                Set GUISize     OF (oBitmapBox(Self)) TO iBMPY iBMPX
+
+                // Page Container
+                if (phoPageContainer(Self)) Begin
+                    Set GUILocation OF (phoPageContainer(Self)) TO 8 (8+iBMPX+8)
+                    Set GUISize OF (phoPageContainer(Self)) TO iPageY iPageX
+                End
+
+                // LineControl
+                Set GUILocation OF (LineControl1(Self)) TO (8+iPageY+8) 8
+                Set GUISize     OF (LineControl1(Self)) TO 2 (iBMPX+8+iPageX)
+
+                // Buttons
+                Move (8+iBMPX+8+iPageX) TO iColStart
+                Move (iColStart - Low(GUISize(oCloseButton(Self)))) TO iColStart
+                Set GUILocation OF (oCloseButton(Self)) TO (8+iPageY+8+2+8) iColStart
+                Move (iColStart - 16) TO iColStart
+                Move (iColStart - Low(GUISize(oNextButton(Self)))) TO iColStart
+                Set GUILocation OF (oNextButton(Self)) TO (8+iPageY+8+2+8) iColStart
+                Move (iColStart - Low(GUISize(oBackButton(Self)))) TO iColStart
+                Set GUILocation OF (oBackButton(Self)) TO (8+iPageY+8+2+8) iColStart
+
+                // Panel
+                Zerotype tRect TO sBuffer
+                GetAddress OF sBuffer TO pBuffer
+                Put 0 TO sBuffer AT tRect.left
+                Put 0 TO sBuffer AT tRect.top
+                Put (8+iBMPX+8+iPageX+8) TO sBuffer AT tRect.right
+                Put (8+iPageY+8+2+8+Hi(GUISize(oCloseButton(Self)))+8) TO sBuffer AT tRect.bottom
+
+                Move (AdjustWindowRect(pbuffer, WS_POPUP IOR WS_CAPTION IOR WS_BORDER, FALSE)) TO Windowindex
+
+                GetBuff From sBuffer AT tRect.top TO iTop
+                GetBuff From sBuffer AT tRect.left TO iLeft
+                GetBuff From sBuffer AT tRect.right TO iRight
+                GetBuff From sBuffer AT tRect.bottom TO iBottom
+
+                Move (iBottom - iTop) TO iHeight
+                Move (iRight - iLeft) TO iWidth
+
+                Set GUISize TO iHeight iWidth
+            End
+        End
+    End_Procedure
+End_Class    // cWizardPanel
+
+Class cSzDbWizardPageContainer Is A dbContainer3d
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set Border_Style TO Border_None
+
+        Set Ring_State TO False
+        Set phoPageContainer TO Self
+    End_Procedure
+
+    Procedure Set Rotate_Mode Integer rMode
+    End_Procedure
+
+    Procedure Page Integer iState
+        Local Integer hWnd
+
+        get Window_Handle TO hWnd
+
+        Forward Send Page iState
+
+        if ((hWnd EQ 0) And Window_Handle(Self)) Send ShowPage 0
+    End_Procedure
+End_Class

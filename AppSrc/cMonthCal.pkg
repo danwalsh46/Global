@@ -1,0 +1,477 @@
+// ******************************************************************************* //
+// ******************************************************************************* //
+// ***********************                                 *********************** //
+// ***********************          SysMonthCal32          *********************** //
+// ***********************                                 *********************** //
+// ******************************************************************************* //
+// ******************************************************************************* //
+//
+// Purposes.. This Windows control allows to the user select date or time using
+//            simple built into Windows calendar.
+//
+// Author.... Sergey V. Natarov (senatc@postman.ru)
+// Version... 0.0.1
+// Date...... 05/05-2003
+// Support... Not available
+//
+// Revision History:
+//    05/05-2003 v0.0.1 -- Basic functionality implemented
+//
+
+Use cWinControls.pkg // External Windows controls base class
+Use cMonthCal.h
+
+Class cMonthCal Is a cBaseWinControls
+    //
+    Procedure Construct_object
+        Date dToday
+        Forward Send Construct_Object
+        Sysdate4 dToday
+        // Calendar Styles
+        Property Integer  pbDayState            Public False //True // False
+        Property Integer  pbMultiSelect         Public False
+        Property Integer  pbWeekNumbers         Public True //False
+        Property Integer  pbNoTodayCircle       Public False
+        Property Integer  pbnoToday             Public False
+        Property Integer  pbAutoSize            Public True //False
+        //
+        // Properties
+        Property Integer  piMaxSelCount         Public 7
+        Property Date     pdSelFromDate         Public dToday
+        Property Date     pdSelToDate           Public dToday
+        // Colors
+        Property Integer  piBackGroundColor     Public WC_CLR_DEFAULT
+        Property Integer  piTextColor           Public WC_CLR_DEFAULT
+        Property Integer  piTitleBkColor        Public WC_CLR_DEFAULT
+        Property Integer  piTitleTextColor      Public WC_CLR_DEFAULT
+        Property Integer  piMonthBkColor        Public WC_CLR_DEFAULT
+        Property Integer  piTrailingTextColor   Public WC_CLR_DEFAULT
+        // Ranges
+        Property Date     pdRangeMax            Public ""
+        Property Date     pdRangeMin            Public ""
+        // Selection range
+        Property Date     pdSelStart            Public ""
+        Property Date     pdSelEnd              Public ""
+        // Delta to scroll
+        Property Integer  piMonthDelta          Public 0
+        // Day State
+        Property Integer  piDateState           Public 0
+        // Month count
+        Property Integer  piMonthCount          Public 1
+        //
+        Property Integer  piFirstDayOfWeek      Public MCD_MONDAY // MCD_SUNDAY //MCD_MONDAY
+        //
+        Send InitCommonControlsEx ICC_DATE_CLASSES
+        Set External_Class_Name "cMonthCal" To MONTHCAL_CLASS
+        Set Value       To ""
+        Set Size        To 95 126 // Week  95 129
+        Set FontWeight  To 400
+    End_Procedure
+    //
+    // Page and adjust window styles
+    Procedure Page Integer iState
+        Handle hWnd iRet iMonths
+        String sRect
+        Pointer pRect
+        Integer iY iX
+        If (iState =1) Begin
+            Set Window_Style To MCS_DAYSTATE        (pbDayState(Self))
+            Set Window_Style To MCS_MULTISELECT     (pbMultiSelect(Self))
+            Set Window_Style To MCS_WEEKNUMBERS     (pbWeekNumbers(Self))
+            Set Window_Style To MCS_NOTODAYCIRCLE   (pbNoTodayCircle(Self))
+            Set Window_Style To MCS_NOTODAY         (pbNoToday(Self))
+        End
+        Forward Send Page iState
+        If (iState =1) Begin
+            Get Window_Handle To hWnd
+            If (hWnd) Begin
+                // First Day of Week
+                Move (SendMessage(hWnd, MCM_SETFIRSTDAYOFWEEK, 0, piFirstDayOfWeek(Self))) To iRet
+                // Max Selection Count
+                If (pbMultiSelect(Self)) Move (SendMessage(hWnd, MCM_SETMAXSELCOUNT, piMaxSelCount(Self), 0)) To iRet
+                // Color Schemas
+                If (piBackGroundColor(Self)<>WC_CLR_DEFAULT)    Set Color MCSC_BACKGROUND   To (piBackGroundColor(Self))
+                If (piTextColor(Self)<>WC_CLR_DEFAULT)          Set Color MCSC_TEXT         To (piTextColor(Self))
+                If (piTitleBkColor(Self)<>WC_CLR_DEFAULT)       Set Color MCSC_TITLEBK      To (piTitleBkColor(Self))
+                If (piTitleTextColor(Self)<>WC_CLR_DEFAULT)     Set Color MCSC_TITLETEXT    To (piTitleTextColor(Self))
+                If (piMonthBkColor(Self)<>WC_CLR_DEFAULT)       Set Color MCSC_MONTHBK      To (piMonthBkColor(Self))
+                If (piTrailingTextColor(Self)<>WC_CLR_DEFAULT)  Set Color MCSC_TRAILINGTEXT To (piTrailingTextColor(Self))
+                // Range - OR -
+                If (pdRangeMax(Self)<>"") Set Range GDTR_MAX To (pdRangeMin(Self)) (pdRangeMax(Self))
+                If (pdRangeMin(Self)<>"") Set Range GDTR_MIN To (pdRangeMin(Self)) (pdRangeMax(Self))
+                // Scroll
+                If (piMonthDelta(Self))   Set Month_Delta To (piMonthDelta(Self))
+                // Size
+                If  (pbAutoSize(Self)) Begin
+        			ZeroType Rect to sRect
+        			GetAddress of sRect to pRect
+        			Move (SendMessage(Window_Handle(Self), MCM_GETMINREQRECT, 0, pRect)) To iRet
+        			GetBuff From sRect at Rect.right to iX
+        			GetBuff From sRect at Rect.bottom to iY
+        			Get piMonthCount To iMonths
+        			If (iMonths>3) Move 3 to iMonths
+        			If (iMonths>1) Set GUISize To iY (iX*iMonths+(4*iMonths))
+        			Else Set GUISize To iY iX
+        			Send Adjust_Logicals
+                End
+            End
+        End
+    End_Procedure
+    //
+    // Day State
+    Procedure Set Day_State Integer iDay Integer iState
+    End_Procedure
+    Function Day_State Integer iDay Returns Integer
+    End_Function
+    // Sets the selection for a month calendar control to a given date range.
+    Function MC_Date_Value Integer iDay Integer iMonth Integer iYear Returns Date
+        Integer iFormat iSep
+        String sDate sDay sMonth sYear sSep
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        Move iDay              To sDay
+        Move iMonth            To sMonth
+        Move iYear             To sYear
+        If (Length(sDay)=1)    Move ('0'+sDay)   To sDay
+        If (Length(sMonth)=1)  Move ('0'+sMonth) To sMonth
+        If (Length(sYear)=1)   Move ('0'+sYear)  To sYear
+        If (iFormat=DF_DATE_EUROPEAN) Move (sDay+sSep+sMonth+sSep+sYear) To sDate // DMY
+        If (iFormat=DF_DATE_USA)      Move (sMonth+sSep+sDay+sSep+sYear) To sDate // MDY
+        If (iFormat=DF_DATE_MILITARY) Move (sYear+sSep+sMonth+sSep+sDay) To sDate // YMD
+        Move (sDay+sSep+sMonth+sSep+sYear) To sDate
+        Function_Return (Date(sDate))
+    End_Function
+    Procedure Set SelRange Date dFrom Date dTo
+        Handle hWnd iRet
+        If ((Not(pbMultiSelect(Self)))Or(dFrom="")Or(dTo="")) Procedure_Return
+        Get Window_Handle To hWnd
+        If (hWnd) Begin
+            Pointer lpSysTime
+            String  sSysTime
+            Integer iYear iMonth iDay
+            ZeroType MCRANGE To sSysTime
+            Get DT_DAY    (String(dFrom)) To iDay   // Min
+            Get DT_MONTH  (String(dFrom)) To iMonth
+            Get DT_YEAR   (String(dFrom)) To iYear
+            Put iYear       To sSysTime At MCRANGE.From_wYear
+            Put iMonth      To sSysTime At MCRANGE.From_wMonth
+            Put 0           To sSysTime At MCRANGE.From_wDayOfWeek
+            Put iDay        To sSysTime At MCRANGE.From_wDay
+            Put 0           To sSysTime At MCRANGE.From_wHour
+            Put 0           To sSysTime At MCRANGE.From_wMinute
+            Put 0           To sSysTime At MCRANGE.From_wSecond
+            Put 0           To sSysTime At MCRANGE.From_wMilliseconds
+            Get DT_DAY    (String(dTo)) To iDay   // Max
+            Get DT_MONTH  (String(dTo)) To iMonth
+            Get DT_YEAR   (String(dTo)) To iYear
+            Put iYear       To sSysTime At MCRANGE.To_wYear
+            Put iMonth      To sSysTime At MCRANGE.To_wMonth
+            Put 0           To sSysTime At MCRANGE.To_wDayOfWeek
+            Put iDay        To sSysTime At MCRANGE.To_wDay
+            Put 0           To sSysTime At MCRANGE.To_wHour
+            Put 0           To sSysTime At MCRANGE.To_wMinute
+            Put 0           To sSysTime At MCRANGE.To_wSecond
+            Put 0           To sSysTime At MCRANGE.To_wMilliseconds
+            GetAddress Of sSysTime To lpSysTime
+            Move (SendMessage(hWnd, MCM_SETSELRANGE, 0, lpSysTime)) To iRet
+        End
+    End_Procedure
+    Function SelRange Returns Integer
+        Pointer lpSysTime
+        String  sSysTime
+        Date    dDate
+        Integer iYear iMonth iDay iRet
+        Handle hWnd
+        Get Window_Handle To hWnd
+        If (hWnd) Begin
+            ZeroType MCRANGE To sSysTime
+            GetAddress Of sSysTime To lpSysTime
+            Move (SendMessage(hWnd, MCM_GETSELRANGE, 0, lpSysTime)) To iRet
+            GetBuff From sSysTime At MCRANGE.From_wYear     To iYear
+            GetBuff From sSysTime At MCRANGE.From_wMonth    To iMonth
+            GetBuff From sSysTime At MCRANGE.From_wDay      To iDay
+            Get MC_Date_Value iDay iMonth iYear To dDate
+            Set pdSelStart To dDate
+            GetBuff From sSysTime At MCRANGE.To_wYear       To iYear
+            GetBuff From sSysTime At MCRANGE.To_wMonth      To iMonth
+            GetBuff From sSysTime At MCRANGE.To_wDay        To iDay
+            Get MC_Date_Value iDay iMonth iYear To dDate
+            Set pdSelEnd To dDate
+        End
+        Function_Return iRet
+    End_Function
+    // Sets the minimum and maximum allowable dates for a month calendar control.
+    Procedure Set Range Integer iMode Date dFrom Date dTo
+        If ((iMode=0)Or((dFrom="")And(dTo=""))) Procedure_Return
+        Handle hWnd iRet
+        Set pdRangeMin To dFrom
+        Set pdRangeMax To dTo
+        Get Window_Handle To hWnd
+        If (hWnd) Begin
+            Pointer lpSysTime
+            String  sSysTime
+            Integer iYear iMonth iDay
+            ZeroType MCRANGE To sSysTime
+            If (dFrom<>"") Begin
+                Get DT_DAY    (String(dFrom)) To iDay   // Min
+                Get DT_MONTH  (String(dFrom)) To iMonth
+                Get DT_YEAR   (String(dFrom)) To iYear
+                Put iYear       To sSysTime At MCRANGE.From_wYear
+                Put iMonth      To sSysTime At MCRANGE.From_wMonth
+                Put 0           To sSysTime At MCRANGE.From_wDayOfWeek
+                Put iDay        To sSysTime At MCRANGE.From_wDay
+                Put 0           To sSysTime At MCRANGE.From_wHour
+                Put 0           To sSysTime At MCRANGE.From_wMinute
+                Put 0           To sSysTime At MCRANGE.From_wSecond
+                Put 0           To sSysTime At MCRANGE.From_wMilliseconds
+            End
+            If (dTo<>"") Begin
+                Get DT_DAY    (String(dTo)) To iDay   // Max
+                Get DT_MONTH  (String(dTo)) To iMonth
+                Get DT_YEAR   (String(dTo)) To iYear
+                Put iYear       To sSysTime At MCRANGE.To_wYear
+                Put iMonth      To sSysTime At MCRANGE.To_wMonth
+                Put 0           To sSysTime At MCRANGE.To_wDayOfWeek
+                Put iDay        To sSysTime At MCRANGE.To_wDay
+                Put 0           To sSysTime At MCRANGE.To_wHour
+                Put 0           To sSysTime At MCRANGE.To_wMinute
+                Put 0           To sSysTime At MCRANGE.To_wSecond
+                Put 0           To sSysTime At MCRANGE.To_wMilliseconds
+            End
+            GetAddress Of sSysTime To lpSysTime
+            Move (SendMessage(hWnd, MCM_SETRANGE, iMode, lpSysTime)) To iRet
+            If (Not(iRet)) Begin // Min/Max failed
+                Set pdRangeMin To ""
+                Set pdRangeMax To ""
+            End
+        End
+    End_Procedure
+    //
+    Procedure Set Month_Delta Integer iDelta
+        Handle hWnd iRet
+        Set piMonthDelta To iDelta
+        Get Window_Handle To hWnd
+        If (hWnd) Move (SendMessage(hWnd, MCM_SETMONTHDELTA, iDelta, 0)) To iRet
+    End_Procedure
+    Function Month_Delta Returns Integer
+        Function_Return (piMonthDelta(Self))
+    End_Function
+    //
+    Procedure Set Color Integer iMode Integer iColor
+        Handle hWnd iRet
+        Get Window_Handle To hWnd
+        If (iColor<0) Move (GetSysColor(iColor Iand $000000FF)) To iColor
+        If (hWnd) Move (SendMessage(hWnd, MCM_SETCOLOR, iMode, iColor)) To iRet
+    End_Procedure
+    Function Color Integer iMode Returns Integer
+        Handle hWnd iColor
+        Get Window_Handle To hWnd
+        Move -1 To iColor // Error
+        If (hWnd) Move (SendMessage(hWnd, MCM_GETCOLOR, iMode, 0)) To iColor
+        Function_Return iColor
+    End_Function
+    //
+    Procedure Set Selection_Count Integer iCount
+        Handle hWnd iRet
+        Set piMaxSelCount To iCount
+        Get Window_Handle To hWnd
+        If (hWnd) Move (SendMessage(hWnd, MCM_SETMAXSELCOUNT, piMaxSelCount(Self), 0)) To iRet
+    End_Procedure
+    Function Selection_Count Returns Integer
+        Function_Return (piMaxSelCount(Self))
+    End_Function
+    //
+    Function DT_DAY String sVal Returns Integer
+        Integer iDay iFormat iSep
+        String  sSep
+        If (sVal="") Sysdate4 sVal
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        // DDMMYYYY
+        Move 0 To iDay
+        If (length(sVal)>=6) Begin
+            If (iFormat=DF_DATE_EUROPEAN) Move (Left(sVal, 2)) To iDay // DMY
+            If (iFormat=DF_DATE_USA)      Move (Mid(sVal, 2, 3)) To iDay // MDY
+            If (iFormat=DF_DATE_MILITARY) Move (Right(sVal, 2)) To iDay // YMD
+        End
+        If (iDay>31) Function_Return 0
+        Else Function_Return iDay
+    End_Function
+    //
+    Function DT_MONTH String sVal Returns Integer
+        Integer iMonth iFormat iSep
+        String  sSep
+        If (sVal="") Sysdate4 sVal
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        // DDMMYYYY
+        Move 0 To iMonth
+        If (length(sVal)<6) Function_Return 0
+        If (iFormat=DF_DATE_EUROPEAN) Move (Mid(sVal, 2, 3)) To iMonth // DMY
+        If (iFormat=DF_DATE_USA)      Move (Left(sVal, 2)) To iMonth // MDY
+        If (length(sVal)=8) Begin
+            If (iFormat=DF_DATE_MILITARY) Move (Mid(sVal, 2, 5)) To iMonth // YMD
+        End
+        If (length(sVal)=6) Begin
+            If (iFormat=DF_DATE_MILITARY) Move (Mid(sVal, 2, 3)) To iMonth // YMD
+        End
+        If (iMonth>12) Function_Return 0
+        Else Function_Return iMonth
+    End_Function
+    //
+    Function DT_YEAR String sVal Returns Integer
+        Integer iYear iFormat iSep
+        String  sSep
+        If (sVal="") Sysdate4 sVal
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        Move (Replaces(sSep, sVal, "")) To sVal
+        Move 0 To iYear
+        If (length(sVal)<6) Function_Return 0
+        If (length(sVal)=8) Begin
+            If (iFormat=DF_DATE_EUROPEAN) Move (Right(sVal, 4)) To iYear // DMY
+            If (iFormat=DF_DATE_USA)      Move (Right(sVal, 4)) To iYear // MDY
+            If (iFormat=DF_DATE_MILITARY) Move (Left(sVal, 4)) To iYear // YMD
+        End
+        If (length(sVal)=6) Begin
+            If (iFormat=DF_DATE_EUROPEAN) Move (Right(sVal, 2)) To iYear // DMY
+            If (iFormat=DF_DATE_USA)      Move (Right(sVal, 2)) To iYear // MDY
+            If (iFormat=DF_DATE_MILITARY) Move (Left(sVal, 2)) To iYear // YMD
+        End
+        If (iYear>2200) Function_Return 0
+        Else Function_Return iYear
+    End_Function
+    //
+    Procedure Set Current_Date Date dDate
+        Handle hWnd iRet
+        Get Window_Handle To hWnd
+        If (hWnd) Begin
+            Pointer lpSysTime
+            String  sSysTime
+            Integer iYear iMonth iDay
+            Get DT_DAY    (String(dDate)) To iDay
+            Get DT_MONTH  (String(dDate)) To iMonth
+            Get DT_YEAR   (String(dDate)) To iYear
+            ZeroType MCSYSTEMTIME To sSysTime
+            Put iYear       To sSysTime At MCSYSTEMTIME.wYear
+            Put iMonth      To sSysTime At MCSYSTEMTIME.wMonth
+            Put 0           To sSysTime At MCSYSTEMTIME.wDayOfWeek
+            Put iDay        To sSysTime At MCSYSTEMTIME.wDay
+            Put 0           To sSysTime At MCSYSTEMTIME.wHour
+            Put 0           To sSysTime At MCSYSTEMTIME.wMinute
+            Put 0           To sSysTime At MCSYSTEMTIME.wSecond
+            Put 0           To sSysTime At MCSYSTEMTIME.wMilliseconds
+            GetAddress Of sSysTime To lpSysTime
+            Move (SendMessage(hWnd, MCM_SETTODAY, 0, lpSysTime)) To iRet
+        End
+    End_Procedure
+    Function Current_Date Returns Date
+        Date dToday
+        If (pdSelFromDate(Self)="") Sysdate4 dToday
+        Else Get pdSelFromDate      To       dToday
+        Function_Return dToday
+    End_Function
+    //
+    Procedure Adjust_Selection Pointer lParam
+        //
+        Integer iVoid
+        String  sNmDTChange
+        Pointer lpsNmDTChange
+        //
+        String sFYear sFMonth sFDay
+        String sTYear sTMonth sTDay
+        //
+        Integer iFormat iSep
+        String  sSep dFrom dTo
+        Get_Attribute DF_DATE_FORMAT    To iformat
+        Get_Attribute DF_DATE_SEPARATOR To iSep
+        Character iSep                  To sSep
+        //
+        Set pdSelFromDate   To ""
+        Set pdSelToDate     To ""
+        //
+        ZeroType NMSELCHANGE To sNmDTChange
+        GetAddress Of sNmDTChange To lpsNmDTChange
+        Move (CopyMemory(lpsNmDTChange, lParam, NMSELCHANGE_size)) To iVoid
+        //
+        // From
+        GetBuff From sNmDTChange At NMSELCHANGE.From_wYear  To sFYear
+        GetBuff From sNmDTChange At NMSELCHANGE.From_wMonth To sFMonth
+        GetBuff From sNmDTChange At NMSELCHANGE.From_wDay   To sFDay
+        // To
+        GetBuff From sNmDTChange At NMSELCHANGE.To_wYear    To sTYear
+        GetBuff From sNmDTChange At NMSELCHANGE.To_wMonth   To sTMonth
+        GetBuff From sNmDTChange At NMSELCHANGE.To_wDay     To sTDay
+        //
+        If (Length(sFDay)=1)    Move ('0'+sFday)    To sFDay
+        If (Length(sFMonth)=1)  Move ('0'+sFMonth)  To sFMonth
+        If (Length(sTDay)=1)    Move ('0'+sTday)    To sTDay
+        If (Length(sTMonth)=1)  Move ('0'+sTMonth)  To sTMonth
+        //
+        If (iFormat=DF_DATE_EUROPEAN) Begin
+            Move (sFDay+sSep+sFMonth+sSep+sFYear) To dFrom
+            Move (sTDay+sSep+sTMonth+sSep+sTYear) To dTo
+        End // DMY
+        If (iFormat=DF_DATE_USA)      Begin
+            Move (sFMonth+sSep+sFDay+sSep+sFYear) To dFrom
+            Move (sTMonth+sSep+sTDay+sSep+sTYear) To dTo
+        End // MDY
+        If (iFormat=DF_DATE_MILITARY) Begin
+            Move (sFYear+sSep+sFMonth+sSep+sFDay) To dFrom
+            Move (sTYear+sSep+sTMonth+sSep+sTDay) To dTo
+        End // YMD
+        //
+        Set pdSelFromDate To (Date(dFrom))
+        If (pbMultiSelect(Self)) Set pdSelToDate To (Date(dTo))
+        Else Set pdSelToDate To (Date(dFrom))
+        //
+    End_Procedure
+    //
+    // Notify messages
+    Procedure OnSelChange Date dFrom Date dTo
+    End_Procedure
+    //
+    Procedure OnGetDayState
+    End_Procedure
+    //
+    Procedure OnSelect Date dFrom Date dTo
+    End_Procedure
+    //
+    Procedure MCNM_SelChange Pointer lParam
+        Date dFrom dTo
+        Get pdSelFromDate To dFrom
+        Send Adjust_Selection lParam
+        If (pbMultiSelect(Self)) Send OnSelChange (pdSelFromDate(Self)) (pdSelToDate(Self))
+        Else Send OnSelChange dFrom (pdSelFromDate(Self))
+    End_Procedure
+    //
+    Procedure MCNM_GetDayState Pointer lParam
+        Showln "GetDayState " lParam
+    End_Procedure
+    //
+    Procedure MCNM_Select Pointer lParam
+        Send Adjust_Selection lParam
+        Send OnSelect (pdSelFromDate(Self)) (pdSelToDate(Self))
+    End_Procedure
+    //
+    // Capture notify messages we interested
+    Procedure Notify Integer wParam Integer lParam
+        Integer iVoid     iCode
+        String  sNmHdr
+        Pointer lpsNmHdr
+        ZeroType tNmHdr To sNmHdr
+        GetAddress Of sNmHdr To lpsNmHdr
+        Move (CopyMemory(lpsNmHdr, lParam, tNmHdr_size)) To iVoid
+        GetBuff From sNmHdr At tNmHdr.code  To iCode
+        If (iCode = MCN_SELCHANGE)          Send MCNM_SelChange     lParam
+        Else If (iCode = MCN_GETDAYSTATE)   Send MCNM_GetDayState   lParam
+        Else If (iCode = MCN_SELECT)        Send MCNM_Select        lParam
+    End_Procedure
+    //
+End_Class

@@ -1,0 +1,485 @@
+//****************************************************************************
+// $Module type: CLASS
+// $Module name: cReportControlGridColumn.pkg
+// $Author     : Nils G. Svedmyr
+// Created     : 2008-03-14 @ 17:56
+//
+// Description : A wrapper class for the Report Control's cComReportColumn.
+//               The class is used internally by the class cReportControlGrid.
+//
+// $Rev History
+//    2008-03-14  Module header created
+//****************************************************************************
+// Note: If you don't have version 11.2.2 of the Report Control, you may use the 11.2.1 instead. 
+//       Of course you cannot Use both packages at the same time.
+//       If you Use version 11.2.1 you wont be able to use the piWatermarkAlignment function 
+//       (If you have Set it in your code, it will be ignored.)
+//Use Codejock.ReportControl.v11.2.1.pkg
+//Use Codejock.ReportControl.v11.2.2.pkg
+//Use Codejock.ReportControl.v12.1.1.pkg
+//Use Codejock.ReportControl.v13.3.1.pkg
+Use cCJReportControl.pkg
+Use cReportControlGridDefines.pkg
+
+{ Visibility=Private }
+// *** For internal usage ***
+//
+// Subclass (wrapper) for the RecordColumn Class.
+// A column in a grid (a cReportControlGrid Object).
+// This class is used by the cReportControlGrid class.
+//
+// NOTE: You would normally not instantiate this class. Instead
+// you would use the corresponding messages of the cReportControlGrid class,
+// with the 'Set/Get MessageName item iColumn to ...' syntax.
+//
+// These messages has been placed here as a 'safety precaution' only;
+// If the wrong syntax is used in a cReportControlGrid object,
+// when addressing a column,
+// e.g. 'Set Header_Label of hColumn to "Some Text"'
+// ...intead of the correct syntax:
+//      'Set Header_Label item iColumn to "Some Text"',
+// it will still work...                            
+//
+Class cReportControlGridColumn is a cCJReportColumn
+
+    { Visibility=Public MethodType=Property }
+    // To set an icon of a particular header item.
+    // Syntax:
+    //   Set HeaderIcon item iColumn to RO_ButtonNormal
+    // Params:
+    //   iIcon is the icon number from the ImageList
+    Procedure Set HeaderIcon Integer iIcon
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComIcon to iIcon
+    End_Procedure // Set HeaderIcon
+
+    { MethodType=Property }
+    // Syntax:
+    //   Get HeaderIcon to Integer (in Enum_List)
+    //   The returned integer is the icon number from the ImageList
+    Function HeaderIcon Returns Integer
+        Integer iIconNumber
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComIcon to iIconNumber
+        Function_Return iIconNumber
+    End_Function // HeaderIcon
+
+    { Visibility=Public MethodType=Property }
+    // Set the width of a particular header item (column header).
+    // Syntax:
+    //   Set HeaderWidth to 300
+    // Note:
+    //   If pbAutoColumnSizing=True the iWidth value passed needs to be much larger than
+    //   the actual column width to be Set.
+    //   It seems like there is some sort of ratio between the grid width and the iWidth passed.
+    //   Trial and Error seems to be the way to Set the iWidth if pbAutoColumnSizing=True.
+    Procedure Set HeaderWidth Integer iWidth
+        Set ComResizable to True  // This must be true to be able to change column width.
+        Set ComWidth to iWidth
+    End_Procedure // HeaderWidth
+
+    { Visibility=Public MethodType=Property }
+    // Get the width of a particular header item.
+    // Syntax:
+    //   Get HeaderWidth to Integer
+    Function HeaderWidth Returns Integer
+        Integer iWidth
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComWidth to iWidth
+        Function_Return iWidth
+    End_Function // HeaderWidth
+
+    { Visibility=Public MethodType=Property }
+    // To set the justification of a particular header item.
+    // Syntax:
+    //   Set Header_Column_Justification_Mode to iMode
+    // iMode Constants:
+    //   OLExtpAlignmentLeft, OLExtpAlignmentCenter, OLExtpAlignmentRight, OLExtpAlignmentVCenter
+    //   OLExtpAlignmentWordBreak, OLExtpAlignmentTextMask, OLExtpAlignmentIconLeft, OLExtpAlignmentIconCenter
+    //   OLExtpAlignmentIconRight, OLExtpAlignmentIconTop, OLExtpAlignmentIconVCenter, OLExtpAlignmentIconBottom, OLExtpAlignmentIconMask
+    //   The modes can be used with the ior and/or iand operands in an expression. 
+    // Default: OLExtpAlignmentLeft 
+    // Note: This setting will override the Header_Justification_Mode which is a global setting.
+    Procedure Set Header_Column_Justification_Mode Integer iMode
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComHeaderAlignment to iMode
+    End_Procedure // Set Header_Column_Justification_Mode
+
+    { MethodType=Property }
+    // Syntax: Get Header_Column_Justification_Mode to Integer
+    Function Header_Column_Justification_Mode Returns Integer
+        Integer iMode
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComHeaderAlignment to iMode
+        Function_Return iMode
+    End_Function // Header_Column_Justification_Mode
+
+    { Visibility=Public MethodType=Property }
+    // Define text for a header.
+    // Syntax:
+    //   Set Header_Label to "Some text"
+    Procedure Set Header_Label String sLabel
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComCaption to sLabel
+    End_Procedure // Set Header_Label
+
+    { MethodType=Property }
+    // Get the text for a header item.
+    // Syntax:
+    //   Get Header_Label to sString
+    Function Header_Label Returns String
+        String sLabel
+        If (not(IsComObjectCreated(Self))) Function_Return ""
+        Get ComCaption to sLabel
+        Function_Return sLabel
+    End_Function // Header_Label
+
+    { Visibility=Public MethodType=Property }
+    // To set the footer text of the specified column.
+    // Note: The Footer_Visible_State state must be true.                                                           
+    Procedure Set Footer_Label String sText
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComFooterText to sText
+    End_Procedure // Set Footer_Label
+
+    { MethodType=Property }
+    // See: Procedure Set Footer_Label for an explanation.
+    Function Footer_Label Returns String
+        String sText
+        If (not(IsComObjectCreated(Self))) Function_Return ""
+        Get ComFooterText to sText
+        Function_Return sText
+    End_Function // Footer_Label
+
+    { MethodType=Property }
+    // This property that can be set for a particular column, which
+    // will override the grid level piAllColumnsAlignment setting.
+    // Aligns the text (and icons) of items for all grid columns. (Not the header, see 
+    // Header_Column_Justification_Mode for that). 
+    // Syntax:
+    //   Set Column_Justification_Mode item iColumn to OLExtpAlignmentLeft
+    // Constants (iMode):
+    //   OLExtpAlignmentLeft, OLExtpAlignmentCenter, OLExtpAlignmentRight,
+    //   OLExtpAlignmentVCenter, OLExtpAlignmentWordBreak, OLExtpAlignmentTextMask,
+    //   OLExtpAlignmentIconLeft, OLExtpAlignmentIconCenter, OLExtpAlignmentIconRight,
+    //   OLExtpAlignmentIconTop, OLExtpAlignmentIconVCenter, OLExtpAlignmentIconBottom,
+    //   OLExtpAlignmentIconMask
+    Procedure Set Column_Justification_Mode Integer iMode
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComAlignment to iMode
+    End_Procedure // Set Column_Justification_Mode
+
+    { MethodType=Property }
+    Function Column_Justification_Mode Returns Integer
+        Integer iMode
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComAlignment to iMode
+        Function_Return iMode
+    End_Function // Column_Justification_Mode
+
+    { Visibility=Public MethodType=Property }
+    // Set the tooltip of a particular header item.
+    // Syntax:
+    //   Set HeaderToolTip to "Some header tooltip text"
+    Procedure Set HeaderToolTip String sToolTip
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComToolTip to sToolTip
+    End_Procedure // Set HeaderToolTip
+
+    { MethodType=Property }
+    // Get the tooltip of a particular header item.
+    // Syntax:
+    //   Get HeaderToolTip to sString
+    Function HeaderToolTip Returns String
+        String sToolTip
+        If (not(IsComObjectCreated(Self))) Function_Return ""
+        Set ComToolTip to sToolTip
+        Function_Return sToolTip
+    End_Function // HeaderToolTip
+
+    { Visibility=Public MethodType=Property }
+    // To set which edit mode should be used for items/cells in a column.                       
+    // Constants for iStyle:
+    //   RC_WordBreak        Breaks words. The style automatically breaks lines between
+    //                       words if a word would extend past the edge of the item rectangle.
+    //   RC_Single_Line      Displays text on a single line only. 
+    //   RC_Numeric          Numeric digits only.        
+    //   RC_Read_Only        Do not allow to edit.
+    // Note:
+    //   The property grid level pbSelectTextOnEdit or the pbColumnSelectTextOnEdit property 
+    //   for the passed column number must be True for this Property to have any effect. 
+    // See Also: Specialized versions of this message; Column_Wordbreak_State,
+    //           Column_CapsLock_State and Column_Numeric_State.
+    Procedure Set ColumnEditControlStyle Integer iStyle
+        Handle  hoItemEditOptions
+
+        Get IsEditOptionsObjectConnected to hoItemEditOptions       
+        If (hoItemEditOptions > 0) ;
+            Set ComEditControlStyle of hoItemEditOptions to iStyle 
+    End_Procedure // Set ColumnEditControlStyle
+                     
+    // Helper function for e.g. ColumnEditControlstyle.
+    // Returns a handle to the ItemEditOptions object (VDF-side)
+    // if it was successfull in connecting the passed.
+    // If unsuccessfull it Returns 0.        
+    Function IsEditOptionsObjectConnected Returns Handle
+        Variant vItemEditOptions                       
+        Handle  hoItemEditOptions    
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        
+        Move (NullComObject()) to vItemEditOptions                                         
+        Get ComEditOptions     to vItemEditOptions  
+        If (IsNullComObject(vItemEditOptions)) Function_Return 0   
+        
+        Get phoItemEditOptions to hoItemEditOptions                
+        Set pvComObject        of hoItemEditOptions to vItemEditOptions // Connect VDF-side with COM object. 
+        Function_Return hoItemEditOptions
+    End_Function // IsEditOptionsObjectConnected
+                       
+    { Visibility=Public MethodType=Property }
+    // Column variant of the 'global' grid level property pbSelectTextOnEdit.
+    // It can be used to override the pbSelectTextOnEdit setting for a particular
+    // column.
+    Procedure Set pbColumnSelectTextOnEdit Boolean bState 
+        Handle  hoItemEditOptions
+        Get IsEditOptionsObjectConnected to hoItemEditOptions       
+        If (hoItemEditOptions > 0) ;
+            Set ComSelectTextOnEdit of hoItemEditOptions to bState
+    End_Procedure // Set pbColumnSelectTextOnEdit 
+     
+    { Visibility=Public MethodType=Property }
+    // Determines if a whole column can be edited or not.
+    // Note: There are actually three different levels that can be used to
+    //       regulate if items/cells can be edited or not.
+    //    1. Set pbAllowEdit at grid level (global for the entire grid)
+    //    2. 'Set ColumnEntry_State to True/FALSE' at column
+    //       level will override the pbAllowEdit setting.
+    //    3. 'Set Entry_State item iItem to True/FALSE' at item
+    //       level will override both the pbAllowEdit and Entry_State
+    //       setting at column level.
+    // Syntax:
+    //   Set ColumnEntry_State to bState
+    Procedure Set ColumnEntry_State Boolean bState
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComEditable  to bState
+    End_Procedure // Set ColumnEntry_State
+
+    { MethodType=Property }
+    // Syntax:
+    //   Get ColumnEntry_State to bState
+    Function ColumnEntry_State Returns Boolean
+        Boolean bState
+        If (not(IsComObjectCreated(Self))) Function_Return False
+        Get ComEditable to bState
+        Function_Return bState
+    End_Function // ColumnEntry_State
+
+    // Same as Set ColumnEntry_State. To be compatable with the Column_Shadow_State
+    // of the VDF DataList class (That is used by the VDF Grid class).               
+    Procedure Set Column_Shadow_State Boolean bState
+        Set ColumnEntry_State to (not(bState ))
+    End_Procedure // Set ColumnEntry_State
+                       
+    // Breaks words for all items/cells in the passed column when in edit mode.
+    // The style automatically breaks lines between words if a word would extend
+    // past the edge of the item rectangle. 
+    Procedure Set Column_Wordbreak_State Boolean bState
+        Handle  hoItemEditOptions      
+        Integer iStyle
+        If (bState = True) Begin
+            Set ColumnEditControlstyle to RC_WordBreak
+        End    
+        Else Begin // Hmm, will it work to 'remove' the Wordbreak state from the style?? 
+            Get IsEditOptionsObjectConnected Self to hoItemEditOptions 
+            Get ComSelectTextOnEdit          of hoItemEditOptions to iStyle
+            Set ColumnEditControlstyle       to (iStyle - RC_WordBreak)            
+        End
+    End_Procedure // Set Column_Wordbreak_State
+                                           
+    // Determines if all text entered to this column from the keyboard will be 
+    // converted to upper Case.  
+    // Note: The setting will _not_ format existing text, it will only influence
+    //       how text is entered into an item/cell.
+    Procedure Set Column_CapsLock_State Boolean bState
+        Handle  hoItemEditOptions      
+        Integer iStyle
+        If (bState = True) Begin
+            Set ColumnEditControlstyle to RC_CapsLock
+        End    
+        Else Begin // Hmm, will it work to 'remove' the Capslock state from the style?? 
+            Get IsEditOptionsObjectConnected Self to hoItemEditOptions 
+            Get ComSelectTextOnEdit          of hoItemEditOptions to iStyle
+            Set ColumnEditControlstyle       to (iStyle - RC_CapsLock)            
+        End
+    End_Procedure // Set Column_CapsLock_State
+                                           
+    // Determines if all text entered to this column from the keyboard will be 
+    // numeric only.
+    Procedure Set Column_Numeric_State Boolean bState
+        Handle  hoItemEditOptions      
+        Integer iStyle
+        If (bState = True) Begin
+            Set ColumnEditControlstyle to RC_CapsLock
+        End    
+        Else Begin // Hmm, will it work to 'remove' the Numeric state from the style?? 
+            Get IsEditOptionsObjectConnected Self to hoItemEditOptions 
+            Get ComSelectTextOnEdit          of hoItemEditOptions to iStyle
+            Set ColumnEditControlstyle       to (iStyle - RC_Numeric)            
+        End
+    End_Procedure // Set Column_Numeric_State   
+                                        
+    // Specifies whether a column of a grid is presented as a combo form.
+    // Syntax:
+    //   Set Column_Combo_State to True/False
+    Procedure Set Column_Combo_State Boolean bState
+        Handle hoItemEditOptions
+        Variant vOptions vRetval
+        
+        Get IsEditOptionsObjectConnected Self to hoItemEditOptions       
+        If (hoItemEditOptions < 1) Procedure_Return
+        
+        If (bState = True) Begin
+            Get ComAddComboButton of hoItemEditOptions False to vRetval
+        End
+        Else Begin
+            Send ComRemoveButtons  of hoItemEditOptions
+        End
+    End_Procedure // Set Column_Combo_State    
+                                             
+    // Specifies whether a column of a grid is presented with a prompt button.
+    // Syntax:
+    //   Set Column_Prompt_Mode to True/False
+    Procedure Set Column_Prompt_Mode Boolean bState
+        Handle hoItemEditOptions
+        Variant vRetval
+        
+        Get IsEditOptionsObjectConnected Self to hoItemEditOptions       
+        If (hoItemEditOptions < 1) Procedure_Return
+        
+        If (bState = True) Begin
+            Get ComAddExpandButton of hoItemEditOptions False to vRetval
+        End
+        Else Begin
+            Send ComRemoveButtons  of hoItemEditOptions
+        End
+    End_Procedure // Set Column_Prompt_Mode  
+
+    // Determines if column allows entry into the cell or only allows selection
+    // of values from list.
+    // Syntax:
+    //   Set Column_Combo_Entry_State to True/False
+    Procedure Set Column_Combo_Entry_State Integer iColumn Boolean bState
+        Handle hoItemEditOptions
+        Get IsEditOptionsObjectConnected Self to hoItemEditOptions       
+        If (hoItemEditOptions < 1) Procedure_Return
+        
+        Set ComConstraintEdit of hoItemEditOptions to bState
+    End_Procedure // Set Column_Combo_Entry_State
+                                             
+    // To set the maximum number of characters that can be entered into
+    // the passed column.
+    // This will be of more interest for a db aware class variant.
+    Procedure Set ColumnMaxLength Integer iLength
+        Handle  hoItemEditOptions
+        Get IsEditOptionsObjectConnected Self to hoItemEditOptions       
+        If (hoItemEditOptions > 0) ;
+            Set ComMaxLength of hoItemEditOptions to iLength
+    End_Procedure // Set ColumnMaxLength
+                                           
+    { MethodType=Property }
+    // To set if a particular column should be sortable.
+    // Syntax:
+    //   Set pbColumnSortable to True/False
+    // Note: There is also a grid level property 'pbAllowAllColumnSort'
+    //       If the pbColumnSortable property is used it will
+    //       override the pbAllowAllColumnSort setting.
+    Procedure Set pbColumnSortable Boolean bState
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComSortable to bState
+    End_Procedure // Set pbColumnSortable
+
+    { MethodType=Property }
+    // See: Procedure Set pbColumnSortable for an explanation.
+    Function pbColumnSortable Returns Boolean
+        Boolean bState
+        If (not(IsComObjectCreated(Self))) Function_Return False
+        Get ComSortable to bState
+        Function_Return bState
+    End_Function // pbColumnSortable
+
+    { Visibility=Public MethodType=Property } 
+    // To set if a particular column should be visible or not.
+    // Syntax:
+    //   Set pbColumnVisible o TRUE/False
+    // Note: See also 'pbShowColumnInFieldChooser'
+    //       Depending on that setting, this column (if set to False) will be available 
+    //       or not in the FieldChooser object.
+    Procedure Set pbColumnVisible Boolean bState
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComVisible to bState
+    End_Procedure // Set pbColumnVisible
+    
+    { MethodType=Property }
+    // See procedure Set pbColumnVisible for an explanation.
+    Function pbColumnVisible Returns Boolean 
+        Boolean bState
+        If (not(IsComObjectCreated(Self))) Function_Return False
+        Get ComVisible to bState
+        Function_Return bState
+    End_Function // pbColumnVisible
+                       
+    { Visibility=Public MethodType=Property }
+    // Indicates if a particular column will appear in the FieldChooser when the column 
+    // is hidden or in the "Group By Box."      
+    // Syntax:
+    //   Set pbShowColumnInFieldChooser to True/False
+    // Note: There is also a pbShowAllColumnsInFieldChooser property at grid level that
+    //       will be used for each column where this message is not used.
+    Procedure Set pbShowColumnInFieldChooser Boolean bState
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComShowInFieldChooser to bState
+    End_Procedure // Set pbShowColumnInFieldChooser
+
+    { MethodType=Property }
+    // See procedure Set pbShowColumnInFieldChooser for an explanation.
+    Function pbShowColumnInFieldChooser Returns Boolean 
+        Boolean bState
+        If (not(IsComObjectCreated(Self))) Function_Return False
+        Get ComShowInFieldChooser to bState
+        Function_Return bState
+    End_Function // pbShowColumnInFieldChooser
+
+    // This is the Index of the column given when added to the ReportControl's collection
+    // of columns. The ItemIndex starts at 0 and increments by 1 for each column in the
+    // ReportControl. The ItemIndex will not change when the columns are moved (dragged and
+    // dropped to another location).
+    // The ItemIndex is used to Find and return a reference to a column.  Since the Index of
+    // the column might change frequently, the ItemIndex is used when the column needs to be
+    // accessed.
+    Procedure Set ColumnItemIndex Integer iValue
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComItemIndex to iValue
+    End_Procedure // ColumnItemIndex
+
+    // See procedure Set ColumnItemIndex for an explanation.
+    Function ColumnItemIndex Returns Integer
+        Integer iValue
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComItemIndex to iValue
+        Function_Return iValue
+    End_Function // ColumnItemIndex
+
+    // Searches the collection of columns sequentially to find the first column matching
+    // the specified ItemIndex. If no matching Found, NULL is returned.
+    Function ColumnFind Integer iIndex Returns Variant
+        Variant vColumn  
+        Handle hoReportObject hoColumnCollection
+        Move (NullComObject()) to vColumn
+        If (not(IsComObjectCreated(Self))) Function_Return vColumn 
+        Delegate Get Private.phoReportObject to hoReportObject // Property of the cReportControlGrid class.
+        Get phoColumnCollection of hoColumnCollection to  hoColumnCollection
+        Get ComFind of hoColumnCollection iIndex to vColumn
+        Function_Return vColumn        
+    End_Function // ColumnFind
+
+End_Class // cReportControlGridColumn

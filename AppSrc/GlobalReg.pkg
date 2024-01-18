@@ -1,0 +1,130 @@
+//************************************************************************
+//*** Class for access to the windows registration database.
+//************************************************************************
+//*** GlobalReg.pkg
+//*** Version: 1.0
+//*** Copyright (c) 2004 NordTeam Gruppen
+//***
+//*** Author......: Allan Kim Eriksen
+//*** Created.....: 14/07 2004
+//*** Last updated:
+//************************************************************************
+// This Class is used for accessing the windows registration database.
+// It is cable of reaching all the database.
+// hRoot must be one of theese values:
+// HKEY_CLASSES_ROOT 
+// HKEY_CURRENT_USER 
+// HKEY_LOCAL_MACHINE 
+// HKEY_USERS
+// HKEY_PERFORMANCE_DATA
+// HKEY_CURRENT_CONFIG  
+// HKEY_DYN_DATA
+//************************************************************************
+Use cRegistry.pkg
+
+Class cGlobalReg is a cRegistry
+
+    Function DoReadReg Handle hRoot String sRegkey String sValue String sStandard Returns String
+        String sOuttxt
+        Boolean bopened
+        Move sStandard To sOutTxt
+        Set phRootKey To hRoot
+        Set pfAccessRights To KEY_READ      // For windows terminal server reasons.
+        Get OpenKey sRegKey To bOpened
+        If bOpened Begin
+            If (ValueExists(Self, sValue)) Begin
+                Get ReadString sValue To sOutTxt
+            End
+            Send CloseKey
+        End
+        Function_Return sOutTxt
+    End_Function
+
+    Procedure DoWriteReg Handle hRoot String sRegkey String sValue String sTxt
+        Boolean bCreateFejl
+        Set phRootKey To hRoot
+        Set pfAccessRights To KEY_ALL_ACCESS
+        Get CreateKey sRegKey To bCreateFejl
+        If Not bCreateFejl Begin
+            Send WriteString sValue sTxt
+            Send CloseKey
+        End
+    End_Procedure
+    
+    Procedure DoDeleteReg Handle hRoot String sRegKey String sValue
+        Boolean bDeleteFejl bOpened
+        Set phRootKey To hRoot
+        Set pfAccessRights To KEY_ALL_ACCESS
+        Get OpenKey sRegKey To bOpened
+        If bOpened Begin
+            If (ValueExists(Self, sValue)) Begin
+                Get DeleteValue sValue To bDeleteFejl
+            End
+            Send CloseKey
+        End
+    End_Procedure
+    
+    Function DoesKeyExists Handle hRoot String sRegKey Returns Boolean
+        Boolean bExists
+        Set phRootKey To hRoot
+        Set pfAccessRights To KEY_READ  // For windows terminal server reasons.
+        Get KeyExists sRegKey To bExists
+        Function_Return bExists
+    End_Function
+
+End_Class
+
+//************************************************************************
+// Global function to read from the registration database.
+//************************************************************************
+Function ReadGlobalReg Global Handle hRoot String sRegkey String sValue String sStandard Returns String
+    String sTxt
+    Handle oGlobalReg
+    Get Create U_cGlobalReg To oGlobalReg
+    If (oGlobalReg = 0) Begin
+        Function_Return ""
+    End
+    Get DoReadReg Of oGlobalReg hRoot sRegKey sValue sStandard To sTxt
+    Send Destroy Of oGlobalReg
+    Function_Return sTxt
+End_Function
+
+//************************************************************************
+// Global Procedure for writing to the registration database.
+//************************************************************************
+Procedure WriteGlobalReg Global Handle hRoot String sRegkey String sValue String sTxt
+    Handle oGlobalreg
+    Get Create U_cGlobalReg To oGlobalReg
+    If (oGlobalReg = 0) Begin
+        Procedure_Return
+    End
+    Send DoWriteReg To oGlobalReg hRoot sRegKey sValue sTxt
+    Send Destroy Of oGlobalReg
+End_Procedure
+
+//************************************************************************
+// Global Procedure for deleteing in the registraion database.
+//************************************************************************
+Procedure DeleteGlobalReg Global Handle hRoot String sRegKey String sValue
+    Handle oGlobalreg
+    Get Create U_cGlobalReg To oGlobalReg
+    If (oGlobalReg = 0) Procedure_Return
+    Send DoDeleteReg To oGlobalReg hRoot sRegKey sValue
+    Send Destroy Of oGlobalReg
+End_Procedure
+
+//************************************************************************
+// Global Function for finding out if a specific key exists in the 
+// registration database.
+//************************************************************************
+Function DoesGlobalKeyExists Global Handle hRoot String sRegKey Returns Boolean
+    Boolean bFound
+    Handle oGlobalReg
+    Get Create U_cGlobalReg To oGlobalReg
+    If (oGlobalReg = 0) Begin
+        Function_Return False
+    End
+    Get DoesKeyExists Of oGlobalReg hRoot sRegKey To bFound
+    Send Destroy Of oGlobalReg
+    Function_Return bFound
+End_Function

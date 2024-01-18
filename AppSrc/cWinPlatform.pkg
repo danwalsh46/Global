@@ -1,0 +1,205 @@
+// cWinPlatform.pkg
+//
+
+Use cWinKernEx.h
+
+Define OS_PLATFORM_UNKNOWN For 0
+Define OS_PLATFORM_NT
+Define OS_PLATFORM_9X
+
+Class cWinPlatform Is a message
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    Property Integer piMajorVersion            0
+    Property Integer piMinorVersion            0        
+    Property Integer piBuildNumber             0        
+    Property Integer piPlatFormId              0
+    Property String  psServicePack             ''
+    Property Integer piServicePackMajor        0
+    Property Integer piServicePackMinor        0
+    Property Integer piSuiteMask               0
+    Property String  psSuite                   ''
+    Property Integer piProductType             0
+    Property String  psOSVersion               ""
+    Property Integer pbNTServer                False
+    Property Integer pbWindowsHome             False
+    Property Integer piMinNET_ServicePack      0
+    //
+    Property String  psPlatform                ""
+    Property Integer piPlatform                OS_PLATFORM_UNKNOWN
+    //
+  End_Procedure // Construct_Object
+
+  Procedure DoSetOSPropertiesEx
+    Integer iRetval
+    String  sOSVersionInfoEx sCSDVersion sOSVersion sPlatform sSuite
+    Pointer pOSVersionInfoEx
+    String  sMaj sMin sBlt sSP
+
+    FillType _OSVERSIONINFOEX With 0 To sOSVersionInfoEX
+    Put _OSVERSIONINFOEX_Size To sOSVersionInfoEx At _OSVERSIONINFOEX.dwOSVersionInfoSize
+    GetAddress Of sOSVersionInfoEX To pOSVersionInfoEX
+    Move (GetOSVersionExEf(pOSVersionInfoEx)) To iRetval 
+    Indicate err False
+    If (Not(iRetval)) Procedure_Return // Begin
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.dwMajorVersion      To iRetval
+    Set piMajorVersion To iRetval
+    Move iRetval To sMaj
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.dwMinorVersion      To iRetval
+    Set piMinorVersion To iRetval
+    Move iRetval To sMin
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.dwBuildNumber       To iRetval
+    Set piBuildNumber To iRetval
+    Move iRetval To sBlt
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.dwPlatformID        To iRetval
+    Set piPlatFormId To iRetval
+
+    GetBuff_String From sOSVersionInfoEx At _OSVERSIONINFOEX.szCSDVersion To sCSDVersion
+    Move (Cstring(sCSDVersion)) To sCSDVersion
+    Set psServicePack To (Trim(sCSDVersion))
+    Move (Trim(sCSDVersion)) To sSP
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.wServicePackMajor   To iRetval
+    Set piServicePackMajor To iRetval
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.wServicePackMinor   To iRetval
+    Set piServicePackMinor To iRetval
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.wSuiteMask           To iRetval
+    Set piSuiteMask To iRetval
+
+    GetBuff From sOSVersionInfoEx At _OSVERSIONINFOEX.wProductType        To iRetval
+    Set piProductType To iRetval
+
+    Send DoSetOsVersion 
+    Get psOSVersion To sOSVersion
+    Get psSuite     To sSuite
+
+    Set psPlatform To (sOSVersion*sSuite*sSP*"("+sMaj+"."+sMin+"."+sBlt+")")
+    If ((sOSVersion = "Windows 95") Or (sOSVersion = "Windows 98") Or (sOSVersion = "Windows ME")) Set piPlatform To OS_PLATFORM_9X
+    Else Set piPlatform To OS_PLATFORM_NT
+  End_Procedure // DoSetOSPropertiesEx
+
+  Procedure DoSetOsVersion 
+    Integer iMajorVersion            
+    Integer iMinorVersion                   
+    Integer iBuildNumber                    
+    Integer iPlatFormId              
+    String  sCSDVersion              
+    Integer iServicePackMajor        
+    Integer iServicePackMinor        
+    Integer iSuiteMask               
+    Integer iProductType             
+
+    Get piMajorVersion     To iMajorVersion    
+    Get piMinorVersion     To iMinorVersion    
+    Get piBuildNumber      To iBuildNumber     
+    Get piPlatFormId       To iPlatFormId      
+    Get psServicePack       To sCSDVersion      
+    Get piServicePackMajor To iServicePackMajor
+    Get piServicePackMinor To iServicePackMinor
+    Get piSuiteMask        To iSuiteMask       
+    Get piProductType      To iProductType   
+
+    If (iSuiteMask=Ver_Suite_SmalLBusiness)                 Set psSuite To "Small Business"
+    Else If (iSuiteMask=Ver_Suite_Enterprise)               Set psSuite To "Enterprise"
+    Else If (iSuiteMask=Ver_Suite_BackOffice)               Set psSuite To "Back Office"
+    Else If (iSuiteMask=Ver_Suite_Communications)           Set psSuite To "Communications"
+    Else If (iSuiteMask=Ver_Suite_Terminal)                 Set psSuite To "Terminal"
+    Else If (iSuiteMask=Ver_Suite_SmallBusiness_Restricted) Set psSuite To "Small Business Restricted"
+    Else If (iSuiteMask=Ver_Suite_EmbeddedNT)               Set psSuite To "Embedded NT"
+    Else If (iSuiteMask=Ver_Suite_DataCenter)               Set psSuite To "Data Center"
+    Else If (iSuiteMask=Ver_Suite_SingleUserTS)             Set psSuite To "Single User Terminal Services"
+    Else If (iSuiteMask=Ver_Suite_Personal)                 Set psSuite To "Personal"
+    Else If (iSuiteMask=Ver_Suite_Blade)                    Set psSuite To "Blade"
+
+    Case Begin
+      Case (iMajorVersion = 3)
+        Set psOSVersion To "Windows NT 3.51"
+        Case BREAK
+
+      Case (iMajorVersion = 4)                      // Windows 9X Series and Win NT 40
+        If (iPlatFormId = CP_VER_PLATFORM_WIN32_WINDOWS) Begin    // Then Windows 95 or 98...
+          Case Begin
+            Case (iMinorVersion = 0)
+              Set psOSVersion To "Windows 95"
+              Case BREAK
+            Case (iMinorVersion = 10)
+              Set psOSVersion To "Windows 98"
+              Case BREAK
+            Case (iMinorVersion = 90)
+              Set psOSVersion   To "Windows ME"
+              Set pbWindowsHome To True
+              Case BREAK
+            Case Else
+              Set psOSVersion To "Windows Version UNKNOWN"
+          Case End
+        End
+        Else Begin
+          Case Begin
+            Case (iProductType = VER_NT_WORKSTATION) 
+              Set psOSVersion To "Windows NT40 Professional"
+              Case BREAK
+            Case (iProductType = VER_NT_DOMAIN_CONTROLLER)
+              Set psOSVersion To "Windows NT40 Server"
+              Set pbNTServer  To True
+              Case BREAK
+            Case Else
+              Set psOSVersion To "Windows NT40"
+          Case End
+        End
+        Case BREAK
+
+      Case (iMajorVersion = 5)                      // Windows NT2k Series
+        Case Begin
+          Case (iMinorVersion = 0)                  // Windows NT2k
+            If (iProductType = VER_NT_WORKSTATION) Set psOSVersion To  "Windows 2000 Professional"
+            Else Begin
+              Set psOSVersion To  "Windows 2000 Server"
+              Set pbNTServer  To True
+            End
+            Case BREAK
+
+          Case (iMinorVersion = 1)                  // XP and .NET server
+            Case Begin
+              Case (iSuiteMask Iand Ver_Suite_Personal)  
+                Set psOSVersion   To "Windows XP Home"
+                Set pbWindowsHome To True
+                Case BREAK
+
+              Case (iProductType = VER_NT_WORKSTATION) 
+                Set psOSVersion To  "Windows XP Professional"
+                Case BREAK
+
+              Case (iProductType = VER_NT_DOMAIN_CONTROLLER)
+                Set psOSVersion To  "Windows .NET Server"
+                Set pbNTServer  To True
+                Case BREAK
+
+              Case (iProductType = VER_NT_SERVER)
+                Set psOSVersion To  "Windows .NET Server"
+                Set pbNTServer  To True
+                Case BREAK
+
+              Case Else
+                Set psOSVersion To  "Windows Version UNKNOWN"
+
+            Case End
+            Case BREAK
+
+          Case Else
+            Set psOSVersion To  "Windows Version UNKNOWN"
+        Case End
+        Case BREAK
+
+      Case Else
+        Set psOSVersion To  "Windows Version UNKNOWN"
+    Case End  
+  End_Procedure // DoSetOsVersion 
+
+End_Class // cPlatform
+

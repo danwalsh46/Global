@@ -1,0 +1,26 @@
+//***************************************************************************
+//*
+//* Class:        cGlblComDocumentObject
+//* Package Name: cGlblComDocumentObject.pkg
+//*
+//***************************************************************************
+
+Use FlexCom20.pkg
+
+Class cGlblComDocumentObject is a cComDocumentObject
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // Create child objects
+
+        // Set property values:
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+End_Class // cGlblComDocumentObject

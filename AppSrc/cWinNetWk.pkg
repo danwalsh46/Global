@@ -1,0 +1,39 @@
+// 
+
+Use cWinNetWk.h
+Use cWinErrorEx.h  // **WvA: Sept 03, 2004 Added
+
+// tdwVarEx.dwVar
+
+Function IsNetDrive Global String sDrive returns integer
+    Integer iRet
+    String sNetname sLength
+    Pointer lpDrive lpNetName lpLength
+    Move (Left(sDrive, 1)+':') to sDrive
+    Zerotype TDWVAREX to sLength
+    ZeroString 255 to sNetName
+    GetAddress of sDrive   to lpDrive
+    GetAddress of sLength  to lpLength
+    GetAddress of sNetName to lpNetName
+    Move (WNetGetConnectionEf(lpDrive, lpNetName, lpLength)) to iRet
+    Function_Return (iRet<>ERROR_NOT_CONNECTED)
+End_Function
+
+Function GetNetDriveInfo Global String sDrive returns string
+    Integer iRet iLength
+    String sNetname sLength sDesc
+    Pointer lpDrive lpNetName lpLength
+    Move (Left(sDrive, 1)+':') to sDrive
+    Zerotype TDWVAREX to sLength
+    Put 255 to sLength at tdwVarEx.dwVar
+    ZeroString 255 to sNetName
+    GetAddress of sDrive   to lpDrive
+    GetAddress of sLength  to lpLength
+    GetAddress of sNetName to lpNetName
+    Move (WNetGetConnectionEf(lpDrive, lpNetName, lpLength)) to iRet
+    If (iRet=NO_ERROR) Begin
+        GetBuff from sLength at tdwVarEx.dwVar to iLength
+    End
+    Function_Return (CString(sNetName))
+End_Function
+

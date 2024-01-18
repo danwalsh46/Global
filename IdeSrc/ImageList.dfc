@@ -1,0 +1,12 @@
+//AB/ CLASSDEF
+Class ImageList is a AbstractNonVisualContainer
+    Set ClassCETV To 33         // use TreeView Image #33 (1-based offset)
+
+    Inherit
+    
+    Property No_Visible String  Bitmap  "ImageList.bmp"
+
+    Property No_Execute Complex Bitmap_Size 16 16 // Determines the size of each image in the image list. It is important to set this property before adding any images.
+    Property No_Execute Complex Imagelist_Size 1 0 // Complex: (Initial,Grow) Initial=Initial number of images that you will be adding. Grow=the number of images by which the image list can grow when the system needs to resize.
+    Property No_Execute Mode Imagelist_Type ILC_Color ILC_Color ILC_Color4 ILC_Color8 ILC_Color8 ILC_Color16 ILC_Color24 ILC_Color32 ILC_ColorDDB ILC_Mask // Specifies the type of image list to create.
+End_Class  // ImageList

@@ -1,0 +1,16 @@
+//AB/ ClassDef
+Class Edit is a AbstractControl Edit ControlMixin DefineControlMixin
+    Set ObjectNameMask To "oEdit<count>"
+    Set ClassHelpName  To "Edit"
+    Set ClassCETV      To 10                        // use TreeView Image #10 (1-based offset)
+
+    Inherit
+
+    Property Integer Label_Row_Offset 1 // Row offset for Label. Result depends on Label_Justification_Mode
+    Property Integer Label_Col_Offset 0 // Column offset for Label. Value depends on Label_Justification_Mode
+    Property Mode Label_Justification_Mode jMode_Top jMode_Left jMode_Right jMode_Top // Mode determines where label's row and column values are offset
+    Property Mode Border_Style Border_ClientEdge Border_None Border_Normal Border_Dialog Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style
+    Property Always_Generate Complex Size 60 120
+    Property No_Execute Boolean Read_Only_State          False  // If true, the contents of the edit buffer are protected.
+    Property No_Execute Boolean Wrap_State               True   // If true, text input will break and wrap to the next line at the end of the object. Otherwise input continues onward on the same line until a carriage return/linefeed is input.
+End_Class

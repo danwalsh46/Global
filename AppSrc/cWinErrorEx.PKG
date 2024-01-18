@@ -1,0 +1,27 @@
+// cWinErrorEx.pkg
+// Compiled by Sergey V. Natarov (senatc@postman.ru)
+//
+
+Use cWinErrorEx.h
+Use cWinKernEx.h
+
+Define WINDOWSEX_SYSTEM_ERROR  For 300
+Define WINDOWSEX_ERROR_PREFIX  For "Windows error"
+Define WINDOWSEX_ERROR_DETAILS For "\n\nDetails"
+
+Procedure WindowsError Integer iErrCode String sDetails
+    Integer iRetChars iRetVal
+    String sMsg sError sErrorDetails
+    If (iErrCode=0) Procedure_Return
+    If NUM_ARGUMENTS Gt 1 Move (WINDOWSEX_ERROR_DETAILS+':'*sDetails) To sErrorDetails
+    ZeroString 255 To sError
+    Move (FormatMessageEf((FORMAT_MESSAGE_FROM_SYSTEM+FORMAT_MESSAGE_IGNORE_INSERTS), FNULL, iErrCode, FNULL, AddressOf(sError), 255, FNULL)) To iRetChars
+    Left sError To sMsg iRetChars
+    Move (ToOEM(sMsg)) To sMsg
+    Move (WINDOWSEX_ERROR_PREFIX*String(iErrCode)+':'*sMsg+sErrorDetails) To sMsg
+    Error WINDOWSEX_SYSTEM_ERROR sMsg
+End_Procedure
+
+#COMMAND WError &#L%RGU #LUG .
+    Send WindowsError !1 !2
+#ENDCOMMAND

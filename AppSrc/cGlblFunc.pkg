@@ -1,0 +1,291 @@
+// GlblFunc.pkg
+//
+// Global Methods
+
+Use File_dlg.pkg
+Use cRegistry.pkg
+
+External_Function GetShortPathName "GetShortPathNameA" Kernel32.Dll ;
+    Pointer lpszLongPath  ;
+    Pointer lpszShortPath ;
+    DWord   cchBuffer     ;
+    Returns DWord
+
+Function IsShortPathName Global String sLongPath Returns String
+    Pointer lpszLongPath lpszShortPath
+    Integer iVoid
+    String  sShortPath
+    //
+//    #IF (!@=>191)
+//    Move (ZeroString(260))       to sShortPath
+//    #ELSE
+    ZeroString 260               to sShortPath
+//    #ENDIF
+    Move (AddressOf(sShortPath)) to lpszShortPath
+    Move (AddressOf(sLongPath))  to lpszLongPath
+    //
+    Move (GetShortPathName (lpszLongPath, lpszShortPath, 260)) to iVoid
+    //
+    Function_Return (Cstring (sShortPath))
+End_Function
+
+External_Function GetLongPathName "GetLongPathNameA" Kernel32.Dll ;
+    Pointer lpszShortPath ;
+    Pointer lpszLongPath  ;
+    DWord   cchBuffer     ;
+    Returns DWord
+
+Function IsLongPathName Global String sShortPath Returns String
+    Pointer lpszShortPath lpszLongPath
+    Integer iVoid
+    String  sLongPath
+    //
+//    #IF (!@=>191)
+//    Move (ZeroString(260))       to sLongPath
+//    #ELSE
+    ZeroString 260               to sLongPath
+//    #ENDIF
+    Move (AddressOf(sLongPath))  to lpszLongPath
+    Move (AddressOf(sShortPath)) to lpszShortPath
+    //
+    Move (GetLongPathName (lpszShortPath, lpszLongPath, 260)) to iVoid
+    //
+    Function_Return (Cstring (sLongPath))
+End_Function
+
+External_Function ShellExecute "ShellExecuteA" shell32.dll ;
+    Handle hWnd ;
+    String lpOperation ;
+    String lpFile ;
+    String lpParameters ;
+    String lpDirectory ;
+    DWord iShowCmd Returns Handle
+
+//function IsTimeString global ;
+//    integer iHr integer iMin integer iSec returns string
+//    //
+//    string sHr sMin sSec
+//    //
+//    if (iHr  < 10) move ("0" + string(iHr )) to sHr
+//    else           move               iHr    to sHr
+//    if (iMin < 10) move ("0" + string(iMin)) to sMin
+//    else           move               iMin   to sMin
+//    if (iSec < 10) move ("0" + string(iSec)) to sSec
+//    else           move               iSec   to sSec
+//    function_return (sHr + ":" + sMin + ":" + sSec)
+//end_function // IsTimeString
+
+Function IsSelectFile Global String sFilter String sCaption String sInitFolder Returns String
+    String  Fname
+    Integer Retval
+    Integer OpenFileObj
+    
+    Object OpenFile is a OpenDialog
+        Set Filter_String       to sFilter
+        Set FileMustExist_State to True
+        Set NoChangeDir_State   to True
+    
+        Set Dialog_Caption to sCaption
+        Set Initial_Folder to sInitFolder
+        Move Current_Object to OpenFileObj
+    End_Object
+    
+    Get Show_Dialog of OpenFileObj to Retval
+    
+    If RetVal ;
+        Move (File_Name(OpenFileObj)) to fName
+    
+    Send Destroy_Object to OpenFileObj
+    Function_Return Fname
+End_Function
+
+#IFDEF LSD_VDFQUERY
+#ELSE
+Function IsEncryptedPassword Global String sPassword Returns String
+    boolean bOdd
+    integer iLength iCounter iAscii
+    string  sEncrypted sKey
+    //
+    move (length(sPassword)) to iLength
+    move "" to sEncrypted
+    move DFTRUE to bOdd
+    for iCounter from 1 to iLength
+        move (mid(sPassword,1,iCounter))   to sKey
+        move (ascii(sKey))                 to iAscii
+        If bOdd Begin
+            Move (iAscii + iCounter) to iAscii
+        End
+        Else Begin
+            Move (iAscii - iCounter) to iAscii
+        End
+        move (character(iAscii))           to sKey
+        move (sEncrypted + sKey)           to sEncrypted
+        move (NOT(bOdd)) to bOdd
+    loop
+    function_return sEncrypted
+End_Function
+#ENDIF
+
+Function IsValidIntegerValue Global String sValue Returns Boolean
+    Integer iLength iCheck iCount iASCII
+    String  sCheck
+    //
+    Move (Length(sValue)) to iLength
+    Move 1                to iCheck
+    //
+    For iCount from 1 to iLength
+        Move (mid(sValue,1,iCheck)) to sCheck
+        Move (ascii(sCheck))        to iASCII
+        If ((iASCII < 48) or (iASCII > 57)) Begin
+            Function_Return
+        End
+        Increment iCheck
+    Loop
+    Function_Return True
+End_Function
+
+Function IsNetworkPath Global String sFilename Returns String
+    Boolean bOk
+    Integer iLength iPos
+    String  sDrive sKey sValue sPath
+    Handle  hoRegistry
+    //
+    Move (Left(sFilename,1))            to sDrive
+    Move ("Network\" + sDrive)          to sKey
+    Move "RemotePath"                   to sValue
+    Move (Length(sFilename))            to iLength
+    Move (Mid(sFilename,(iLength-2),3)) to sFilename
+    //
+    Get Create (RefClass(cRegistry)) to hoRegistry
+    If (hoRegistry) Begin
+        Set phRootKey of hoRegistry      to HKEY_CURRENT_USER
+        Get OpenKey   of hoRegistry sKey to bOk
+        If (bOk) Begin
+            If (ValueExists(hoRegistry,sValue)) Begin
+                Get ReadString of hoRegistry sValue to sPath
+                Move (sPath + sFilename)            to sPath
+            End
+        End
+    End
+    //
+    Function_Return sPath
+End_Function
+
+Function IsNetworkDrive Global String sDrive Returns Boolean
+    Boolean bOk
+    String  sKey
+    Handle  hoRegistry
+    //
+    Move ("Network\" + sDrive) to sKey
+    //
+    Get Create (RefClass(cRegistry)) to hoRegistry
+    If (hoRegistry) Begin
+        Set phRootKey of hoRegistry      to HKEY_CURRENT_USER
+        Get OpenKey   of hoRegistry sKey to bOk
+    End
+    //
+    Function_Return bOk
+End_Function
+
+// Create and augment procedure and functions
+Procedure DoStartDocument Global ;
+    String sOperation            ;
+    String sDocument             ;
+    String sParameters
+    //
+    Handle hWnd hInstance
+    //
+    Get Window_Handle to hWnd
+    Move (ShellExecute(hWnd, sOperation, sDocument, sParameters, "", 1)) to hInstance
+End_Procedure
+
+// the same as Nils' NewTableID, but without the Request_Entry_Update, for use in procedural code outside of a DDO
+//
+// Function to auto-create a unique ID value - without the need to use a system file to autoincrement new ID's.
+// Syntax:
+//   Move (vNewTableID (hTable, hField, hIDFieldIndex)) to iRetval
+//   Use it within Procedure Creating in a DD - after the line Forward Send Creating.
+// Sample:
+//   Procedure Creating
+//
+//     Forward Send Creating
+//
+//     Move (vNewTableID(Customer.File_Number, 1, 1)) to Customer.ID
+//  End_Procedure
+//
+// Returns:
+//   The new unique ID.
+Function vNewTableID Global Integer iFileNumber Integer iFieldNumber Integer iIndex Returns Integer
+    Integer iID
+    //
+    Move 1 to iID
+    Clear iFileNumber
+    Fill_Field iFileNumber iFieldNumber With DF_HIGH
+    Vfind iFileNumber iIndex LE
+    If (Found) Begin
+        Get_Field_Value iFileNumber iFieldNumber to iID
+        Increment iID
+    End   
+    Clear iFileNumber
+//    Send Request_Entry_Update iFileNumber 3
+    Set_Field_Value iFileNumber iFieldNumber to iID 
+    Function_Return iID
+End_Function
+
+Function TwelveHourTime Global String sValue Returns String
+    Boolean bPM
+    Integer iHr
+    String  sHr sMin
+    //
+    Move (Trim(sValue))      to sHr
+    Move (Mid(sHr,2,3))      to sMin
+    Move (Left(sHr,2))       to sHr
+    Move (Integer(sHr))      to iHr
+    Move (iHr > 11)          to bPM
+    If (iHr > 12) Begin
+        Move (iHr - 12)      to iHr
+    End
+    Move (String(iHr))       to sHr
+    Move (sHr + ":" + sMin)  to sHr
+    If bPM Begin
+        Move "PM"            to sMin
+    End
+    Else Begin
+        Move "AM"            to sMin
+    End
+    Move (sHr * sMin)        to sValue
+    //
+    Function_Return sValue
+End_Function
+
+Struct tSystemTime
+    Short wYear
+    Short wMonth
+    Short wDayofWeek
+    Short wDay
+    Short wHour
+    Short wMinute
+    Short wSecond
+    Short wMilliseconds
+End_Struct
+
+External_Function GetSystemTime "GetSystemTime" kernel32.dll Pointer lpName Returns Integer
+
+// returns the current system time in UTC
+//  https://docs.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemtime
+Function CurrentSystemTime Global Returns DateTime
+    tSystemTime systime
+    Pointer pSystime
+    Integer iRetVal
+    DateTime dtSystemTime
+    
+    Move (AddressOf(systime)) to pSystime    
+    Move (GetSystemTime(pSystime)) to iRetVal
+    Move (DateSetYear(dtSystemTime,systime.wYear)) to dtSystemTime
+    Move (DateSetMonth(dtSystemTime,systime.wMonth)) to dtSystemTime
+    Move (DateSetDay(dtSystemTime,systime.wDay)) to dtSystemTime
+    Move (DateSetHour(dtSystemTime,systime.wHour)) to dtSystemTime
+    Move (DateSetMinute(dtSystemTime,systime.wMinute)) to dtSystemTime
+    Move (DateSetMillisecond(dtSystemTime,systime.wMilliseconds)) to dtSystemTime
+    Function_Return dtSystemTime    
+End_Function

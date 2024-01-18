@@ -1,0 +1,68 @@
+//****************************************************************************//
+//                                                                            //
+// File Name: VpeRepKy.Pkg                                                    //
+// Purpose:   Report interrupt panel for VPE.                                 //
+//            This is the same as DFRepKy.Pkg except that the preview         //
+//            is sent to VPE rather than to Winprint.                         //
+// Author:    Carl Schaer                                                     //
+//            713-270-4000                                                    //
+//            carls@hcss.com                                                  //
+//                                                                            //
+//****************************************************************************//
+Use Windows.pkg
+
+Object oVPE_Print_Cancel_Rpt is a ModalPanel
+
+   Set Label to "Report Interrupt"
+   Set Size to 73 184
+   Set Locate_Mode to Center_on_Panel
+
+   Object Textbox1 is a TextBox
+      Set label to "Do you wish to cancel this Report?"
+      Set Location to 9 34
+   End_Object    // Textbox1
+
+   Object YesBn is a Button
+     Set Label to "&Yes"
+     Set Size to 14 50
+     Set Location to 38 9
+
+     Procedure OnCLick
+       Procedure_Return MSG_OK
+     End_Procedure // OnCLick
+
+   End_Object    // oOK_bn
+
+   Object NoBn is a Button
+     Set Label to "&No"
+     Set Location to 38 64
+
+     Procedure OnCLick
+       Procedure_Return MSG_Cancel
+     End_Procedure // OnCLick
+
+   End_Object    // oCancel_bn
+
+   Object PreviewBn is a Button
+
+     Set Label to "&Preview..."
+     Set Location to 38 119
+
+     Procedure OnCLick
+        Local Pointer hwnd
+        Send DFPreview to WinprintID False  // Do not enable auto delete
+     End_Procedure // OnCLick
+
+   End_Object    // OK_bn
+
+   On_Key Key_Y Send OnClick to (YesBn(Current_Object))
+   On_Key Key_N Send OnClick to (NoBn(Current_Object))
+   On_Key Key_P Send OnClick to (PreviewBn(Current_Object))
+
+   Function Halt_VPE_Report Returns integer
+      Local Integer iRetVal
+      Get msg_Popup_Modal to iRetVal
+      Function_Return (iRetVal eq msg_Ok)
+   End_Function  // Halt_VPE_Report
+
+End_Object  // oVPE_Print_Cancel_Rpt

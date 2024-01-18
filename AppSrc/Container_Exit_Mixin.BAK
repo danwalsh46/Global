@@ -1,0 +1,427 @@
+// ************************************************************************************
+// File Name: Container_Exit_Mixin.Pkg
+// Class: cContainerExitControl     :Mixin Class For Any Container Class
+// Class: cObjectExitControl        :Mixin Class For Any UI Control Which Accepts The Focus (dbform etc) which 
+//                                   would be located inside the container (dbaware or not).
+//
+// Purpose:
+//      Adds Ability To Detect And Control Focus Exiting Out Of A Container
+//      Default: No Change To Your Apps. Abilities Of Container Must Be Turned ON (with a property) To Function.
+//
+//      Many times you will place controls for a child or other DDO on a tabpage or within a dbgroup or container.
+//      Since (should_save()) only takes into account the main_DDO and not it's child files, a necessary 
+//      addition is needed to make sure child files are saved (like in a dbgrid) prior to exiting the container (i.e. tab page or other).
+//      These 2 mixin classes will give you "bulletproof" control over the user exiting and not saving OR 
+//      simply a hook to do some custom code when exiting out of a container.
+//
+// Author: Peter A Donovan - Sonata Software July 2004
+// Revision 2.0  *The 1.0 version was made invalid when DAW no longer used the cUIObject as the base object
+//                for all controls, and replaced it with the cObject.  This is why the 1.0 version does not
+//                work with VDF9.1 (Only VDF8).
+//
+// PLEASE VISIT www.SonataSoftware.US - FOR MORE INFORMATION.
+//
+// Minimum VDF Version = 9.1 (Tests On This Version Only)
+// ***********************************
+// FOR USE WITH VDF9.1 OR GREATER ONLY 
+// ***********************************
+//
+// No Warranties Or Claims Accompany This Package.
+//
+// Directions For Use:
+// Requires Use Of Subclasses (Global And/Or Local).
+//**************************************************
+//-------------------------------------------------------------------------------------------------------//
+// 1.  Add This Container Mixin To A Container CLASS (Or More) Of Your Choice.
+//     Directions: Alter Your Global Subclasses As shown below: (\Visual DataFlex9.1\Usr\Global\Appsrc)
+//     (This adds the ability for the container to detect exiting out of the container)
+//
+//(a)  File: MyCompany_dbGroup.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbGroup Is A SonataEC_dbGroup // EC=Exit Control
+//         Procedure Construct_Object                   ***************  
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+//
+//(b)  File: MyCompany_dbTabPage.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbTabPage Is A SonataEC_dbTabPage
+//         Procedure Construct_Object
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+//
+//(c)  File: MyCompany_dbContainer3D.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbContainer3D Is A SonataEC_dbContainer3D
+//         Procedure Construct_Object
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+
+//-------------------------------------------------------------------------------------------------------//
+// 2.  Add This UIControl Mixin To A CLASS (Or More) Of Your Choice.
+//     Directions: Alter Your Global Subclasses As shown below: (\Visual DataFlex9.1\Usr\Global\Appsrc)
+//     (This adds the ability for the container to detect exiting out of the container FROM ONE OF THESE CLASSES)
+
+//(a)  Package To Alter: MyCompany_dbForm.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbForm Is A SonataEC_dbForm 
+//         Procedure Construct_Object
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+//
+
+//(b)  Package To Alter: MyCompany_dbSpinForm.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbSpinForm Is A SonataEC_dbSpinForm
+//         Procedure Construct_Object
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+//
+
+//(c)  Package To Alter: MyCompany_dbEdit.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbEdit Is A SonataEC_dbEdit
+//         Procedure Construct_Object
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+//
+
+//(d)  Package To Alter: MyCompany_dbComboForm.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbComboForm Is A SonataEC_dbComboForm
+//         Procedure Construct_Object
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+//
+
+//(e)  Package To Alter: MyCompany_dbCheckBox.Pkg
+//
+//     Use Container_Exit_Mixin.Pkg
+//     Class MyCompany_dbCheckBox Is A SonataEC_dbCheckBox
+//         Procedure Construct_Object
+//             Forward Send Construct_Object
+//         End_Procedure
+//     End_Class
+//
+
+//-------------------------------------------------------------------------------------------------------//
+// 3. In Your VIEW, Enable The Container To Control Exiting And Augment The Exiting Message And Result (allow focus to exit?)
+//
+//     Enable A Container OBJECT To Control Focus Exiting.  EXAMPLE #1:
+//
+//     Object CustomerNotesGroup Is a MyCompany_dbGroup
+//         // In Top Or Bottom Section Of Custom Code: (example)
+//         Set pbExitMixinON To True
+//         Function OnContainerExit Returns Boolean // Allow Exit?
+//             If (Should_Save(CNotes_DD(Self))) Begin
+//                 Send Request_Save_No_Clear
+//                 If (Should_Save(CNotes_DD(Self))) Begin
+//                     Send Stop_Box "Exit Warning: Customer Notes Not Saved: Please Clear Or Save"
+//                     Function_Return True  // Focus will not exit this container.
+//                 End
+//             End
+//             Function_Return False // Exiting Is Allowed.
+//         End_Function
+//    End_Object
+// ************************************************************************************
+//     Enable A Container OBJECT To Control Focus Exiting.  EXAMPLE #2:
+//     (*Warning Only)
+//     Object odbTabPage1 Is a MyCompany_dbTabPage
+//         // In Top Or Bottom Section Of Custom Code: (example)
+//         Set pbExitMixinON To True
+//         Function OnContainerExit Returns Boolean // Allow Exit?
+//             If (Should_Save(CNotes_DD(Self))) Begin
+//                 Send Info_Box "Polite Exit Warning: Your Changes Have Not Been Saved Yet. Please Remember To Save"
+//             End
+//             Function_Return False // Exiting Is Allowed.
+//         End_Function
+//    End_Object
+// ************************************************************************************
+
+//-------------------------------------------------------------------------------------------------------//
+// Note: These mixin classes also work for non-data-aware classes if you wish.
+//
+// End Of Documentation****************************************************************
+
+// Mixin For Container Objects:
+Class cContainerExitControl Is A Mixin
+    Procedure EnableContainerExitAbility
+        Object ChildObjectArray Is A Array
+            // 0 = Child Object ID
+        End_Object
+        Property Boolean pbExitMixinON    Public False
+        Property Boolean pbChildContainer Public False
+        Property Handle  phArrayID        Public (ChildObjectArray(Self))
+    End_Procedure
+    Function OnContainerExit Returns Boolean
+        Function_Return False
+    End_Function
+    Function ParentExiting Integer iWhereTo Returns Boolean
+        // Focus May Be Leaving The Container ;
+        // Programmer Controls Permission
+        Integer iItem iObjects
+        Boolean bExitingContainer bReject
+        Handle  hArray hObjectID
+        Get phArrayID To hArray
+        Get Item_Count Of hArray To iObjects
+        If (pbExitMixinON(Self)) Begin
+            For iItem From 0 To (iObjects - 1)
+                Get Array_Value Of hArray iItem To hObjectID
+                If (hObjectID = iWhereTo) Begin
+                    // The next focus is still inside this container.
+                    Function_Return False
+                End
+            Loop
+            Move True To bExitingContainer // Documentation Only
+            Get OnContainerExit To bReject
+            If (bReject) Function_Return bReject
+        End
+        If (pbChildContainer(Self)) Forward Get ParentExiting iWhereTo To bReject
+        Function_Return bReject
+    End_Function
+    Procedure ObjectRegistration Handle hObjectID Handle hOuterContainerArray
+        Integer iItem
+        Handle  hArray
+        Get phArrayID             To hArray
+        // Pass-thru for child containers: each container gets it's own children only.
+        If (hArray <> hOuterContainerArray) Begin
+            Set pbChildContainer To True
+            Forward Send ObjectRegistration hObjectID hOuterContainerArray
+        End
+        Else Begin
+            Get Item_Count  Of hArray To iItem
+            Set Array_Value Of hArray Item iItem To hObjectID
+        End
+    End_Procedure
+    Procedure LoadChildObjects
+        // Always Load : Very Fast, And Ability Becomes Dynamic.
+        Handle hArray
+        Get phArrayID To hArray
+        Send Delete_Data Of hArray
+        If (Child_Count(Self)) Begin
+            Broadcast Recursive Send DoLoadYourObjectID hArray // All objects (even embedded in subcontainers) get this.
+            If (pbExitMixinON(Self)) Begin
+                Broadcast Recursive Set  pbObjExitMixinON To True
+            End
+        End
+    End_Procedure
+    Procedure Activating
+        Forward Send Activating
+        Send LoadChildObjects
+    End_Procedure
+    Function OnContainerExit Returns Boolean // False = OK, Exit
+        Function_Return False
+    End_Function
+End_Class
+// Mixin For Focus Objects:
+Class cObjectExitControl Is A Mixin
+    Procedure EnableObjExitControl
+        Property Boolean pbObjExitMixinON  Public False
+    End_Procedure
+    Procedure Exiting Integer iWhereTo Returns Integer
+        Integer iRetVal
+        Forward Get Msg_Exiting iWhereTo To iRetVal
+        If (iRetVal) Procedure_Return iRetVal
+        If (pbObjExitMixinON(Self)) Begin
+            Get ParentExiting iWhereTo To iRetVal
+        End
+        Procedure_Return iRetVal
+    End_Procedure
+End_Class
+
+Procedure DoLoadYourObjectID FOR cObject Handle hArray
+    Integer iMode
+    Get Delegation_Mode To iMode
+    Set Delegation_Mode To Delegate_To_Parent
+    Send ObjectRegistration (Object_ID(Self)) hArray // hArray is a pass-thru identifier for embedded containers.
+    Set Delegation_Mode To iMode
+End_Procedure
+
+// Containers Within Containers:
+// Complex Applications:
+//      It is ok to use any level of child containers within containers.
+//      Each child container may be enabled to control it's own exiting with the othermost container also enabled.
+//
+// Dynamic Flipping Of Container Properties By Programmer:
+//      Containers must run procedure activating (loads children) with pbExitMixinON True In Order To Be Dynamic.
+//      Then, all containers who have activated (loaded their children) can be flipped off and on dynamically.
+//
+// *CONTAINER CLASSES*
+Class SonataEC_dbGroup Is A dbGroup
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // Load New Properties And Child Object Array Into The Instantiated Object:
+        Send EnableContainerExitAbility
+    End_Procedure
+    Import_Class_Protocol cContainerExitControl
+End_Class
+
+Class SonataEC_dbContainer3D Is A dbContainer3D
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // Load New Properties And Child Object Array Into The Instantiated Object:
+        Send EnableContainerExitAbility
+    End_Procedure
+    Import_Class_Protocol cContainerExitControl
+End_Class
+
+Class SonataEC_dbTabPage Is A dbTabPage
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // Load New Properties And Child Object Array Into The Instantiated Object:
+        Send EnableContainerExitAbility
+    End_Procedure
+    Import_Class_Protocol cContainerExitControl
+End_Class
+
+Class SonataEC_Group Is A Group
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // Load New Properties And Child Object Array Into The Instantiated Object:
+        Send EnableContainerExitAbility
+    End_Procedure
+    Import_Class_Protocol cContainerExitControl
+End_Class
+
+Class SonataEC_Container3D Is A Container3D
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // Load New Properties And Child Object Array Into The Instantiated Object:
+        Send EnableContainerExitAbility
+    End_Procedure
+    Import_Class_Protocol cContainerExitControl
+End_Class
+
+// *UI FOCUS CONTROL CLASSES* (Data Aware)
+
+Class SonataEC_dbForm is a dbForm
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_dbComboForm is a dbComboForm
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_dbSpinForm is a dbSpinForm
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_dbCheckbox is a dbCheckbox
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_dbEdit is a dbEdit
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+// *UI FOCUS CONTROL CLASSES* (Non-Data Aware)
+
+Class SonataEC_Form is a Form
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_ComboForm is a ComboForm
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_SpinForm is a SpinForm
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_Checkbox is a Checkbox
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_Edit is a Edit
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_Grid is a Grid
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+
+Class SonataEC_Button is a Button
+    Procedure Construct_Object
+        Forward Send Construct_Object    // Important
+        // Create your property definitions here...
+        Send EnableObjExitControl
+    End_Procedure
+    Import_Class_Protocol cObjectExitControl
+End_Class
+// End Of Package.
+//NOTE:  You must precompile your global workspace and/or local workspace classes after making these changes!
+
+//NOTE:  See Line #127 : Shows How To Implement This Container Ability.
+
+//NOTE TO ADVANCED USERS:
+//I recommend using the subclassing enclosed instead of directly using the mixin classes.
+//There are a number of mixin classes that also augment exiting which would conflict with this work. Thank You.

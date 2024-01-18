@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbWizardPageContainer is a dbContainer3d
+    Set ClassPackage To "cGlblDbWizard.pkg"
+    Inherit
+End_Class

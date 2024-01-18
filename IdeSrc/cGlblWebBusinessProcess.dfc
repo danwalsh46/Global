@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblWebBusinessProcess is a cWebBusinessProcess
+    Set ClassPackage To "cGlblWebBusinessProcess.pkg"
+    Inherit
+End_Class

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDbTabView is a dbTabView
+    Set ClassPackage To "cGlblDbTabView.pkg"
+    Inherit
+End_Class

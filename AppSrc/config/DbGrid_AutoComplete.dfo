@@ -1,0 +1,33 @@
+//AB/ OBJECTDEF
+Object oDBGrid_AutoComplete Is A DBGrid_AutoComplete 
+  //AB-StoreStart
+  //#######################
+  //Required Settings
+  //Set  AutoComplete_Index item {col#} to 1 // index#
+  //Send ToggleAutoComplete {col#} FALSE // Default is TRUE
+  //#######################
+  //Optional Settings
+  //Set FindMode item {col#} to GE // Default is EQ. Only options are EQ or GE
+  //Set PopupOffset item {col#} to 0 0 // adjust the location of the popup with +/- integer values
+  //#######################
+  //Display Columns
+  //                        Column# | DD of find file | Find file.field | Column width
+  //Send Add_Display_Column {col#} (Inventry_DD(Self)) File_Field Inventry.Desc       160
+  //Send Add_Display_Column {col#} (Inventry_DD(Self)) File_Field Inventry.Categ_Code 20
+  // tip: add the recnum but make the column width zero if you want to make that record active.
+  //Send Add_Display_Column {col#} (Inventry_DD(Self)) File_Field Inventry.Recnum     0
+  //
+  //Procedure Accepted
+  //    oAux_Value is an array object that stores all the values of the popup from the row selected
+  //    Each item# of the array corresponds with the column from the popup.
+  //
+  //    default a value
+  //  Get String_Value of oAux_Value item 0 to sVal
+  //  Set FIELD_CHANGED_VALUE of POBody_DD FIELD POBody.Desc to (trim(sVal))
+  //
+  //    make an entire record active
+  //  Get Integer_Value of oAux_Value item 2 to iRecnum
+  //  Send Find_By_Recnum of Inventry_DD Inventry.File_Number iRecnum
+  //End_Procedure // Accepted
+  //AB-StoreEnd
+End_Object // oDBGrid_AutoComplete

@@ -1,0 +1,16 @@
+//AB/ CLASSDEF
+Class Button IS A AbstractControl Button ABMetaButtonMixin DefineABMetaButtonMixin
+    Set ObjectNameMask To "oButton<count>"
+    Set ClassHelpName  To "Button"
+    Set ClassCETV      To 4                // use TreeView Image #4 (1-based offset)
+    inherit
+    Property NO_EXECUTE Boolean Default_State False // If true, the button is designated as the default-action button for the dialog that contains it.
+    Property String Bitmap // Bitmap Resource name or file name (options: /T=transparent /3D=3D Display)
+    Property Complex Size 14 50 // + (windows standard is 14,50)
+    Property Boolean MultiLineState False          // If the text in button cannot be displayed in one line, should it wrap onto multiple lines? If true, text is left justified (not centered).
+    Property Boolean FlatState False               // The button will have a flat appearance when this property is set to True. If false, button has a 3d appearance.
+    Property NO_EXECUTE Boolean Enabled_State True // Disable the button from taking user-input?
+    // cancel these
+    Property no_visible no_execute no_generate Color Color clWindow
+    Property no_visible no_execute no_generate Color TextColor clWindowText // Text Color
+End_Class

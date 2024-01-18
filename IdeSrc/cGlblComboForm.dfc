@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblComboForm is a ComboForm
+    Set ClassPackage To "cGlblComboForm.pkg"
+    Inherit
+End_Class

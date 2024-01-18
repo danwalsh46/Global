@@ -1,0 +1,65 @@
+//round.pkg
+
+//MAS 08/14/00 (Dev 2308) Modified Round_Number function to correctly round to the nearest whole dollar.  For some
+//             reason if an image has no decimal places, a number with decimals still gets printed to the image and the
+//             decimals will not truncate.
+//CHS 9/2/99   (Bug 1655) Added the function RoundNumberToString, which is used in Vpe3Prnt.Pkg.
+
+/ROUND_IMAGE
+____________. ____________._ ____________.__ ____________.___  ____________.____
+/COMMA_IMAGE
+______,_____. ______,_____._ _____,______.__ ______,_____.___  _____,______.____
+/*
+
+Function Round_Number Number Val Integer Decimal_Places Returns Number
+   Local Number Round_Increment
+   Local Integer iVal
+   If (Decimal_Places >= 0 and Decimal_Places <= 4) Begin
+      Move Decimal_Places to Windowindex
+      If (Decimal_Places = 0) Move 0.5     to Round_Increment
+      If (Decimal_Places = 1) Move 0.05    to Round_Increment
+      If (Decimal_Places = 2) Move 0.005   to Round_Increment
+      If (Decimal_Places = 3) Move 0.0005  to Round_Increment
+      If (Decimal_Places = 4) Move 0.00005 to Round_Increment
+      If (Val < 0.0) Move (-1.0 * Round_Increment) to Round_Increment
+//MAS 08/14/00      Move (Val + Round_Increment) to ROUND_IMAGE.1&
+      If (Decimal_Places > 0) Begin  //MAS 08/14/00
+        Move (Val + Round_Increment) to ROUND_IMAGE.1&
+        Move ROUND_IMAGE.1& to Val
+      End
+       Else Begin //MAS 08/14/00  If no decimal places, do not use first round_image.
+         Move (Round(Val)) to iVal
+         Move iVal to Val
+       End
+   End
+   Function_Return Val
+End_Function  // Round_Number
+
+
+// Round a number and change it to a string with commas.
+Function RoundNumberToString Number Num Integer iPoints Returns String
+   Local String QuanString
+   Move (Round_Number(Self,Num,iPoints)) to Num
+   // Using Windowindex does not work.
+   If (iPoints = 0) Begin
+      Print Num to Comma_Image.1
+      Movestr Comma_Image.1  to QuanString
+   End
+   If (iPoints = 1) Begin
+      Print Num to Comma_Image.2
+      Movestr Comma_Image.2  to QuanString
+   End
+   If (iPoints = 2) Begin
+      Print Num to Comma_Image.3
+      Movestr Comma_Image.3  to QuanString
+   End
+   If (iPoints = 3) Begin
+      Print Num to Comma_Image.4
+      Movestr Comma_Image.4  to QuanString
+   End
+   If (iPoints = 4) Begin
+      Print Num to Comma_Image.5
+      Movestr Comma_Image.5  to QuanString
+   End
+   Function_Return (Trim(QuanString))
+End_Function  // RoundNumberToString

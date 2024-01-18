@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblAutoWebReport is a cAutoWebReport
+    Set ClassPackage To "cGlblAutoWebReport.pkg"
+    Inherit
+End_Class

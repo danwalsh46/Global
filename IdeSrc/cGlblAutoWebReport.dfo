@@ -1,0 +1,11 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    // Method to start the report from your own procedure is:
+    //      Get DoAutoReport iIndex sHrefName iMaxCount iStartRecord To iLastRecord
+    // Method to start the report from an ASP page is:
+    //      <% EndRecId = <WboName>.Call ("Get_AutoReport", sTable, iIndex, hRefName, iMaxCount, iStartRecord) %>
+    // For Example:
+    //      <% EndRecId = <oCustomerReport>.Call ("Get_AutoReport", "Customer", 1, "", 50, 1) %>
+    //AB-StoreEnd
+End_Object

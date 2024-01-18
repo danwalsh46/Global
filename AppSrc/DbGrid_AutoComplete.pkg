@@ -1,0 +1,359 @@
+Use AutoComplete_Mixin.pkg
+
+//************************************************************
+// This class duplicates the arrays and properties used in the
+// grid. We create one of the objects for every column in the
+// grid where autocomplete will be used. Each object stores
+// settings for that column. When typing in a column, we load
+// the setting stored for that column into the grid.
+// [INTERNAL]
+Class cColumn_Settings is a DFObject 
+  Procedure Construct_Object
+    Set Focus_Mode to NONFOCUSABLE
+    Forward Send Construct_Object
+    Object oCol_Server is an Array
+    End_Object // oCol_Server
+    Object oCol_File is an Array
+    End_Object // oCol_File
+    Object oCol_Field is an Array
+    End_Object // oCol_Field
+    Object oCol_Width is an Array
+    End_Object // oCol_Width
+    Object oCol_Pos is an Array
+    End_Object // oCol_Pos
+    Property Boolean pbAutoComplete_Status  TRUE
+    Property Integer piList_Index           0
+    Property Integer piHiPopupOffset        0
+    Property Integer piLowPopupOffset       0
+    Property Integer piFind_Mode            EQ
+  End_Procedure // Construct_Object
+End_Class
+
+//************************************************************
+// This class replaces the normal grid class to support the
+// autocomplete function for cells. This class differs from the
+// DBForm in that each column can have a seperate autocomplete
+// object. Different data sources and indexes for those.
+Class DbGrid_AutoComplete Is a DBGrid
+  //************************************************************
+  // [INTERNAL]
+  Procedure Construct_Object
+    Forward Send Construct_Object
+    Property Integer piCurrentCol -1   // INTERNAL USE ONLY - controls whether column settings need to be reloaded
+    
+    //************************************************************
+    // This object stores the handles to any autocomplete settings
+    // stored in the cColumn_Settings
+    // [INTERNAL]
+    Object oColumn_Settings_ID is an Array
+    End_Object // oColumn_Settings_ID
+    
+    Send Define_AutoComplete_Mixin
+    On_Key Key_Enter Send Accept_AutoComplete                  
+  End_Procedure // Construct_Object
+  
+  Import_Class_Protocol AutoComplete_Mixin
+
+  // Set AutoComplete_Index Item 0 to 1
+  // Set AutoComplete_Index item 3 to 4
+  //
+  //************************************************************
+  // Use this to set the autocomplete index for each column. You
+  // must first specify the column (zero based) then the index#.
+  Procedure Set AutoComplete_Index Integer iColumn Integer iIndex
+    Integer iID
+    Get Integer_Value of oColumn_Settings_ID item iColumn to iID
+    If (iID = 0) Begin
+      Get Create U_cColumn_Settings to iID
+      Set Array_Value of oColumn_Settings_ID item iColumn to iID
+    End
+    Set piList_Index of iID to iIndex
+  End_Procedure // AutoComplete_Index
+
+  // Send ToggleAutoComplete Item 4 (Cust.On_Hold <> "Y")
+  //
+  //************************************************************ 
+  // Use this to toggle the autocomplete option on and off for
+  // each column. This can be used at runtime based a set of rules
+  Procedure ToggleAutoComplete Integer iColumn Boolean bVal
+    Integer iID
+    Get Integer_Value of oColumn_Settings_ID item iColumn to iID
+    If (iID = 0) Begin
+      Get Create U_cColumn_Settings to iID
+      Set Array_Value of oColumn_Settings_ID item iColumn to iID
+    End
+    Set pbAutoComplete_Status of iID to bVal
+  End_Procedure // ToggleAutoComplete
+  
+  // Set PopupOffset item 0 to 1 -2 // for column 0, +1 vertical, -2 horizontal
+  //
+  //************************************************************
+  // This procedure will allow you to adjust where the popup occurs.
+  // It may be needed when object sizes are non-standard, or the
+  // object is several layers deep within containers/panels/tabdialogs.
+  Procedure Set PopupOffset Integer iColumn Integer iHi Integer iLow
+    Integer iID
+    Get Integer_Value of oColumn_Settings_ID item iColumn to iID
+    If (iID = 0) Begin
+      Get Create U_cColumn_Settings to iID
+      Set Array_Value of oColumn_Settings_ID item iColumn to iID
+    End
+    Set piHiPopupOffset  of iID to iHi
+    Set piLowPopupOffset of iID to iLow
+  End_Procedure // Set PopupOffset
+  
+  // Set FindMode item 0 to GE // for column 0 use GE
+  // Set FindMode item 1 to EQ // for column 1 use GE
+  //
+  //************************************************************
+  // This procedure will allow you to set the find mode for each
+  // column. The default is EQ but this can be changed to GE.
+  Procedure Set FindMode Integer iColumn Integer iMode
+    Integer iID
+    Get Integer_Value of oColumn_Settings_ID item iColumn to iID
+    If (iID = 0) Begin
+      Get Create U_cColumn_Settings to iID
+      Set Array_Value of oColumn_Settings_ID item iColumn to iID
+    End
+    Set piFind_Mode of iID to iMode
+  End_Procedure // Set PopupOffset
+
+  // This will be used to add additional columns to the
+  // autocomplete list. You must also specify the column
+  // width for each item you add.
+  //   Example of data from one file
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Vendor.Name     80
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Vendor.Address1 100
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Vendor.Address2 100
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Vendor.City     75
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Vendor.State    20
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Vendor.Zip      40
+  //
+  //   Example of Data from two related files.
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Invoice.Num     80
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Invoice.Date    80
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Billto.Name     100
+  //   Send Add_Display_Column Item 0 (Vendor_DD(Self)) FILE_FIELD Invoice.Amt     75
+  //************************************************************
+  Procedure Add_Display_Column Integer iColumn Handle hServer Integer iFile Integer iField Integer iCol_Width 
+    Integer iCount iItem iTemp iWidth iID
+    If (hServer = 0) Error 999 ("Attempt to add an additional column with an invalid server object\nColumn# "+String(iColumn))
+    Else If (iFile = 0) Error 999 ("Attempt to add an additional column with an invalid file#\nFile# "+String(iFile))
+    Else If (iFile <> Main_File(hServer)) Error 999 ("Attempt to add an additional column where file does not match server\nFile# "+String(iFile)+" Server "+String(Main_File(hServer)))
+    Else Begin
+      Get Integer_Value of oColumn_Settings_ID item iColumn to iID
+      If (iID = 0) Begin
+        Get Create U_cColumn_Settings to iID
+        Set Array_Value of oColumn_Settings_ID item iColumn to iID
+      End
+      // Add up all column widths
+      Get Item_Count of (oCol_Server(iID)) to iCount
+      For iItem from 0 to (iCount - 1)
+        Get Array_Value of (oCol_Width(iID)) item iItem to iTemp
+        Add iTemp to iWidth
+      Loop
+      //
+      Set Array_Value of (oCol_Server(iID))  item iCount to hServer
+      Set Array_Value of (oCol_File(iID))    item iCount to iFile
+      Set Array_Value of (oCol_Field(iID))   item iCount to iField
+      Set Array_Value of (oCol_Width(iID))   item iCount to iCol_Width
+      Set Array_Value of (oCol_Pos(iID))     item iCount to iWidth
+    End
+  End_Procedure // Add_Display_Col
+
+  //************************************************************
+  // This procedure will default all the file.field and servers
+  // for each column in the grid. It will first check to see if
+  // there was an alternate file.field and server before it sets it
+  // [INTERNAL]
+  //************************************************************
+  Procedure AutoComplete_Find
+    Integer iCol iID iItem iCount iVal
+    String sSeedValue
+    Number nSeedValue
+    Handle hObj hList
+
+    // kill list if it exists
+    Send Kill_AutoComplete
+    //
+    Get Current_Col to iCol
+    Get Integer_Value of oColumn_Settings_ID item iCol to iID
+    If (iID <> 0) Begin
+      // Load Column Settings if changed
+      If (iCol <> piCurrentCol(Self)) Begin
+        Send Delete_Data of oCol_Server
+        Send Delete_Data of oCol_File
+        Send Delete_Data of oCol_Field
+        Send Delete_Data of oCol_Width
+        Send Delete_Data of oCol_Pos
+        Get item_Count of (oCol_Server(iID)) to iCount
+        For iItem from 0 to (iCount-1)
+          Get Integer_Value of (oCol_Server(iID)) item iItem to iVal
+          Set Array_Value of oCol_Server item iItem to iVal
+          Get Integer_Value of (oCol_File(iID)) item iItem to iVal  
+          Set Array_Value of oCol_File item iItem to iVal
+          Get Integer_Value of (oCol_Field(iID)) item iItem to iVal 
+          Set Array_Value of oCol_Field item iItem to iVal
+          Get Integer_Value of (oCol_Width(iID)) item iItem to iVal
+          Set Array_Value of oCol_Width item iItem to iVal
+          Get Integer_Value of (oCol_Pos(iID)) item iItem to iVal
+          Set Array_Value of oCol_Pos item iItem to iVal
+        Loop
+        Set pbAutoComplete_Status to (pbAutoComplete_Status(iID))
+        Set piList_Index      to (piList_Index(iID))
+        Set piHiPopupOffset   to (piHiPopupOffset(iID))
+        Set piLowPopupOffset  to (piLowPopupOffset(iID))
+        Set piFind_Mode       to (piFind_Mode(iID))
+        Send Check_List_Index
+      End
+      //
+      Get Object_ID to hObj
+      If (Item_Count(oCol_Server(hObj)) > 0) Begin
+        // Make sure object still has the focus
+        If ((Focus(Desktop)) = hObj) Begin
+          If (piFieldType(hObj) = DF_ASCII) Begin
+            // Make sure the user entered a value
+            // Get the entered value
+            Get Value to sSeedValue
+            If (sSeedValue <> "") Begin
+              // make autocomplete
+              Get CreateList hObj to hList
+              Send Ascii_Search hObj hList sSeedValue
+            End
+          End
+          Else If (piFieldType(hObj) = DF_BCD) Begin
+            // Make sure the user entered a value
+            // Get the entered value
+            Get Value to nSeedValue
+            If (nSeedValue <> 0) Begin
+              // make autocomplete
+              Get CreateList hObj to hList
+              Send Numeric_Search hObj hList nSeedValue 
+            End
+          End
+        End
+      End
+    End
+  End_Procedure // AutoComplete_Find
+  
+  //************************************************************
+  // This function creates the list and returns the handle of the
+  // list object created.
+  // [INTERNAL]
+  Function CreateList Handle hObj Returns Handle  
+    Handle hPanel hTemp hList hParent hServer hFile hField
+    Integer iLoc iItem iRet iMaskType iMaskValState iFieldType
+    Integer iGridHeader iHigh iTemp iLow
+    String sMask
+    
+    // Create list object
+    Get Create of (Client_Area(hObj)) U_cListPanel to hPanel
+    Set phoPanel to hPanel
+    Set phoCallback_Obj of (phoPanel(hObj)) to hObj
+    // Create a temporary object in the location where this should popup
+    // Get the GUI location of this object and use this to set the location
+    // of the actual list.
+    Get Parent of hObj to hParent
+    Get Create of hParent U_Form to hTemp
+    
+    If (Header_Visible_State(hObj)) Move 20 to iGridHeader
+    Else Move 0 to iGridHeader
+    // Row spacing
+    Move 10 to iHigh
+    Move ((iHigh * (Current_Row(hObj))) + iGridHeader) to iHigh
+    // Every 6th row is just 1 unit smaller...
+    Move ((Current_Row(hObj))/6) to iTemp
+    Subtract iTemp from iHigh
+    For iItem from 0 to (Current_Col(Self)-1)
+      Get Form_Width item iItem to iTemp
+      Add (iTemp-1) to iLow // 03/08/04 DMM
+    Loop
+    Add 1 to iLow // 03/08/04 DMM 
+    Set Location of hTemp to (Hi(Location(hObj))+iHigh+piHiPopupOffset(hObj)) (Low(Location(hObj))+iLow+piLowPopupOffset(hObj))
+    //
+    Set Visible_State of hTemp to FALSE
+    Set Size of hTemp to (Hi(Size(hObj))) (Low(Size(hObj)))
+    Send Page_Object to hTemp TRUE
+    Get Absolute_GUIOrigin of hTemp to iLoc
+    Send Destroy of hTemp
+    Set GUILocation of (phoPanel(hObj)) to (Hi(iLoc)) (Low(iLoc))
+    Send Adjust_Logicals to (phoPanel(hObj))
+    // Create List.
+    Get Create of (phoPanel(hObj)) U_cAutoComplete_List to hList
+    Set phoList of (phoPanel(hObj)) to hList
+    Set Line_Width of hList to (Item_Count(oCol_Server(hObj))) 0
+    // Add each column to the list.
+    For iItem from 0 to (Item_Count(oCol_Server(hObj))-1)
+      Get Integer_Value of oCol_Server  item iItem to hServer
+      Get Integer_Value of oCol_File    item iItem to hFile
+      Get Integer_Value of oCol_Field   item iItem to hField
+      // make sure has server, file, and field.
+      // Recnum will be skipped, but this shouldn't have any masking anyways.
+      If ((hServer) and (hFile) and (hField)) Begin
+        Get File_Field_Mask_Type of hServer hFile hField to iMaskType
+        // if a mask is already defined in the DEO we will use that mask instead of
+        // the one in the DD. We assume the developer knew what they were doing to
+        // go to the extra trouble of creating a deo mask, yet no mask data-type.
+        Get File_Field_Mask of hServer hFile hField to sMask // Get the mask for this
+        // if we have no type but we've got a mask - auto-assign it
+        If ((iMaskType = 0) AND (sMask <> "")) Begin
+          Get_Attribute DF_FIELD_TYPE of hFile hField to iFieldType
+          If (iFieldType = DF_DATE) Move Mask_Date_Window to iMaskType
+          Else If (iFieldType = DF_BCD) Move Mask_Numeric_Window to iMaskType
+          Else Move Mask_Window to iMaskType
+        End
+        If (iMaskType > ASCII_WINDOW) Begin // if field mask type is set
+          Set Form_DataType of hList item iItem to iMaskType   // set mask type from ddo
+          // if the mask is blank but the field type is numeric or currency
+          // we will build an automatic mask based on our default mask
+          If ((sMask = "") AND ((iMaskType = MASK_NUMERIC_WINDOW) OR (iMaskType = MASK_CURRENCY_WINDOW))) Begin
+            Get Field_Number_Default_Mask hFile hField (If(iMaskType = Mask_Numeric_Window, Default_Numeric_Mask, Default_Currency_Mask)) to sMask
+          End
+          If (sMask <> "") Begin
+            Set Form_Mask of hList item iItem to sMask
+            // If we have a mask we must determine if the DEOs value should
+            // contain masking characters or not. This would probably only be
+            // used with strings.
+            Get File_Field_Mask_Value_State of hServer hFile hField to iMaskValState
+            //Set Form_Mask_Value_State item iItem to iMaskValState
+          End
+        End
+      End
+    Loop
+    Function_Return hList
+  End_Function // CreateList
+
+  //************************************************************
+  // Navigates through list
+  // [INTERNAL]
+  Procedure Previous_Find
+    Handle hPanel
+    Get phoPanel to hPanel
+    If (hPanel) Send Previous_Find to hPanel
+    Else Forward Send Up_Row
+  End_Procedure // Previous_Find
+  
+  //************************************************************
+  // Navigates through list
+  // [INTERNAL]
+  Procedure Next_Find
+    Handle hPanel
+    Get phoPanel to hPanel
+    If (hPanel) Send Next_Find to hPanel
+    Else Send Down_Row
+  End_Procedure // Next_Find
+  
+  //************************************************************          
+  // [INTERNAL]
+  Procedure Next
+    Forward Send Next
+    Send Kill_AutoComplete
+  End_Procedure // Next
+  
+  //************************************************************          
+  // [INTERNAL]
+  Procedure Previous
+    Forward Send Previous
+    Send Kill_AutoComplete
+  End_Procedure // Previous
+End_Class // DbGrid_AutoComplete

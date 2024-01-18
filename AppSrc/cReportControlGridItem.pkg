@@ -1,0 +1,361 @@
+//****************************************************************************
+// $Module type: CLASS
+// $Module name: cReportControlGridColumn.pkg
+// $Author     : Nils G. Svedmyr
+// Created     : 2008-03-14 @ 17:59
+//
+// Description : A wrapper class for the Report Control's ReportRecordItem.
+//               The class is used internally by the class cReportControlGrid.
+//
+// $Rev History
+//    2008-03-14  Module header created
+//****************************************************************************
+// Note: If you don't have version 11.2.2 of the Report Control, you may use the 11.2.1 instead. 
+//       Of course you cannot Use both packages at the same time.
+//       If you Use version 11.2.1 you wont be able to use the piWatermarkAlignment function 
+//       (If you have Set it in your code, it will be ignored.)
+//Use Codejock.ReportControl.v11.2.1.pkg
+//Use Codejock.ReportControl.v11.2.2.pkg
+//Use Codejock.ReportControl.v12.1.1.pkg
+//Use Codejock.ReportControl.v13.3.1.pkg
+Use cCJReportControl.pkg
+Use cReportControlGridDefines.pkg
+
+{ Visibility=Private }
+// *** For Internal usage ***
+//
+// Subclass (wrapper) for the ReportRecordItem class.
+// This is one item/cell in the grid (a cReportControlGrid Object).
+// The class is used by the cReportControlGrid class.
+//
+// NOTE: You would normally not instantiate this class. Instead
+// you would use the corresponding messages of the cReportControlGrid class,
+// with the 'Set/Get MessageName item iItem to ...' syntax.
+//
+// The messages has been placed here as a 'safety precaution' only;
+// If the wrong syntax is used in a cReportControlGrid object,
+// when addressing an item/cell,
+// e.g. 'Set pbIsButton of hCell to True'
+// ...intead of the correct syntax:
+//      'Set pbIsButton item hCell to True',
+// it will still work...
+Class cReportControlGridItem is a cCJReportRecordItem
+
+    Register_Function piButtonBackColor       Returns Integer
+    Register_Function Private.pvCurrentRow    Returns Variant
+    Register_Function Private.pvCurrentColumn Returns Variant
+
+
+    { Visibility=Public MethodType=Property } 
+    // To set the value of an individual item/cell.          
+    // Syntax:
+    //   Set Value to "Some text"
+    // Note:
+    // We need to set two value here. The ComValue is the value to sort on
+    // when the column header is clicked. The ComCaption is the value that is
+    // passed to the OnClick event. This can be used to figure out which item/cell
+    // was acted upon. 
+    Procedure Set Value String sValue 
+        Boolean bIsButton
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+
+        Set ComValue   to sValue
+        Get pbIsButton to bIsButton
+        // We need to set ComCaption for buttons in the OnClick procedure.
+        // We do _not_ need it for other items/cells because if
+        // we did, when a value is edited, it will look like it
+        // never was edited when leaving the item because the item
+        // will then display the ComCaption value, and not the 
+        // newly changed value (ComValue)! 
+        // So to keep the changes visible in the item/cell, do not set the caption, 
+        // for normal items. Do it for item buttons only.
+        If (bIsButton = True) Set ComCaption to sValue
+    End_Procedure // Set Value  
+                                                 
+    { MethodType=Property }
+    //   Syntax: 
+    //     Get Value to sString
+    Function Value Returns String
+        String sValue
+        If (not(IsComObjectCreated(Self))) Function_Return ""
+        Get ComValue to sValue
+        Function_Return sValue
+    End_Function // Value  
+
+    { Visibility=Public MethodType=Property }
+    // To set an item/cell text to bold.
+    Procedure Set pbBold Boolean bState
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComBold to bState
+    End_Procedure // Set pbBold
+
+    { MethodType=Property }
+    // To get if an item/cell text is bold or not.
+    Function pbBold Returns Boolean
+        Boolean bState
+        If (not(IsComObjectCreated(Self))) Function_Return False
+        Get ComBold to bState
+        Function_Return bState
+    End_Function // pbBold
+
+    { Visibility=Public MethodType=Property }
+    // To set an item/cell text to bold.
+    // Note: This is the same as using the pbBold property.
+    // To set an item to BoldFace set the Weight to > 400.
+    // This is put here for legacy purposes.
+    Procedure Set FontWeight Integer iWeight
+        Boolean bState
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Move (If(iWeight <=400, False, True)) to bState
+        Set ComBold to bState
+    End_Procedure // Set FontWeight
+
+    // To get if an item/cell text is bold or not.
+    // Returns:
+    //   Integer. If a value of 700 is returned the fontweight is bold.
+    //            Else if a value of 400 is returned the fontweight is not bold.
+    Function FontWeight Integer iItem Returns Integer
+        Integer iWeight
+        Boolean bState
+        If (not(IsComObjectCreated(Self))) Function_Return False
+        If (iItem > 0) Get ComBold of iItem to bState
+        Function_Return (If(bState = True, 700, 400))
+    End_Function  // FontWeight
+     
+    { Visibility=Public MethodType=Property }
+    { EnumList="clNone, clAqua, clBlack, clBlue, clDkGray, clFuchsia, clGray, clGreen, clLime, clLtGray, clMaroon, clNavy, clOlive, clPurple, clRed, clSilver, clTeal, clWhite, clYellow" }
+    // To Set the background color for an item/cell.
+    // Syntax: Set ItemColor to iColor 
+    // Constants:
+    //   clNone, clAqua, clBlack, clBlue, clDkGray, clFuchsia, clGray, clGreen, clLime, clLtGray,
+    //   clMaroon, clNavy, clOlive, clPurple, clRed, clSilver, clTeal, clWhite, clYellow
+    // Note: You can also use the VDF RGB function to specify a color.
+    Procedure Set ItemColor Integer iColor
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComBackColor to iColor
+    End_Procedure // Set ItemColor
+
+    { MethodType=Property }
+    // Get the background color for an item/cell.
+    Function ItemColor Returns Integer
+        Integer iColor
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComBackColor to iColor
+        Function_Return iColor
+    End_Function // ItemColor
+
+    { Visibility=Public MethodType=Property }
+    { EnumList="clNone, clAqua, clBlack, clBlue, clDkGray, clFuchsia, clGray, clGreen, clLime, clLtGray, clMaroon, clNavy, clOlive, clPurple, clRed, clSilver, clTeal, clWhite, clYellow" }
+    // Set the text or foreground color for an item/cell.
+    // Syntax: Set ItemTextColor to iColor 
+    // Constants:
+    //   clNone, clAqua, clBlack, clBlue, clDkGray, clFuchsia, clGray, clGreen, clLime, clLtGray,
+    //   clMaroon, clNavy, clOlive, clPurple, clRed, clSilver, clTeal, clWhite, clYellow
+    // Note: You can also use the VDF RGB function to specify a color.
+    Procedure Set ItemTextColor Integer iColor
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComForeColor to iColor
+    End_Procedure // Set ItemTextColor
+
+    { MethodType=Property }
+    // Set the text color for an item/cell.
+    // Syntax: Get ItemTextColor to Integer
+    Function ItemTextColor Returns Integer
+        Integer iColor
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComForeColor to iColor
+        Function_Return iColor
+    End_Function // ItemTextColor
+
+    { Visibility=Public MethodType=Property }
+    // To set an icon for a item/cell in the grid.
+    // Syntax: Set Icon item iItem to RO_ButtonNormal
+    // Params:
+    //   iIcon is the icon number in an ImageList
+    Procedure Set Icon Integer iIcon
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComIcon to iIcon
+    End_Procedure // Set Icon
+
+    { MethodType=Property }
+    // To Get an icon for a item/cell in the grid.
+    // Syntax: Get Icon to iIconNumber
+    Function Icon Returns Integer
+        Integer iIcon
+        Move -1 to iIcon
+        If (not(IsComObjectCreated(Self))) Function_Return 0
+        Get ComIcon to iIcon
+        Function_Return iIcon
+    End_Function // Icon
+
+    { Visibility=Public MethodType=Property }
+    // Set the tooltip for an item/cell
+    //   Set ToolTip to "Item tooltip text"
+    Procedure Set ToolTip String sToolTip
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComToolTip to sToolTip
+    End_Procedure // Set ToolTip
+
+    { MethodType=Property }
+    // Get the tooltip for an item/cell
+    Function ToolTip Returns String
+        String sToolTip
+        If (not(IsComObjectCreated(Self))) Function_Return ""
+        Get ComToolTip to sToolTip
+        Function_Return sToolTip
+    End_Function // ToolTip
+
+    { Visibility=Public MethodType=Property }
+    // Determines if an item/cell can be edited.
+    // Note: There are actually three different levels that can be used to
+    //       regulate if items/cells can be edited or not.
+    //    1. Set pbAllowEdit at grid level (global for the entire grid)
+    //    2. 'Set ColumnEntry_State item iColumn to True/FALSE' at column
+    //       level will override the pbAllowEdit setting.
+    //    3. 'Set Entry_State to True/FALSE' at item
+    //       level will override both the pbAllowEdit and Entry_State
+    //       setting at column level.
+    // Syntax: 
+    //   Set Entry_State to True/False
+    Procedure Set Entry_State Boolean bState
+        Boolean bIsButton
+        Handle iItem
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Move (Self) to iItem
+        If (iItem < 0) Procedure_Return
+
+        Get pbIsButton     to bIsButton
+        If (bIsButton = True) Move False to bState // Never allow a button to be edited. (Just makes sense).
+        Set ComEditOnClick to bState
+        Set ComEditable    to bState               // *** TODO: Should this be? ***
+        Set ComAllowEdit   to bState 
+    End_Procedure // Set Entry_State
+
+    { MethodType=Property }
+    // Syntax: Get Entry_State to bState
+    Function Entry_State Returns Boolean
+        Boolean bIsButton bState
+
+        If (not(IsComObjectCreated(Self))) Function_Return False
+
+        Get ComAllowEdit to bState 
+        Get pbIsButton   to bIsButton
+        If (bIsButton = True) Move False to bState 
+        Function_Return bState
+    End_Function // Entry_State
+                                                    
+    { Visibility=Public MethodType=Property }
+    // Should an item/cell be treated as a button?
+    // Syntax: 
+    //   Set pbIsButton to True/False
+    // Note: The enum_list's RO_ButtonNormal and RO_ButtonPressed
+    //       icons will be used to display the button in an item. 
+    // Syntax: Set pbIsButton item iItem to True/FALSE  
+    // 
+    // If the ReportRecordItem does not have a CheckBox, then setting the ComChecked
+    // property has no effect. However, we can still set this property for our own usage,
+    // namely to keep track of that this is a button item/cell.
+    Procedure Set pbIsButton Boolean bState
+        Boolean bEditable   
+        Handle hoReportObject
+        Integer iButtonBackColor
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+
+        Delegate Get Private.phoReportObject to hoReportObject 
+        Get pbAllowEdit of hoReportObject    to bEditable
+
+        Set ComHasCheckbox to False
+        Set ComChecked     to bState  
+
+        // Default values for 'button' cell type: 
+        If (bEditable = False) Begin 
+           Set ComAllowEdit   to False
+        End  
+        Else Begin 
+            Set ComAllowEdit  to (not(bState))
+        End                      
+        Get piButtonBackColor of hoReportObject to iButtonBackColor
+        Set ComBackColor      to iButtonBackColor
+    End_Procedure // Set pbIsButton
+             
+    { MethodType=Property }
+    // Is the item/cell a button?
+    Function pbIsButton Returns Boolean 
+        Boolean bState bCheckbox    
+        Move False to bState
+        If (not(IsComObjectCreated(Self))) Function_Return bState
+        
+        Get ComHasCheckbox to bCheckbox
+        If (bCheckbox = False) Get ComChecked to bState 
+        Function_Return bState
+    End_Function // pbIsButton
+
+    { MethodType=Property }
+    // Allows any item to become a checkbox-type item.
+    // Syntax:
+    //   Set Checkbox_Item_State to True/False
+    Procedure Set Checkbox_Item_State Boolean bState
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComHasCheckbox to bState 
+    End_Procedure // Set Checkbox_Item_State
+         
+    { MethodType=Property }
+    // Is the item/cell a checkbox?
+    // Syntax:
+    //   Get Checkbox_Item_State to bState
+    Function Checkbox_Item_State Returns Boolean
+        Boolean bState 
+        If (not(IsComObjectCreated(Self))) Function_Return False
+        
+        Get ComHasCheckbox to bState 
+        Function_Return bState                                       
+    End_Function // Checkbox_Item_State
+    
+    { MethodType=Property }
+    // Reflects whether this item/cell is checked.
+    // Syntax:
+    //   Set Checked_State to True/False
+    Procedure Set Checked_State Boolean bState
+        Boolean bCheckbox
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        
+        Get Checkbox_Item_State to bCheckbox
+        If (bCheckbox = False)             Procedure_Return
+        Set ComChecked          to bState 
+    End_Procedure // Set Checked_State
+         
+    { MethodType=Property }
+    // Is the item/cell checked?
+    // Syntax:
+    //   Get Checked_State to bState
+    Function Checked_State Returns Boolean
+        Boolean bState bCheckbox
+        If (not(IsComObjectCreated(Self))) Function_Return False
+                                       
+        Get Checkbox_Item_State to bCheckbox
+        If (bCheckbox = False)             Function_Return False                               
+        Get ComChecked          to bState 
+        Function_Return bState                                       
+    End_Function // Checked_State
+    
+    { Visibility=Private MethodType=Property }
+    // Syntax:
+    //   Set Aux_Value to sValue 
+    // You may use it to store any value you might wish to have associated with the item.
+    Procedure Set Aux_Value String sValue
+        If (not(IsComObjectCreated(Self))) Procedure_Return
+        Set ComTag to sValue
+    End_Procedure // Set Aux_Value  
+                                                 
+    { MethodType=Property }
+    // Syntax:
+    //   Get Aux_Value to sValue
+    Function Aux_Value Returns String
+        String sValue sRow
+        Variant vRecord
+        If (not(IsComObjectCreated(Self))) Function_Return ""
+        Get ComTag to sValue 
+        Function_Return sValue  
+    End_Function // Aux_Value   
+    
+End_Class // cReportControlGridItem

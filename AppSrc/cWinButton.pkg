@@ -1,0 +1,269 @@
+//TH-Header
+//TH-Header
+//*****************************************************************************************
+// Copyright (c) 2003 cWindowsEx Framework
+// All rights reserved.
+// $Authors     : Sergey V. Natarov (senatc@postman.ru)
+//                Chris Spenser
+//                Nils G. Svedmyr
+//
+// $FileName    : cWinButton.pkg
+// $Created     :
+//
+//*****************************************************************************************
+//TH-RevisionStart
+//TH-RevisionEnd
+Use cWinButton.h
+Use cWinGradient.h
+Use cWinGDIEx.h
+Use cWinTrackMouse.h
+Use cWinToolTip.h
+Use mPointer.pkg
+Use mBitmapStuff.pkg
+Use cBaseWinControl.h
+Use cBaseWinControl.pkg
+Use cWinButtonBase.pkg
+
+// cfs mixin based on Standard_Object_Mixin - did not require RGB support causes problems
+Class WinButton_Object_Mixin Is A Mixin
+
+    //Doc/ Interface=Private
+    Procedure Define_WinButton_Object_Mixin
+
+        Property Integer Private.CurrentButtonState          Public False
+        //Doc/ Interface=Private
+        Property Integer Switch_Skip_State                   Public False
+
+        //Doc/ Interface=Private
+        Property String  Private.Status_Help                 Public ''
+
+        Property Integer Use_Parent_Status_Help              Public False
+
+        //Doc/ Interface=Private
+        Property Integer Disable_Default_Action_Button_State Public False
+
+        Send Define_Help_Mixin
+        //Send Define_Modal_Mixin
+
+        On_Key Kswitch            Send Switch_Next_Area      Private
+        On_Key Kswitch_Back       Send Switch_Prior_Area     Private
+    End_Procedure
+
+    //Import_Class_Protocol RGB_Support_Temp_Mixin
+    Import_Class_Protocol Help_Mixin
+
+    //Doc/ Type=Property Interface=Public
+    Procedure Set Status_Help String sHelp
+        Set Private.Status_Help To sHelp
+    End_Procedure // Status_Help
+
+    //Doc/ Type=Property Interface=Public
+    Function Status_Help Returns String
+        Local String sHelp
+        Get Private.Status_Help To sHelp
+        If (sHelp = '' And Use_Parent_Status_Help(Self)) ;
+            Delegate Get Status_Help To sHelp
+        Function_Return sHelp
+    End_Function // Status_Help
+
+    // New Message
+    //Doc/ Interface=Private
+    Procedure Switch_Next_Area
+        Send Switch
+    End_Procedure // Switch_Next_Area
+
+    // New Message
+    //Doc/ Interface=Private
+    Procedure Switch_Prior_Area
+        Send Switch_Back
+    End_Procedure // Switch_Prior_Area
+
+    //Doc/ Interface=Public
+    Procedure Request_Status_Help Integer iFg
+        Local String sStatus_Help
+        Local Integer sBid
+        If iFg Begin
+            Get Statusbar_Id To sBid
+            If Not sBid Procedure_Return
+            Get Status_Help To sStatus_Help
+            Send Show_Status_Help To sBid sStatus_Help
+        End
+    End_Procedure // Request_Status_Help
+
+    // when the object takes the focus make sure that the default button, if any
+    // is highlighted. Note that buttons override this message and handle this
+    // a bit differently.
+    //
+    //Doc/ Interface=Private
+    Procedure PrivateSetCurrentButton
+        Local Integer hoButton
+        If Not (Disable_Default_Action_Button_State(Self)) Begin
+            Get Default_Action_Button To hoButton
+            If hoButton Set CurrentButtonState Of hoButton To True
+        End
+    End_Procedure // PrivateSetCurrentButton
+
+    // when the object loses the focus the default button highlight must
+    // be removed - it will be restored, as needed, by the next object
+    // that takes the focus. If we do not do this, the button will not
+    // lose the highlight when switching between other panels and
+    // programs (and it should).
+    //
+    //Doc/ Interface=Private
+    Procedure PrivateKillCurrentButton
+        Local Integer hoButton
+        Get Current_Action_Button To hoButton
+        If hoButton Set CurrentButtonState Of hoButton To False
+    End_Procedure
+
+    // this forces a reset of the default button....This should only be sent to this
+    // object when it is the focus object since it is the focus that determines
+    // what should or should not be highlighted.
+    //
+    //Doc/ Interface=Private
+    Procedure DoResetCurrentButton
+        Send PrivateKillCurrentButton
+        Send PrivateSetCurrentButton
+    End_Procedure // DoResetCurrentButton
+
+    //Doc/ Type=Event Interface=Private
+    Procedure Notify_Focus_Change Integer iFg
+        //***Forward Send Notify_Focus_Change Fg
+        If iFg Begin
+            Send OnSetFocus
+            Send PrivateSetCurrentButton
+        End // If iFg Begin
+        Else Begin
+            Send PrivateKillCurrentButton
+            Send OnKillFocus
+        End // Else Begin
+        Send Request_Status_Help iFg
+    End_Procedure // Notify_Focus_Change
+
+    //Doc/ Interface=Public Type=Event
+    Procedure OnSetFocus
+    End_Procedure
+
+    //Doc/ Type=Event Interface=Public
+    Procedure OnKillFocus
+    End_Procedure
+
+    // dbLists now send this callback message. By adding this at this low
+    // level all objects can safely use prompt lists.
+    //
+    //Doc/ Interface=Private
+    Procedure Prompt_Callback Integer hPrompt
+    End_Procedure
+
+End_Class // WinButton_Object_Mixin
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+Class cWinButtonMixinBase Is A cWinButtonBase
+    Import_Class_Protocol External_Class_Mixin
+
+	Procedure Construct_Object
+        Forward Send Construct_Object
+//cfs added
+        Send Define_WinButton_Object_Mixin
+        Send Define_Single_Item_Navigate_Mixin
+        Send Define_StatusHelp_Item_mixin
+    End_Procedure
+
+//cfs added
+    Import_Class_Protocol WinButton_Object_Mixin
+    Import_Class_Protocol Single_Item_Navigate_Mixin
+    Import_Class_Protocol StatusHelp_Item_Mixin
+End_Class // cWinButtonMixinBase
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+Class cWinButton Is A cWinButtonMixinBase
+
+// cfs added
+    Import_Class_Protocol External_Class_Mixin
+
+//cfs added needed to allow navigation
+    Function Item_Count Returns Integer
+        Function_Return 1
+    End_Function // Item_Count
+
+//cfs added
+    //  Default_State is the public interface for setting the Default
+    //  Action Button at the button itself. The message CurrentButtonState
+    //  is implementation of part of the mechanism and should not be used
+    //  directly.
+    //
+    //Doc/ Type=Property Interface=Public
+    Procedure Set Default_State Integer bState
+        Set Default_Action_Button To (If(bState,Self,0))
+    End_Procedure // Set Default_State
+
+    //Doc/ Type=Property Interface=Public
+    Function Default_State Returns Integer
+        Local Handle hButton
+        Get Default_Action_Button To hButton
+        Function_Return (hButton=Self)
+    End_Function // Default_State
+
+//**********************************************************added cfs
+//added to set status Help
+    Procedure Set Status_Help String sHelp
+         Forward Set Status_Help 0 To sHelp
+    End_Procedure // Set Status_Help
+
+    Function Status_Help Returns String
+         Local String sHelp
+         Forward Get Status_Help 0 To sHelp
+         Function_Return sHelp
+    End_Procedure // Status_Help
+
+//cfs added to support defualt Button
+    Function CurrentButtonState Returns Integer
+        Function_Return (Private.CurrentButtonState(Self))
+    End_Function // CurrentButtonState
+
+//cfs -not quite right yet, there is no visual clue that the Default_State is set.
+    Procedure Set CurrentButtonState Integer bState
+        Local Handle hWnd hObj
+        Local Integer iStyle cxy iTemp
+        // Cannot make a shadowed button the default
+        If (Object_Shadow_State(Self) And bState) ;
+           Procedure_Return
+        Get Window_Handle To hWnd
+        If (hWnd And (CurrentButtonState(Self) <> bState)) Begin
+            Set Private.CurrentButtonState To bState
+            Move (If(bState,Self,0)) To hObj
+            // Very private message! Do not send from anywhere else!!!!!
+            Delegate Set Private.Current_Action_Button To hObj // delegate to panel
+            Get GuiSize To cxy
+            Move (GetWindowLong(hWnd, GWL_STYLE)) To iStyle
+            If bState Begin
+                Move (SetWindowLong(hWnd, GWL_STYLE, iStyle Ior 1)) To iTemp
+                Set GuiSize To (Hi(cxy)) (Low(cxy))
+            End // If bState Begin
+            Else Begin
+                //Move (SetWindowLong(hWnd, GWL_STYLE, iStyle iAnd $FFFFFFFE)) To iTemp
+                //Move (SetWindowLong(hWnd, GWL_STYLE, iStyle iOr 1)) To iTemp
+                Set GuiSize To (Hi(cxy)) (Low(cxy))
+            End // Else Begin
+        End // If (hWnd And (CurrentButtonState(Self) <> bState)) Begin
+    End_Procedure
+
+    // Readded as these are added by the mixins and need to overridden here to set pbShadowState
+    Procedure Set Enabled_State Integer iFlag
+        Local Integer iRet
+        Set Private.pbShadowState To (Not(iFlag))
+        If iFlag Set Focus_Mode   To Focusable
+        Else     Set Focus_Mode   To NonFocusable
+        If (Window_Handle(Self) = 0) Procedure_Return
+        Send RedrawControl
+        Send RefreshToolTip
+        If (Focus(Desktop) = Self And iFlag = (False)) Send Next // We don't want to be sitting here...
+    End_Procedure // Set Enabled_State
+
+    Function Enabled_State Returns Boolean
+        Function_Return (Private.pbShadowState(Self) = (False))
+    End_Function // Enabled_State
+
+End_Class // cWinButton

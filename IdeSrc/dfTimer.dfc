@@ -1,0 +1,18 @@
+//AB/ CLASSDEF
+Class dfTimer is a AbstractNonVisualContainer
+    Set ObjectNameMask To "oTimer<count>"
+    Set ClassHelpName  To "DfTimer"
+    Set ClassCETV      To 32                 // use TreeView Image #32 (1-based offset)
+    Set ClassPackage   To "dfTimer.pkg"      // generate "use" statement for this class package
+
+    Inherit
+    
+    Property No_Visible String Bitmap "dfTimer.bmp"
+
+    Property No_Execute Boolean Auto_Start_State True   // Should timer start when its container object is activated. In objects that remain active for long periods, you would normally want to set this property false.
+    Property No_Execute Boolean Auto_Stop_State True    // Specifies whether this timer will stop running when its container object is deactivated.
+    Property No_Execute Boolean Timer_Active_State True // If true, the timer begins to run. If false, this process stops.
+    Property No_Execute String  Timer_Message // Contains the message_id of the message to be sent on every timer event. You must either define this message, or define an onTimer event (preferred).
+    Property No_Execute String  Timer_Object  // If you wish the timer_message to be sent to an object other than this object, set this property to the object_id (handle) of that object.
+    Property No_Execute Integer TimeOut 1000  // Milliseconds that you wish to pass between each timer event. The effective resolution of events is about 55 milliseconds.
+End_Class

@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblApplication is a cApplication
+    Set ClassPackage To "cGlblApplication.pkg"
+    Inherit
+End_Class

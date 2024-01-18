@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblImageList is a cImageList
+    Set ClassPackage To "cGlblImageList.pkg"
+    Inherit
+End_Class

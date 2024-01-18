@@ -1,0 +1,28 @@
+//****************************************************************************
+// $Module type: Class
+// $Module name: cWindbComboForm
+// $Author     : Nils G. Svedmyr
+// Created     : 2004-05-15 @ 16:02
+//
+// Description :
+//
+// $Rev History:
+//    2004-05-15  Module header created
+//****************************************************************************
+Use cWinToolTip.pkg
+
+Class cWindbComboForm Is A dbComboForm
+
+    Import_Class_Protocol cWinToolTip_mx
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Send Define_cWinToolTip
+        // Note: It seems like it is _never_ possible to display a tooltip for
+        // a comboform when Enabled_State = False.
+        Set pbClassEnabledHandleType    To True  // True=Default
+        Set pbClassDisabledHandleType   To True  // True=Default
+        Set pbClassEntryStateHandleType To False // True=Default
+    End_Procedure // Construct_Object
+
+End_Class // cWindbComboForm

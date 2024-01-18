@@ -1,0 +1,33 @@
+//AB/ CLASSDEF
+
+Class cszVpeReportView is a dbview
+    Inherit
+End_Class
+
+Class cszVpeDocument is a Container3d
+    Inherit
+    Property No_Visible No_Generate Mode Border_Style Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge
+    Property No_Visible No_Generate Mode Bitmap_Style Bitmap_Center Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center
+    Property No_Visible No_Generate String Bitmap "cszVpeDocument.bmp"
+End_Class
+
+Class cszVpeReport is a Container3d
+    Inherit
+    Property No_Visible No_Generate Mode Border_Style Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge
+    Property No_Visible No_Generate Mode Bitmap_Style Bitmap_Center Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center
+    Property No_Visible No_Generate String Bitmap "cszVpeReport.bmp"
+End_Class
+
+Class cszVpeColumnReport is a Container3d
+    Inherit
+    Property No_Visible No_Generate Mode Border_Style Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge
+    Property No_Visible No_Generate Mode Bitmap_Style Bitmap_Center Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center
+    Property No_Visible No_Generate String Bitmap "cszVpeColumnReport.bmp"
+End_Class
+
+Class cszVpeTreeDocument is a Container3d
+    Inherit
+    Property No_Visible No_Generate Mode Border_Style Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge
+    Property No_Visible No_Generate Mode Bitmap_Style Bitmap_Center Bitmap_Actual Bitmap_Stretch Bitmap_Tile Bitmap_Center
+    Property No_Visible No_Generate String Bitmap "cszVpeTreeDocument.bmp"
+End_Class

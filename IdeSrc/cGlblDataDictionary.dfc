@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDataDictionary is a DataDictionary
+    Set ClassPackage To "cGlblDataDictionary.pkg"
+    Inherit
+End_Class

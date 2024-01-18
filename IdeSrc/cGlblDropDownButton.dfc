@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblDropDownButton IS A cszDropDownButton
+    Set ClassPackage to cGlblDropDownButton.pkg
+    Inherit
+End_Class

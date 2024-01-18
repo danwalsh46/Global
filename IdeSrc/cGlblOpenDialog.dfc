@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblOpenDialog is a OpenDialog
+    Set ClassPackage To "cGlblOpenDialog.pkg"
+    Inherit
+End_Class

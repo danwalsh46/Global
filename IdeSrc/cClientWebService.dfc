@@ -1,0 +1,12 @@
+//AB/ CLASSDEF
+Class cClientWebService is a cObject
+    Set peClassLibrary To clWinApp
+    Set ObjectNameMask To "oClientWebService<count>"
+    Set ClassHelpName  To "cClientWebService"
+    Set ClassCETV      To 59
+    Set ClassPackage   To "cClientWebService.pkg"
+
+    Inherit
+    Property No_Visible String Bitmap "cClientWebService.bmp"
+    Property No_Execute Boolean pbSuppressLastError False // If set true, transfer errors will not be displayed and you must handle errors yourself. You can check for errors with peTransferStatus.
+End_Class

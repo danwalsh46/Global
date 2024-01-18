@@ -1,0 +1,14 @@
+//AB/ SUBCOMPONENT
+Object Setup is a Button
+    Set Label to "Printer Setup"
+    Set Location to 63 122
+
+    //AB-StoreStart
+    Procedure OnClick
+        Local Integer Report_obj
+        Get  Report_Object_ID  To Report_obj
+        Send DFPrintSetup      To Report_obj
+    End_Procedure
+    //AB-StoreEnd
+
+End_Object    // Setup

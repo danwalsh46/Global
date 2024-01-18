@@ -1,0 +1,6 @@
+//AB/ CLASSDEF
+
+Class cGlblComDocumentObject is a cComDocumentObject
+    Set ClassPackage To "cGlblComDocumentObject.pkg"
+    Inherit
+End_Class

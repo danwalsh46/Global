@@ -1,0 +1,16 @@
+//AB/ CLASSDEF
+Class Dialog IS A AbstractContainer AbDialog ClientControlMixin DefineClientControlMixin
+    Set Type_Of_Drag  To TD_DRAG_PANEL
+    Set ClassHelpName To "Dialog"
+    Set ClassCETV     To 11                // use TreeView Image #11 (1-based offset)
+    Inherit
+    Property Boolean Caption_Bar TRUE // Show Caption bar?
+    Property Boolean Maximize_Icon FALSE // Show maximize icon in caption bar?
+    Property Boolean Minimize_Icon FALSE // Show minimize icon in caption bar?
+    Property Boolean Modal_State False // Is Dialog Modal?
+    Property No_Execute Boolean Sysmenu_Icon TRUE // Show System Menu icon in caption bar?
+    Property Mode Border_Style Border_Dialog Border_None Border_Normal Border_Dialog Border_Thick Border_ClientEdge Border_WindowEdge Border_StaticEdge // Border Display style
+    Property String Icon // Icon resource name or file name.
+    Property String Label // Text to appear in the caption bar
+    Property Always_generate Complex Size 50 130
+End_Class

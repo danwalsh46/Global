@@ -1,0 +1,255 @@
+//************************************************************************
+// RegDefaults.pkg
+//
+//************************************************************************
+// Description:
+//     This package contains functions and procedures to set/access 
+//     system defaults out of the registry for the entire system.  All 
+//     functions and procedures should access values of subkeys out of  
+//     the DEFAULTS key (WorkSpaces\DEFAULTS\ArbitrarySubKey). - OLIVER
+//
+// Author: Oliver Nelson
+// Create Date: 07/12/2000
+//************************************************************************
+
+Procedure Assign_Profile_String string sbranch string sval
+    integer hoRegistry iError
+    string skey
+    
+    Get Create U_cRegistry To hoRegistry
+    Get RegistryKeyString of oapplication To sKey
+
+    Move (sKey +"\Preferences") To sKey
+    
+    Get CreateKey of hoRegistry sKey To iError
+    If (iError = 0);
+        Send WriteString of hoRegistry sbranch sval            
+    Send CloseKey of hoRegistry
+    Send Destroy of hoRegistry
+End_Procedure
+
+Function Retrieve_Profile_String string sbranch returns string
+    integer hoRegistry bSuccess
+    string skey sval
+    
+    Get Create U_cRegistry To hoRegistry
+    Set pfAccessRights of hoRegistry To KEY_READ
+
+    Get RegistryKeyString of oapplication To sKey
+    Move (sKey +"\Preferences") To sKey    
+
+    Get OpenKey of hoRegistry sKey To bSuccess
+    If bSuccess;
+        If (ValueExists(hoRegistry, sbranch)) Get ReadString of hoRegistry sbranch To sval   
+    
+    Send Destroy of hoRegistry
+    Function_Return sval
+End_Function
+
+Procedure Set Scheduler_PageOrientation Integer iOrientation
+    Send assign_profile_string "PageOrientation" iOrientation 
+end_procedure
+
+Function Scheduler_PageOrientation returns integer
+    integer iOrientation
+    
+    Get Retrieve_Profile_String "PageOrientation" to iOrientation
+    if (not(iOrientation)) move 1 to iOrientation // IOW, give a default if there is no reg value
+    function_return iOrientation
+end_function
+
+Procedure Set Scheduler_RowsPerPage Integer iRows
+    Send assign_profile_string "RowsPerPage" iRows
+end_procedure
+
+Function Scheduler_RowsPerPage returns integer
+    integer iRows
+    
+    Get Retrieve_Profile_String "RowsPerPage" to iRows
+    if (not(iRows)) move 45 to iRows // IOW, give a default if there is no reg value
+    function_return iRows
+end_function
+
+Procedure Set Scheduler_PageMargin String sBorder Integer iMargin
+    move (uppercase(sBorder)) to sBorder
+    
+    Send assign_profile_string ("Margin" + sBorder) iMargin
+end_procedure
+
+Function Scheduler_PageMargin String sBorder returns number
+    integer iMargin
+    
+    Get Retrieve_Profile_String ("Margin" + sBorder) to iMargin
+    if iMargin function_return iMargin
+    else function_return 50 //  1/10th MM scale for VPE
+end_function
+
+Procedure Set Scheduler_GridOffset integer iGrid
+    Send assign_profile_string "GridOffset" iGrid
+end_procedure
+
+Function Scheduler_GridOffset returns integer
+    integer iGrid
+    
+    Get Retrieve_Profile_String "GridOffset" to iGrid
+    if iGrid function_return iGrid
+    else function_return 120  // 1/10th MM scale for VPE
+end_function
+
+Function Scheduler_TitleFontSize returns integer
+    integer iSize
+
+    Get Retrieve_Profile_String "TitleFontSize" to iSize
+    if iSize function_return iSize
+    else function_return 14
+end_function
+
+Procedure Set Scheduler_TitleFontSize integer iSize
+    Send assign_profile_string "TitleFontSize" iSize
+end_procedure    
+
+Procedure Set DEFAULT_DocumentLocation string sLocation
+    
+    Send assign_profile_string "DocumentLocation" sLocation
+end_procedure
+
+Function DEFAULT_DocumentLocation returns string
+    string sws sline spath
+    handle hows
+    Move (phoWorkspace(oApplication(self))) to hoWs
+    Get psWorkspaceName of hoWs to sWs
+    Move (sws+".ws") to sWs
+    Get_File_Path sWs to sWs
+    //Get getworkspacefilename of hoWs sWs to sWs
+    If (sWs="");
+        Function_return "c:\winnh9\docs\"
+    Direct_Input sWs
+    Repeat
+        Readln sline
+  
+        If (sline contains "DocumentLocation");
+            move sline to spath         
+    Until [seqeof]
+    Close_Input sWs
+    Move (trim(Replace("DocumentLocation",sPath,""))) to sPath
+    Move (trim(Replace("=",sPath,""))) to sPath                
+    If (right(sPath,1)<>"\");
+        move (sPath+"\") to sPath
+    
+    
+    Function_Return sPath   
+    //Get Retrieve_Profile_String "DocumentLocation" to sLocation
+    //move (trim(sLocation)) to sLocation
+    //if (sLocation <> "") function_return sLocation
+    //else function_return "c:\WinNH\docs\"
+End_Function
+
+
+Procedure Set DEFAULT_HeaderLocation string sLocation
+    Send assign_profile_string "HeaderLocation" sLocation
+end_procedure
+
+Function DEFAULT_HeaderLocation returns string
+    string sLocation
+    string sws sline spath
+    handle hows
+    Move (phoWorkspace(oApplication(self))) to hoWs
+    Get psWorkspaceName of hoWs to sWs
+    Get psWorkspaceName of hoWs to sWs
+    Move (sws+".ws") to sWs
+    Get_File_Path sWs to sWs
+    If (sWs="");
+        Function_return "c:\"
+    
+    Direct_Input sWs
+    Repeat
+        Readln sline
+        If (sline contains "HeaderLocation");
+            move sline to spath         
+    Until [seqeof]
+    Close_Input sWs
+    Move (trim(Replace("HeaderLocation",sPath,""))) to sPath
+    Move (trim(Replace("=",sPath,""))) to sPath                
+    If (right(sPath,1)<>"\");
+        move (sPath+"\") to sPath
+                
+    
+    //Get Retrieve_Profile_String "HeaderLocation" to sLocation
+    //move (trim(sLocation)) to sLocation
+    
+    function_return sPath
+end_procedure
+
+Procedure Set DEFAULT_QAToRadio integer sButtonNum
+    Send assign_profile_string "QAToRadio" sButtonNum
+end_procedure
+
+Function DEFAULT_QAToRadio returns integer
+    integer sButtonNum
+    
+    Get Retrieve_Profile_String "QAToRadio" to sButtonNum
+    move (trim(sButtonNum)) to sButtonNum
+    if (sButtonNum <> "") function_return (integer(sButtonNum))
+    else function_return 0
+end_procedure
+
+Procedure Set DEFAULT_LetterEditor integer sButtonNum
+    Send assign_profile_string "LetterEditor" sButtonNum
+end_procedure
+
+Function DEFAULT_LetterEditor returns integer
+    integer sButtonNum
+    
+    Get Retrieve_Profile_String "LetterEditor" to sButtonNum
+    move (trim(sButtonNum)) to sButtonNum
+    if (sButtonNum <> "") function_return (integer(sButtonNum))
+    else function_return 0
+end_procedure 
+
+Procedure Set DEFAULT_BeginLunch integer iLunchHour
+    Send assign_profile_string "BeginLunch" iLunchHour
+end_procedure
+
+Function DEFAULT_BeginLunch returns integer
+    integer iLunchHour
+    
+    Get Retrieve_Profile_String "BeginLunch" to iLunchHour
+    if (iLunchHour <> 0) function_return iLunchHour 
+    else function_return 1200 // 12:00PM
+end_procedure 
+
+Procedure Set DEFAULT_EndLunch integer iLunchHour
+    Send assign_profile_string "EndLunch" iLunchHour
+end_procedure
+
+Function DEFAULT_EndLunch returns integer
+    integer iLunchHour
+    
+    Get Retrieve_Profile_String "EndLunch" to iLunchHour
+    if (iLunchHour <> 0) function_return iLunchHour 
+    else function_return 1300 // 1:00PM
+end_procedure 
+
+Procedure Set DEFAULT_SkipLunch integer iSkip
+    Send assign_profile_string "SkipLunch" iSkip
+end_procedure
+
+Function DEFAULT_SkipLunch returns integer
+    integer iSkip
+    
+    Get Retrieve_Profile_String "SkipLunch" to iSkip
+    if (iSkip <> 0) function_return iSkip 
+    else function_return 0
+end_procedure 
+
+Procedure Set DEFAULT_PromptLunch integer iLprompt  
+    Send assign_profile_string "PromptLunch" iLprompt
+end_procedure
+
+Function DEFAULT_PromptLunch returns integer
+    integer iLprompt
+    
+    Get Retrieve_Profile_String "PromptLunch" to iLprompt
+    if (iLprompt <> 0) function_return iLprompt 
+    else function_return 0
+end_procedure     

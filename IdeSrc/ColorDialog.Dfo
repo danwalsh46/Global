@@ -1,0 +1,16 @@
+//AB/ OBJECTDEF
+Object
+    //AB-StoreStart
+    Function SelectColor Returns Integer
+        Integer iRgbColor 
+        Boolean bColorSelected
+
+        Get Show_Dialog To bColorSelected
+        If (bColorSelected) Begin
+            Get SelectedColor To iRgbColor
+        End
+
+        Function_Return iRgbColor
+    End_Function // SelectColor
+    //AB-StoreEnd
+End_Object

@@ -1,0 +1,230 @@
+//TH-Header
+// *****************************************************************************
+// * Copyright (c) 2017 Excellent Software Ltd
+// * All rights reserved.
+// *
+// * Name    : cDbComboForm
+// * Title   : a Better dbComboForm DataFlex Class
+// * Author  : Raveen Sundram
+// *
+// * License/Remarks
+// * ---------------------------------------------------------------------------
+// *  This package/class is free software: you can redistribute it and/or modify
+// *  it under the terms of the GNU General Public License as published by
+// *  the Free Software Foundation, either version 3 of the License, or
+// *  any later version.
+// *
+// *  This package/class is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS for a PARTICULAR PURPOSE.  See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have received a copy of the GNU General Public License
+// *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
+//TH-RevisionStart
+// ********************
+// MODIFICATION SUMMARY
+// ********************
+// ####### DD/MM/YYYY  WHO COMMENT
+//         03/08/2017  RRS Created (DF18.2 or higher)
+//         29/01/2018  RRS Fixed: Combo_Add_Item
+//                         -
+//TH-RevisionEnd
+Use Dfcentry.pkg
+Use WinSuggestionCombo.pkg
+Use WinBKComboForm.pkg
+
+{ Visibility=Private }
+Class cDbComboSuggestionForm Is a dbComboForm
+  Import_Class_Protocol cSuggestionControl_mixin
+  Import_Class_Protocol cSuggestion_mixin
+  
+  Procedure Construct_Object
+    Forward Send Construct_Object
+  
+    Send Define_cSuggestionControl_mixin
+    Send Define_cSuggestion_mixin
+  End_Procedure
+End_Class
+
+{ OverrideProperty=peSuggestionMode DesignTime=False}
+{ OverrideProperty=pbCaseSensitive  DesignTime=False}
+{ OverrideProperty=pbFindOnSelect   DesignTime=False}
+{ OverrideProperty=pbFullWidth      DesignTime=False}
+{ OverrideProperty=piFindIndex      DesignTime=False}
+{ OverrideProperty=pbFullText    InitialValue=True }
+{ OverrideProperty=piStartAtChar InitialValue=1 }
+{ DesignerClass=cDTComboForm }
+Class cDbComboForm Is a cDbComboSuggestionForm
+  
+  Procedure Construct_Object
+    Forward Send Construct_Object
+       
+    // Properties
+    { MethodType=Property InitialValue=True }
+    { Description='Autosizes the combo list to fit the widest combo item' }
+    Property Boolean pbAutoListWidth True
+    
+    { MethodType=Property EnumList="False,True" InitialValue=False }
+    { Description='Show All or hide items starting with @' }
+    Property Boolean pbComboShowAll False
+    
+    { MethodType=Property }
+    { Description='Disables the BkComboForm feature' }
+    Property Boolean pbDisableNewComboForm False
+    
+    { MethodType=Property DesignTime=False }
+    Property Handle phoBkComboForm 0
+
+    {MethodType=Property DesignTime=False}
+    Property Handle phcBkComboFormClass (RefClass(cBackgroundComboForm))
+    
+    // Mixins
+    Send Define_cSuggestion_Combo_mixin
+    
+  End_Procedure // Construct_Object
+  
+  Import_Class_Protocol cSuggestion_Combo_mixin
+    
+  Procedure SizeComboWidth
+    Integer iCount iItem iTextExt
+    Integer iRows iWd iNewWd iVertAdj
+    String  sVal
+    
+    // Initialise Width
+    Set ListWidth to 0
+    Send DoSetListWidth
+    
+    Get ListRowCount     to iRows
+    Get Combo_Item_Count to iCount
+    
+    // Vertical scroll-bar adjustment is needed
+    Move (iRows>0 And iCount>iRows) to iVertAdj
+    If (iVertAdj) Move (GetSystemMetrics(SM_CXVSCROLL)+GetSystemMetrics(SM_CXEDGE)) to iVertAdj
+    Else Move (GetSystemMetrics(SM_CXEDGE)) to iVertAdj
+    
+    // Calculate New Width
+    For iItem from 0 to (iCount-1)
+      Get Combo_Value iItem to sVal
+      If (sVal<>"") Begin
+        Get Text_Extent sVal to iTextExt
+        Move (Low(iTextExt)+iVertAdj) to iWd
+        If (iWd>iNewWd) Begin
+          Move (iWd+GetSystemMetrics(SM_CXFIXEDFRAME)+GetSystemMetrics(SM_CXEDGE)) to iNewWd
+        End
+      End
+    Loop
+    
+    // Set New Width
+    Set ListWidth to iNewWd
+    Send DoSetListWidth
+  End_Procedure
+  
+  Procedure Combo_Add_Item String sDescription String sData
+    Boolean bAddComboItem bHiddenItem
+    
+    Move (num_arguments > 1) to bAddComboItem
+    If (bAddComboItem) Begin
+      Get pbComboShowAll to bAddComboItem
+      Move (Left(sDescription,1)="@") to bHiddenItem
+    End
+      
+    If (Not(bAddComboItem)) Move (Not(bHiddenItem)) to bAddComboItem
+    If (bAddComboItem) Begin
+      If (bHiddenItem) Move (Right(sDescription,Length(sDescription)-1)) to sDescription
+      If (num_arguments > 1) ;
+           Forward Send Combo_Add_Item sDescription sData
+      Else Forward Send Combo_Add_Item sDescription
+    End
+  End_Procedure
+  
+  Procedure Combo_Fill_List
+    Forward Send Combo_Fill_List
+    If (pbAutoListWidth(Self) And (ListWidth(Self)) <= 0) Send SizeComboWidth
+  End_Procedure
+  
+  Procedure DoApplyAnchors Integer Arg1 Integer Arg2
+    Handle hoBkComboForm
+    Integer iStart iEnd
+    If (Focus(Desktop)=Self) Begin
+      Get SelStart to iStart
+      Get SelEnd   to iEnd
+    End
+    Forward Send DoApplyAnchors Arg1 Arg2
+    Send SetSel iStart iEnd
+    Get phoBkComboForm to hoBkComboForm
+    If (hoBkComboForm) Send DoApplyAnchors of hoBkComboForm Arg1 Arg2
+  End_Procedure
+  
+  Procedure Page Integer iPageObject
+    Forward Send Page iPageObject
+    If (iPageObject=1 And Focus(Desktop)<> Self) Send SetSel 0 0
+  End_Procedure
+  
+  Procedure Shadow_Display
+    Handle hoBkComboForm
+    Boolean bShadow
+    Forward Send Shadow_Display
+    If (Active_State(Self) And Not(pbDisableNewComboForm(Self))) Begin
+      Get Shadow_State to bShadow
+      Get phoBkComboForm to hoBkComboForm
+      If (bShadow And hoBkComboForm=0) Begin
+        Send Create_WinComboControlForm
+        Get phoBkComboForm to hoBkComboForm
+      End
+      If (hoBkComboForm) Begin
+        Set Visible_State to (Not(bShadow))
+        Set Visible_State of hoBkComboForm to bShadow
+      End
+    End
+  End_Procedure
+  
+  Procedure Add_Focus Handle hoParent Returns Integer
+    Integer iErr iVoid
+    Handle  hoBkComboForm
+    
+    Forward Get msg_Add_Focus hoParent to iErr
+    If (Not(iErr)) Begin
+      Get phoBkComboForm to hoBkComboForm
+      If (hoBkComboForm) Send Add_Focus of hoBkComboForm (Self)
+      Send Shadow_Display
+    End
+    Procedure_Return iErr
+  End_Procedure
+  
+  Procedure Create_WinComboControlForm
+    Handle  hoBkComboForm iClass
+    Get phoBkComboForm to hoBkComboForm
+    If (hoBkComboForm=0) Begin
+      Get phcBkComboFormClass to iClass
+      If (iClass) Get Create iClass to hoBkComboForm
+      If (hoBkComboForm) Begin
+        Set phoParent of hoBkComboForm to (Self)
+        Set phoBkComboForm to hoBkComboForm
+        Send InitialiseForm of hoBkComboForm
+        // Activate ComboFormForm
+        Send Add_Focus of hoBkComboForm Self
+      End
+    End
+  End_Procedure
+  
+  Procedure Set Local_Value Integer iItem String sValue
+    Handle hoBkComboForm
+    Forward Set Local_Value iItem to sValue
+    Get phoBkComboForm to hoBkComboForm
+    If (hoBkComboForm) Send RefreshForm of hoBkComboForm
+  End_Procedure
+   
+  Procedure Destroy_Object
+    Handle hoBkComboForm
+    Get phoBkComboForm to hoBkComboForm
+    If (hoBkComboForm) Send Destroy of hoBkComboForm
+    Forward Send Destroy_Object
+  End_Procedure
+  
+End_Class
+
+
+
+

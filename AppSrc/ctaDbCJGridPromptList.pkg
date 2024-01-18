@@ -1,0 +1,22 @@
+Use cDbCJGridPromptList.pkg
+Use ctaGridScrolling_mx.pkg
+
+Class _ctaDbCJGridPromptList is a cDbCJGridPromptList
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Send Define_ctaGridScrolling_Mixin
+    End_Procedure
+
+    Import_Class_Protocol ctaGridScrolling_Mixin
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+        Send End_Define_ctaGridScrolling_Mixin
+    End_Procedure
+End_Class
+
+Class ctaDbCJGridPromptList is a _ctaDbCJGridPromptList
+End_Class

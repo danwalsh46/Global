@@ -1,0 +1,37 @@
+//AB/ CLASSDEF
+Class SaveAsDialog is a BitmapContainer
+    // disallow dropping controls onto this control
+    Set Drop_Allowed   To False
+    Set Type_Of_Drag   To TD_DRAG_NONVISUAL
+    // disable DataBase tab page in Properties
+    Set Control_Type   To ctBASE
+    Set Size_Allowed   To False
+    Set ObjectNameMask To "oSaveAsDialog<count>"
+    Set ClassHelpName  To "SaveAsDialog"
+    Set ClassCETV      To 27                        // use TreeView Image #27 (1-based offset)
+    Set ClassPackage   To "File_dlg.Pkg"
+
+    //don't show location
+    Property No_Visible Pseudo Complex Location 0 0
+    //don't show size
+    Property No_Visible Pseudo Complex Size 20 20
+    //show this bitmap on control
+    Property No_Visible String Bitmap "SaveAsDialog.bmp"
+    Property No_Visible Integer Bitmap_Style Bitmap_Center
+
+    Property No_Execute Boolean AllowReadOnly_State True // Determines whether users without write access can select files that are read-only or in a read-only folder.
+    Property No_Execute Boolean CreatePrompt_State True // If true, a message box will ask users whether they want to create the entered filename, when such filename is not found.
+    Property No_Execute String  Dialog_Caption // The object's caption. Windows will provide a suitable default if you do not set this property.
+    Property No_Execute Boolean FileMustExist_State True // Specifies whether users can enter a file title that doesn't exist.
+    Property No_Execute String  File_Name // Name of file. Normally, maintained by object.
+    Property No_Execute String  File_Title // File name to appear title bar (if ShowFileTitle_State is true). Normally, maintained by object.
+    Property No_Execute Integer Filter_Index 0 // Determines which filter you would like this object’s Filter combobox to start with. The default is one, which is the first filter.
+    Property No_Execute String  Filter_String 'All Files|*.*' // Holds the descriptions and filters that will be available to users. Format is pairs of "description" "|" "file-filter"
+    Property No_Execute String  Initial_Folder "" // Determines the starting point for this object. If no value is assigned, Windows will provide the starting point.
+    Property No_Execute Boolean NoChangeDir_State False // If true, restores the current directory to the original directory if the user switched the current directory while searching for files.
+    Property No_Execute Boolean OverwritePrompt_State True // Determines whether users should be prompted before saving a file name that already exists.
+    Property No_Execute Boolean PathMustExist_State True // Determines whether users can enter a file path that doesn't exist
+    Property No_Execute Boolean ShowFileTitle_State True // Determines whether the contents of the file_title property should be inserted into the dialog box as a default for selecting.
+    Property No_Execute Boolean HideReadOnly_State False // The can dialog contain a checkbox labeled Open as read-only: This property determines whether the checkbox is hidden.
+End_Class
+

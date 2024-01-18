@@ -1,0 +1,16 @@
+//AB/ CLASSDEF
+Class ComboForm is a AbstractForm ComboForm ComboFormMixin DefineComboFormMixin
+    Set ObjectNameMask To "oComboForm<count>"
+    Set ClassHelpName  To "ComboForm"
+    Set ClassCETV      To 15                // use TreeView Image #15 (1-based offset)
+    Set ClassPackage   To "dfCmbFrm.pkg"
+
+    Inherit
+
+    Property ITEM Boolean Entry_State True // Does the Combo Form allow text entry into the main form?
+    Property NO_EXECUTE Boolean Combo_Sort_State True // Should the combo-list's items be sorted?
+    Property No_Execute Mode Form_DataType Ascii_window ascii_window date_window 0 1 2 3 4 5 6 7 8
+    Property Integer ListRowCount 0 // How many drop-down rows are required (0 = use size to determine number of rows)
+    Property Integer ListWidth    0 // Width of dropped-down list (0=default width of edit)
+    Property NO_VISIBLE Mode Form_Border Border_ClientEdge Border_ClientEdge
+End_Class

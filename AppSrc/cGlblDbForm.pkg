@@ -1,0 +1,102 @@
+//***************************************************************************
+//*
+//* Class:        cGlblDbForm
+//* Package Name: cGlblDbForm.pkg
+//*
+//***************************************************************************
+
+Use DFAllEnt.pkg
+//Use cWinToolTip.pkg
+//
+//// Visual DataFlex 12.0 Migration Utility, added January 13, 2007: 10:10:18
+//#IF (!@ >= 120)
+//{ OverrideProperty=piToolTipIcon InitialValue=TTI_INFO }
+//{ OverrideProperty=piToolTipIcon EnumList="TTI_INFO, TTI_NONE, TTI_WARNING, TTI_ERROR" }
+//{ OverrideProperty=pbAutoLabelAsToolTipTitle InitialValue=True }
+//{ OverrideProperty=pbAutoStatusHelpAsToolTip InitialValue=True }
+//#ENDIF
+Class cGlblDbForm is a dbForm
+
+//    Import_Class_Protocol cWinToolTip_mx
+
+    // Construct_Object: Object constructor.
+    Procedure Construct_object
+        Forward Send Construct_Object
+
+        // Define new Properties: Property {Type} {pxName} {initial_value}
+
+        // shadow key field when used as foreign field
+        Property Boolean pbDisableKey False
+        // add data loss confirmation to Request_Find / Prompt
+        Property Boolean pbDataLoss   False
+
+        // Create child objects
+
+        // Set property values:
+
+        // cWindowsEx tooltip
+//        Send Define_cWinToolTip
+//        Set pbClassEnabledHandleType    To True  // True=Default
+//        Set pbClassDisabledHandleType   To True  // True=Default
+//        Set pbClassEntryStateHandleType To True  // True=Default
+
+    End_Procedure
+
+    // Create and augment procedure and functions
+
+    // shadow key field when used as foreign field
+    procedure Refresh integer iMode
+        boolean bDisableKey
+        integer hDD iCurrent
+        //
+        get pbDisableKey to bDisableKey
+        //
+        if (bDisableKey) begin
+            get Server         to hDD
+            get Current_Record of hDD to iCurrent
+            set Enabled_State  to (iCurrent = 0)
+        end
+        //
+        forward send Refresh iMode
+        //
+        if (bDisableKey AND iCurrent AND Focus(self) = self) send Next
+    end_procedure
+
+    procedure Request_Find integer iMode integer bEntryUpdate
+        boolean bCancel
+        //
+        if (pbDataLoss(self) AND (Current_Record(Server(self))) AND Should_Save(self)) begin
+            get Confirm "Abandon changes?" to bCancel
+            if (bCancel) procedure_return
+        end
+        //
+        forward send Request_Find iMode bEntryUpdate
+    end_procedure
+
+    procedure Request_Superfind integer iMode
+        if (pbDataLoss(self)) procedure_return
+        //
+        forward send Request_Superfind iMode
+    end_procedure
+
+    procedure Prompt
+        boolean bCancel
+        //
+        if (pbDataLoss(self) AND (Current_Record(Server(self))) AND Should_Save(self)) begin
+            get Confirm "Changes may be lost.  Proceed?" to bCancel
+            if (bCancel) procedure_return
+        end
+        //
+        forward send Prompt
+    end_procedure
+
+//    Procedure Activate
+//        Integer iVoid
+//        Handle  HWnd
+//        //
+//        Forward Send Activate
+//        //
+//        Get form_Window_Handle of (oForm(Self)) 0 to hWnd
+//        Move (SendMessage(hWnd,WM_KEYDOWN, VK_RIGHT, EXTKEY)) to iVoid    
+//    End_Procedure
+End_Class // cGlblDbForm
