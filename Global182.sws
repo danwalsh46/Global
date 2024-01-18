@@ -1,0 +1,8 @@
+[Properties]
+Version=18.2
+[WorkspacePaths]
+ConfigFile=.\Programs\Global.ws
+[TestProjects]
+TestWindowsProject=TestBed.src
+[Projects]
+Project0=TestBed.src
